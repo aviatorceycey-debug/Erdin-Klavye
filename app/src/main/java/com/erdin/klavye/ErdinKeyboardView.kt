@@ -35,6 +35,14 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
     private var alternateOptions: List<String> = emptyList()
     private var popupRect: RectF? = null
     private var selectedAlternate = -1
+    private val deleteRepeatRunnable = object : Runnable {
+        override fun run() {
+            if (downKey?.label == "⌫" && longPressed) {
+                onKey("⌫")
+                handler.postDelayed(this, 65)
+            }
+        }
+    }
 
     private val alternatives = mapOf(
         "g" to listOf("ğ", "Ğ"), "u" to listOf("ü", "Ü"),
@@ -90,7 +98,8 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
             }
         } else if (key.label == "⌫") {
             longPressed = true
-            onKey("⌫⌫")
+            onKey("⌫")
+            handler.postDelayed(deleteRepeatRunnable, 180)
         }
     }
 
@@ -219,6 +228,7 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
             }
             MotionEvent.ACTION_UP -> {
                 handler.removeCallbacks(longPressRunnable)
+                handler.removeCallbacks(deleteRepeatRunnable)
                 val key = downKey
                 if (longPressed && alternateOptions.isNotEmpty()) {
                     if (selectedAlternate >= 0) {
@@ -246,6 +256,7 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
             }
             MotionEvent.ACTION_CANCEL -> {
                 handler.removeCallbacks(longPressRunnable)
+                handler.removeCallbacks(deleteRepeatRunnable)
                 downKey = null
                 downRect = null
                 alternateOptions = emptyList()
