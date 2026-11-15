@@ -16,10 +16,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Android SDK kur
-        uses: android-actions/setup-android@v3
-      - name: Android platform ve build tools
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Android SDK paketlerini hazırla
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
       - name: Gradle 8.9 kur
         uses: gradle/actions/setup-gradle@v4
         with:
