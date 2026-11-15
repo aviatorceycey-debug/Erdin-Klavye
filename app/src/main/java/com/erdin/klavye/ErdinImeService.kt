@@ -8,8 +8,8 @@ class ErdinImeService : InputMethodService() {
         val connection = currentInputConnection ?: return@ErdinKeyboardView
         when (value) {
             "⌫" -> connection.deleteSurroundingText(1, 0)
+            "⌫⌫" -> connection.deleteSurroundingText(5, 0)
             "↵" -> connection.commitText("\n", 1)
-            "?123" -> { /* Symbol layout will be added in the next iteration. */ }
             "🌐" -> switchToNextInputMethod(false)
             else -> connection.commitText(value, 1)
         }
