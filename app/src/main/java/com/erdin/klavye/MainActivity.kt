@@ -1,0 +1,45 @@
+package com.erdin.klavye
+
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import android.provider.Settings
+import android.view.inputmethod.InputMethodManager
+import android.content.Context
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
+
+class MainActivity : Activity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(28, 36, 28, 28)
+            setBackgroundColor(0xFF101522.toInt())
+        }
+        val title = TextView(this).apply {
+            text = "ERDİN KLAVYE"
+            textSize = 26f
+            setTextColor(0xFFF4F7FF.toInt())
+        }
+        val info = TextView(this).apply {
+            text = "Kurulum için önce klavyeyi etkinleştir, ardından varsayılan klavye olarak seç."
+            textSize = 15f
+            setTextColor(0xFFB8C3D9.toInt())
+            setPadding(0, 18, 0, 24)
+        }
+        val enable = Button(this).apply {
+            text = "Klavyeyi etkinleştir"
+            setOnClickListener { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
+        }
+        val choose = Button(this).apply {
+            text = "Varsayılan klavyeyi seç"
+            setOnClickListener {
+                (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
+            }
+        }
+        root.addView(title); root.addView(info); root.addView(enable); root.addView(choose)
+        setContentView(root)
+    }
+}
