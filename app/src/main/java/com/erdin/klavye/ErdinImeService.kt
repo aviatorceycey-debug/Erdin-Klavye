@@ -9,8 +9,8 @@ class ErdinImeService : InputMethodService() {
         when (value) {
             "⌫" -> connection.deleteSurroundingText(1, 0)
             "↵" -> connection.commitText("\n", 1)
-            "⇧" -> { /* shift state is handled by the keyboard view */ }
-            "🌐" -> request לה
+            "?123" -> { /* Symbol layout will be added in the next iteration. */ }
+            "🌐" -> switchToNextInputMethod(false)
             else -> connection.commitText(value, 1)
         }
     }
