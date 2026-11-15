@@ -2,105 +2,187 @@ package com.erdin.klavye
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.RectF
+import android.graphics.Shader
 import android.os.Handler
 import android.os.Looper
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.max
 
+private data class KeyboardKey(
+    val label: String,
+    val value: String = label,
+    val weight: Float = 1f,
+    val kind: Kind = Kind.NORMAL
+) {
+    enum class Kind { NORMAL, ACTION, ACCENT, SPACE }
+}
+
 class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val rows = listOf(
-        listOf("1","2","3","4","5","6","7","8","9","0"),
-        listOf("q","w","e","r","t","y","u","ı","o","p"),
-        listOf("a","s","d","f","g","h","j","k","l"),
-        listOf("⇧","z","x","c","v","b","n","m","⌫"),
-        listOf("?123",",","🌐","SPACE",".","↵")
-    )
-    private val alternatives = mapOf("g" to "ğ", "u" to "ü", "c" to "ç", "s" to "ş", "o" to "ö", "ı" to "i")
+    private val density = resources.displayMetrics.density
+    private val gap = 5f * density
+    private val topInset = 10f * density
     private var shift = false
-    private var downKey: String? = null
-    private var downIndex = -1
+    private var symbols = false
+    private var downKey: KeyboardKey? = null
+    private var downRect: RectF? = null
     private var longPressed = false
     private val handler = Handler(Looper.getMainLooper())
-    private val longPress = Runnable {
-        val key = downKey ?: return@Runnable
-        val alt = alternatives[key]
-        if (alt != null) {
-            longPressed = true
-            onKey(alt)
-        }
-    }
+
+    private val letterRows = listOf(
+        listOf("1","2","3","4","5","6","7","8","9","0").map { KeyboardKey(it) },
+        "qwertyuıop".map { KeyboardKey(it.toString()) },
+        "asdfghjkl".map { KeyboardKey(it.toString()) },
+        listOf(KeyboardKey("⇧", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)) +
+            "zxcvbnm".map { KeyboardKey(it.toString()) } +
+            listOf(KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)),
+        listOf(
+            KeyboardKey("?123", kind = KeyboardKey.Kind.ACCENT, weight = 1.55f),
+            KeyboardKey(",", weight = .8f),
+            KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
+            KeyboardKey("Türkçe  •  English", " ", 4.2f, KeyboardKey.Kind.SPACE),
+            KeyboardKey(".", weight = .8f),
+            KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.25f)
+        )
+    )
+
+    private val symbolRows = listOf(
+        listOf("1","2","3","4","5","6","7","8","9","0"),
+        listOf("@","#","₺","%","&","-","+","(",")","/"),
+        listOf("*","\"","' ",":",";","!","?","₺","€","£"),
+        listOf(KeyboardKey("=\\<", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)) +
+            listOf("_","\\","|","~","<",">","[") .map { KeyboardKey(it) } +
+            listOf(KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)),
+        listOf(
+            KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.55f),
+            KeyboardKey(",", weight = .8f),
+            KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
+            KeyboardKey("Türkçe  •  English", " ", 4.2f, KeyboardKey.Kind.SPACE),
+            KeyboardKey(".", weight = .8f),
+            KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.25f)
+        )
+    ).map { row -> row.map { if (it is String) KeyboardKey(it) else it } }
+
+    private fun rows() = if (symbols) symbolRows else letterRows
 
     init { isFocusable = true }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = MeasureSpec.getSize(widthMeasureSpec)
-        setMeasuredDimension(width, (resources.displayMetrics.density * 252).toInt())
+        setMeasuredDimension(width, (density * 278).toInt())
+    }
+
+    private fun keyRects(): List<Pair<KeyboardKey, RectF>> {
+        val current = rows()
+        val rowHeight = (height - topInset - gap * (current.size + 1)) / current.size
+        val result = mutableListOf<Pair<KeyboardKey, RectF>>()
+        current.forEachIndexed { rowIndex, row ->
+            val totalWeight = row.sumOf { it.weight.toDouble() }.toFloat()
+            val available = width - gap * (row.size + 1)
+            var x = gap
+            row.forEach { key ->
+                val keyWidth = available * key.weight / totalWeight
+                val y = topInset + gap + rowIndex * (rowHeight + gap)
+                result += key to RectF(x, y, x + keyWidth, y + rowHeight)
+                x += keyWidth + gap
+            }
+        }
+        return result
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawColor(0xFF101522.toInt())
-        val density = resources.displayMetrics.density
-        val gap = 4f * density
-        val top = 8f * density
-        val rowHeight = (height - top - gap * 6) / rows.size
-        rows.forEachIndexed { rowIndex, row ->
-            val keyWidth = (width - gap * (row.size + 1)) / row.size
-            row.forEachIndexed { col, key ->
-                val left = gap + col * (keyWidth + gap)
-                val rect = RectF(left, top + rowIndex * (rowHeight + gap), left + keyWidth, top + rowIndex * (rowHeight + gap) + rowHeight)
-                paint.color = if (key == "SPACE") 0xFF28334A.toInt() else 0xFF202B40.toInt()
-                canvas.drawRoundRect(rect, 9f * density, 9f * density, paint)
-                paint.color = 0xFFF3F6FF.toInt()
-                paint.textAlign = Paint.Align.CENTER
-                paint.textSize = if (key == "SPACE") 12f * density else 17f * density
-                val label = if (key == "SPACE") "Türkçe • English" else if (shift && key.length == 1) key.uppercase() else key
-                val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2
-                canvas.drawText(label, rect.centerX(), baseline, paint)
+        val bg = LinearGradient(0f, 0f, width.toFloat(), height.toFloat(),
+            intArrayOf(0xFF101522.toInt(), 0xFF151D31.toInt(), 0xFF101522.toInt()),
+            null, Shader.TileMode.CLAMP)
+        paint.shader = bg
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        paint.shader = null
+
+        keyRects().forEach { (key, rect) ->
+            paint.setShadowLayer(3f * density, 0f, 2f * density, 0x66000000)
+            paint.color = when (key.kind) {
+                KeyboardKey.Kind.SPACE -> 0xFF263653.toInt()
+                KeyboardKey.Kind.ACCENT -> 0xFF244B78.toInt()
+                KeyboardKey.Kind.ACTION -> 0xFF29344B.toInt()
+                KeyboardKey.Kind.NORMAL -> 0xFF202B40.toInt()
             }
+            canvas.drawRoundRect(rect, 10f * density, 10f * density, paint)
+            paint.clearShadowLayer()
+
+            if (key.kind == KeyboardKey.Kind.ACCENT) {
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 1f * density
+                paint.color = 0x6657B8FF
+                canvas.drawRoundRect(rect, 10f * density, 10f * density, paint)
+                paint.style = Paint.Style.FILL
+            }
+
+            val label = when {
+                key.kind == KeyboardKey.Kind.SPACE -> key.label
+                shift && !symbols && key.label.length == 1 -> key.label.uppercase()
+                else -> key.label
+            }
+            paint.color = if (key.kind == KeyboardKey.Kind.SPACE) 0xFFB9C9E2.toInt() else 0xFFF4F7FF.toInt()
+            paint.textAlign = Paint.Align.CENTER
+            paint.textSize = when {
+                key.kind == KeyboardKey.Kind.SPACE -> 10f * density
+                key.label.length > 3 -> 11f * density
+                key.label.length > 1 -> 14f * density
+                else -> 18f * density
+            }
+            val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
+            canvas.drawText(label, rect.centerX(), baseline, paint)
         }
     }
 
-    private fun hitKey(x: Float, y: Float): String? {
-        val gap = 4f * resources.displayMetrics.density
-        val top = 8f * resources.displayMetrics.density
-        val rowHeight = (height - top - gap * 6) / rows.size
-        val row = ((y - top) / (rowHeight + gap)).toInt()
-        if (row !in rows.indices) return null
-        val keyWidth = (width - gap * (rows[row].size + 1)) / rows[row].size
-        val col = ((x - gap) / (keyWidth + gap)).toInt()
-        return rows[row].getOrNull(col)
-    }
+    private fun findKey(x: Float, y: Float): Pair<KeyboardKey, RectF>? =
+        keyRects().firstOrNull { it.second.contains(x, y) }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                downKey = hitKey(event.x, event.y)
-                downIndex = rows.indexOfFirst { downKey in it }
+                val hit = findKey(event.x, event.y)
+                downKey = hit?.first
+                downRect = hit?.second
                 longPressed = false
-                if (downKey != null) handler.postDelayed(longPress, 420)
+                if (downKey != null) {
+                    handler.postDelayed({
+                        val key = downKey ?: return@postDelayed
+                        if (key.label == "⌫") {
+                            longPressed = true
+                            onKey("⌫⌫")
+                        }
+                    }, 420)
+                }
                 return true
             }
             MotionEvent.ACTION_UP -> {
-                handler.removeCallbacks(longPress)
+                handler.removeCallbacksAndMessages(null)
                 val key = downKey
                 if (key != null && !longPressed) {
-                    when (key) {
+                    when (key.label) {
                         "⇧" -> { shift = !shift; invalidate() }
-                        "SPACE" -> onKey(" ")
-                        "?123" -> onKey("?123")
-                        else -> onKey(if (shift && key.length == 1) key.uppercase() else key)
+                        "⌫" -> onKey("⌫")
+                        "?123" -> { symbols = true; invalidate() }
+                        "ABC" -> { symbols = false; invalidate() }
+                        "Türkçe  •  English" -> onKey(" ")
+                        else -> onKey(if (shift && !symbols && key.value.length == 1) key.value.uppercase() else key.value)
                     }
                 }
                 downKey = null
+                downRect = null
                 return true
             }
             MotionEvent.ACTION_CANCEL -> {
-                handler.removeCallbacks(longPress); downKey = null; return true
+                handler.removeCallbacksAndMessages(null)
+                downKey = null
+                downRect = null
+                return true
             }
         }
         return true
