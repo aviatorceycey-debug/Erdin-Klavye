@@ -221,7 +221,11 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
                 handler.removeCallbacks(longPressRunnable)
                 val key = downKey
                 if (longPressed && alternateOptions.isNotEmpty()) {
-                    if (selectedAlternate >= 0) onKey(alternateOptions[selectedAlternate])
+                    if (selectedAlternate >= 0) {
+                        onKey(alternateOptions[selectedAlternate])
+                    } else if (key != null) {
+                        onKey(if (shift) key.value.uppercase() else key.value)
+                    }
                 } else if (key != null && !longPressed) {
                     when (key.label) {
                         "⇧" -> { shift = !shift; invalidate() }
