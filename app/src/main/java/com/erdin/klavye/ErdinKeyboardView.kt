@@ -29,6 +29,7 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
     private val handler = Handler(Looper.getMainLooper())
     private var shift = false
     private var symbols = false
+    private var emojiMode = false
     private var downKey: KeyboardKey? = null
     private var downRect: RectF? = null
     private var longPressed = false
@@ -60,10 +61,23 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
         listOf(
             KeyboardKey("?123", kind = KeyboardKey.Kind.ACCENT, weight = 1.55f),
             KeyboardKey(",", weight = .8f),
-            KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
+            KeyboardKey("😊", kind = KeyboardKey.Kind.ACTION, weight = .9f),
             KeyboardKey("Türkçe  •  English", " ", 4.2f, KeyboardKey.Kind.SPACE),
             KeyboardKey(".", weight = .8f),
             KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.25f)
+        )
+    )
+
+    private val emojiRows = listOf(
+        listOf("😀","😃","😄","😁","😆","😅","😂","🤣").map { KeyboardKey(it) },
+        listOf("😊","😍","🥰","😘","😎","🤩","🥳","😭").map { KeyboardKey(it) },
+        listOf("👍","👎","👏","🙏","❤️","🔥","✨","💯").map { KeyboardKey(it) },
+        listOf("🎉","🌹","☀️","🌙","🐱","🐶","🍀","☕").map { KeyboardKey(it) },
+        listOf(
+            KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.2f),
+            KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
+            KeyboardKey(" ", " ", 4.8f, KeyboardKey.Kind.SPACE),
+            KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f)
         )
     )
 
@@ -77,18 +91,22 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
         listOf(
             KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.55f),
             KeyboardKey(",", weight = .8f),
-            KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
+            KeyboardKey("😊", kind = KeyboardKey.Kind.ACTION, weight = .9f),
             KeyboardKey("Türkçe  •  English", " ", 4.2f, KeyboardKey.Kind.SPACE),
             KeyboardKey(".", weight = .8f),
             KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.25f)
         )
     )
 
-    private fun rows() = if (symbols) symbolRows else letterRows
+    private fun rows() = when {
+        emojiMode -> emojiRows
+        symbols -> symbolRows
+        else -> letterRows
+    }
 
     private val longPressRunnable = Runnable {
         val key = downKey ?: return@Runnable
-        if (!symbols && key.value.length == 1) {
+        if (!symbols && !emojiMode && key.value.length == 1) {
             val options = alternatives[key.value.lowercase()]
             if (!options.isNullOrEmpty()) {
                 longPressed = true
@@ -240,10 +258,15 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
                     when (key.label) {
                         "⇧" -> { shift = !shift; invalidate() }
                         "⌫" -> onKey("⌫")
-                        "?123" -> { symbols = true; invalidate() }
-                        "ABC" -> { symbols = false; invalidate() }
+                        "?123" -> { symbols = true; emojiMode = false; invalidate() }
+                        "ABC" -> { symbols = false; emojiMode = false; invalidate() }
+                        "😊" -> { emojiMode = true; symbols = false; invalidate() }
+                        "🌐" -> onKey("🌐")
                         "Türkçe  •  English" -> onKey(" ")
-                        else -> onKey(if (shift && !symbols && key.value.length == 1) key.value.uppercase() else key.value)
+                        else -> {
+                            onKey(if (shift && !symbols && !emojiMode && key.value.length == 1) key.value.uppercase() else key.value)
+                            if (shift && !symbols && !emojiMode && key.value.length == 1) shift = false
+                        }
                     }
                 }
                 downKey = null
