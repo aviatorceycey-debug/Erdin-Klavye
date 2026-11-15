@@ -10,7 +10,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.MotionEvent
 import android.view.View
-import kotlin.math.max
 
 private data class KeyboardKey(
     val label: String,
@@ -50,12 +49,12 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
         )
     )
 
-    private val symbolRows = listOf(
-        listOf("1","2","3","4","5","6","7","8","9","0"),
-        listOf("@","#","₺","%","&","-","+","(",")","/"),
-        listOf("*","\"","' ",":",";","!","?","₺","€","£"),
+    private val symbolRows: List<List<KeyboardKey>> = listOf(
+        listOf("1","2","3","4","5","6","7","8","9","0").map { KeyboardKey(it) },
+        listOf("@","#","₺","%","&","-","+","(",")","/").map { KeyboardKey(it) },
+        listOf("*","\"","'",":",";","!","?","€","£","₺").map { KeyboardKey(it) },
         listOf(KeyboardKey("=\\<", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)) +
-            listOf("_","\\","|","~","<",">","[") .map { KeyboardKey(it) } +
+            listOf("_","\\","|","~","<",">","[").map { KeyboardKey(it) } +
             listOf(KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)),
         listOf(
             KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.55f),
@@ -65,7 +64,7 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
             KeyboardKey(".", weight = .8f),
             KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.25f)
         )
-    ).map { row -> row.map { if (it is String) KeyboardKey(it) else it } }
+    )
 
     private fun rows() = if (symbols) symbolRows else letterRows
 
