@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.MotionEvent
 import android.view.View
+import android.view.HapticFeedbackConstants
 import kotlin.math.floor
 
 private data class KeyboardKey(
@@ -233,6 +234,7 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
                 val hit = findKey(event.x, event.y)
                 downKey = hit?.first
                 downRect = hit?.second
+                if (hit != null) performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                 longPressed = false
                 alternateOptions = emptyList()
                 popupRect = null
