@@ -22,11 +22,17 @@ private data class KeyboardKey(
     enum class Kind { NORMAL, ACTION, ACCENT, SPACE }
 }
 
-class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) : View(context) {
+class ErdinKeyboardView(
+    context: Context,
+    private val onKey: (String) -> Unit,
+    private val onSuggestion: (String) -> Unit
+) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val density = resources.displayMetrics.density
     private val gap = 5f * density
-    private val topInset = 10f * density
+    private val topInset = 42f * density
+    private var suggestions: List<String> = emptyList()
+    private val suggestionRects = mutableListOf<RectF>()
     private val handler = Handler(Looper.getMainLooper())
     private var shift = false
     private var symbols = false
@@ -122,10 +128,15 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
         }
     }
 
+    fun setSuggestions(items: List<String>) {
+        suggestions = items.distinct().take(3)
+        invalidate()
+    }
+
     init { isFocusable = true }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), (density * 278).toInt())
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), (density * 310).toInt())
     }
 
     private fun keyRects(): List<Pair<KeyboardKey, RectF>> {
@@ -154,6 +165,7 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
 
+        drawSuggestionStrip(canvas)
         keyRects().forEach { (key, rect) ->
             paint.setShadowLayer(4f * density, 0f, 2f * density, 0x77000000)
             paint.color = when (key.kind) {
@@ -188,6 +200,38 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
             canvas.drawText(label, rect.centerX(), baseline, paint)
         }
         drawAlternatePopup(canvas)
+    }
+
+    private fun drawSuggestionStrip(canvas: Canvas) {
+        suggestionRects.clear()
+        if (emojiMode || symbols) return
+        val count = suggestions.size
+        if (count == 0) {
+            paint.color = 0xFF9EABC2.toInt()
+            paint.textSize = 11f * density
+            paint.textAlign = Paint.Align.CENTER
+            canvas.drawText("ERDİN  •  Türkçe klavye", width / 2f, 25f * density, paint)
+            return
+        }
+        val cellWidth = width.toFloat() / count
+        suggestions.forEachIndexed { index, suggestion ->
+            val rect = RectF(index * cellWidth + 4f * density, 5f * density,
+                (index + 1) * cellWidth - 4f * density, 37f * density)
+            suggestionRects += rect
+            if (index == 1) {
+                paint.color = 0x332D83D5
+                canvas.drawRoundRect(rect, 9f * density, 9f * density, paint)
+            }
+            paint.color = 0xFFEAF1FC.toInt()
+            paint.textSize = 14f * density
+            paint.textAlign = Paint.Align.CENTER
+            val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
+            val display = if (paint.measureText(suggestion) > rect.width() - 8f * density) {
+                android.text.TextUtils.ellipsize(suggestion, android.text.TextPaint(paint),
+                    rect.width() - 8f * density, android.text.TextUtils.TruncateAt.END).toString()
+            } else suggestion
+            canvas.drawText(display, rect.centerX(), baseline, paint)
+        }
     }
 
     private fun drawAlternatePopup(canvas: Canvas) {
@@ -231,6 +275,13 @@ class ErdinKeyboardView(context: Context, private val onKey: (String) -> Unit) :
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                if (!emojiMode && !symbols) {
+                    val suggestionIndex = suggestionRects.indexOfFirst { it.contains(event.x, event.y) }
+                    if (suggestionIndex >= 0 && suggestionIndex < suggestions.size) {
+                        onSuggestion(suggestions[suggestionIndex])
+                        return true
+                    }
+                }
                 val hit = findKey(event.x, event.y)
                 downKey = hit?.first
                 downRect = hit?.second
