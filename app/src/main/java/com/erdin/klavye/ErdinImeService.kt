@@ -22,6 +22,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private var spellCheckerSession: SpellCheckerSession? = null
     private var spellCheckerLocale: Locale? = null
     private var keyboardView: ErdinKeyboardView? = null
+    private var activeSubtypeLocale = "tr_TR"
     private var lastQueriedWord = ""
     private var suggestionRequestSequence = 0
     private var lastContextWord = ""
@@ -40,7 +41,8 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
     override fun onCurrentInputMethodSubtypeChanged(subtype: InputMethodSubtype) {
         super.onCurrentInputMethodSubtypeChanged(subtype)
-        keyboardView?.setInputLanguage(subtype.locale)
+        activeSubtypeLocale = subtype.locale.ifBlank { "tr_TR" }
+        keyboardView?.setInputLanguage(activeSubtypeLocale)
     }
 
     override fun onCreateInputView(): View {
@@ -50,7 +52,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             onSuggestion = { value -> applySuggestion(value) }
         ).also {
             keyboardView = it
-            it.setInputLanguage(currentInputMethodSubtype.locale)
+            it.setInputLanguage(activeSubtypeLocale)
             updateAutoShift()
         }
     }
@@ -137,7 +139,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
     private fun activeEditorLocale(): Locale {
         currentInputEditorInfo?.hintLocales?.get(0)?.let { return it }
-        val subtypeLocale = currentInputMethodSubtype.locale
+        val subtypeLocale = activeSubtypeLocale
         return if (subtypeLocale.isBlank()) Locale("tr", "TR")
         else Locale.forLanguageTag(subtypeLocale.replace('_', '-'))
     }
