@@ -40,6 +40,8 @@ class ErdinKeyboardView(
     private var capsLock = false
     private var symbols = false
     private var emojiMode = false
+    private var clipboardMode = false
+    private var clipboardItems: List<String> = emptyList()
     private var downKey: KeyboardKey? = null
     private var downRect: RectF? = null
     private var longPressed = false
@@ -111,6 +113,21 @@ class ErdinKeyboardView(
     )
 
     private fun rows() = when {
+        clipboardMode -> {
+            val items = clipboardItems.take(4).mapIndexed { index, item ->
+                KeyboardKey(
+                    android.text.TextUtils.ellipsize(item.replace("\\n", " "), android.text.TextPaint().apply { textSize = 12f * density }, 190f * density, android.text.TextUtils.TruncateAt.END).toString(),
+                    "__CLIP_ITEM__$index",
+                    1f,
+                    KeyboardKey.Kind.NORMAL
+                )
+            }
+            (items + List(4 - items.size) { KeyboardKey("", "", 1f, KeyboardKey.Kind.ACTION) }) +
+                listOf(KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.2f),
+                    KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
+                    KeyboardKey(" ", " ", 4.8f, KeyboardKey.Kind.SPACE),
+                    KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f))
+        }
         emojiMode -> emojiRows
         symbols -> symbolRows
         else -> letterRows
@@ -131,6 +148,14 @@ class ErdinKeyboardView(
                 invalidate()
             }
         }
+    }
+
+    fun setClipboardItems(items: List<String>) {
+        clipboardItems = items.take(4)
+        clipboardMode = true
+        emojiMode = false
+        symbols = false
+        invalidate()
     }
 
     fun setSuggestions(items: List<String>) {
@@ -211,6 +236,13 @@ class ErdinKeyboardView(
 
     private fun drawSuggestionStrip(canvas: Canvas) {
         suggestionRects.clear()
+        if (clipboardMode) {
+            paint.color = 0xFFB8C9E4.toInt()
+            paint.textSize = 11f * density
+            paint.textAlign = Paint.Align.CENTER
+            canvas.drawText("📋  PANO  •  SON KOPYALANANLAR", width / 2f, 25f * density, paint)
+            return
+        }
         if (emojiMode || symbols) return
         val count = suggestions.size
         if (count == 0) {
@@ -282,7 +314,15 @@ class ErdinKeyboardView(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                if (!emojiMode && !symbols) {
+                if (event.y < topInset && event.x < 58f * density) {
+                    onKey(if (clipboardMode) "__CLIPBOARD__" else "__CLIPBOARD__")
+                    return true
+                }
+                if (event.y < topInset && event.x > width - 58f * density && clipboardMode) {
+                    onKey("__CLIP_CLEAR__")
+                    return true
+                }
+                if (!emojiMode && !symbols && !clipboardMode) {
                     val suggestionIndex = suggestionRects.indexOfFirst { it.contains(event.x, event.y) }
                     if (suggestionIndex >= 0 && suggestionIndex < suggestions.size) {
                         onSuggestion(suggestions[suggestionIndex])
@@ -342,12 +382,12 @@ class ErdinKeyboardView(
                         }
                         "⌫" -> onKey("⌫")
                         "?123" -> { symbols = true; emojiMode = false; invalidate() }
-                        "ABC" -> { symbols = false; emojiMode = false; invalidate() }
-                        "😊" -> { emojiMode = true; symbols = false; invalidate() }
+                        "ABC" -> { symbols = false; emojiMode = false; clipboardMode = false; invalidate() }
+                        "😊" -> { emojiMode = true; symbols = false; clipboardMode = false; invalidate() }
                         "🌐" -> onKey("🌐")
                         "Türkçe  •  English" -> onKey(" ")
                         else -> {
-                            onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) upper(key.value) else key.value)
+                            if (key.value.isNotEmpty()) onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) upper(key.value) else key.value)
                             if (shift && !capsLock && !symbols && !emojiMode && key.value.length == 1) shift = false
                         }
                     }
