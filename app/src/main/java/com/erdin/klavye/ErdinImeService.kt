@@ -21,6 +21,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private var spellCheckerSession: SpellCheckerSession? = null
     private var keyboardView: ErdinKeyboardView? = null
     private var lastQueriedWord = ""
+    private var suggestionRequestSequence = 0
     private var lastContextWord = ""
     private var lastContextPreviousWord = ""
     private lateinit var languageModel: LocalLanguageModel
@@ -50,6 +51,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         super.onStartInput(attribute, restarting)
         mainHandler.removeCallbacksAndMessages(null)
         lastQueriedWord = ""
+        suggestionRequestSequence++
         lastContextWord = ""
         lastContextPreviousWord = ""
         val inputType = attribute?.inputType ?: InputType.TYPE_NULL
@@ -94,6 +96,8 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
     override fun onFinishInput() {
         mainHandler.removeCallbacksAndMessages(null)
+        suggestionRequestSequence++
+        lastQueriedWord = ""
         // Clipboard snippets are intentionally session-only; discard them when
         // the input session ends so they cannot linger across apps.
         clipboardHistory.clear()
@@ -235,9 +239,12 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 return@postDelayed
             }
             lastQueriedWord = word
+            val requestSequence = ++suggestionRequestSequence
             val local = languageModel.completions(word)
             keyboardView?.setSuggestions((listOf(word) + local).take(3))
-            spellCheckerSession?.getSuggestions(arrayOf(TextInfo(word)), 3, false)
+            spellCheckerSession?.getSuggestions(
+                arrayOf(TextInfo(word, 0, requestSequence)), 3, false
+            )
         }, 180)
     }
 
@@ -276,7 +283,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     override fun onGetSuggestions(results: Array<SuggestionsInfo>) {
         val queriedWord = lastQueriedWord
         if (queriedWord.isBlank() || !suggestionsEnabled) return
-        val corrections = results
+        val activeSequence = suggestionRequestSequence
+        val matchingResults = results.filter { it.cookie == 0 && it.sequence == activeSequence }
+        if (matchingResults.isEmpty()) return
+        val corrections = matchingResults
             .flatMap { info ->
                 (0 until info.suggestionsCount).mapNotNull { index ->
                     info.getSuggestionAt(index)
