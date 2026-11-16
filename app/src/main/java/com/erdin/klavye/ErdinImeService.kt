@@ -38,7 +38,9 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
+        mainHandler.removeCallbacksAndMessages(null)
         lastQueriedWord = ""
+        lastContextWord = ""
         val inputType = attribute?.inputType ?: InputType.TYPE_NULL
         val inputClass = inputType and InputType.TYPE_MASK_CLASS
         val variation = inputType and InputType.TYPE_MASK_VARIATION
