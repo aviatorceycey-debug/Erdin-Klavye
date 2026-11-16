@@ -1,6 +1,8 @@
 package com.erdin.klavye
 
 import android.content.Context
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
@@ -43,6 +45,7 @@ class ErdinKeyboardView(
     private val onSuggestion: (String) -> Unit
 ) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val keyTone = ToneGenerator(AudioManager.STREAM_SYSTEM, 35)
     private fun upper(value: String) = value.uppercase(Locale("tr", "TR"))
     private fun palette(): KeyboardPalette {
         return when (context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
@@ -214,6 +217,12 @@ class ErdinKeyboardView(
     }
 
     init { isFocusable = true }
+
+    override fun onDetachedFromWindow() {
+        handler.removeCallbacksAndMessages(null)
+        keyTone.release()
+        super.onDetachedFromWindow()
+    }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val preferredHeight = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
@@ -414,9 +423,14 @@ class ErdinKeyboardView(
                 val hit = findKey(event.x, event.y)
                 downKey = hit?.first
                 downRect = hit?.second
-                if (hit != null && context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
-                        .getBoolean("haptic_enabled", true)) {
-                    performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                if (hit != null) {
+                    val prefs = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+                    if (prefs.getBoolean("haptic_enabled", true)) {
+                        performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                    }
+                    if (prefs.getBoolean("key_sound_enabled", false)) {
+                        keyTone.startTone(ToneGenerator.TONE_PROP_BEEP, 28)
+                    }
                 }
                 longPressed = false
                 cursorMoved = false
