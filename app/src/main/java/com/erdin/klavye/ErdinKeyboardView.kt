@@ -158,7 +158,7 @@ class ErdinKeyboardView(
 
     private fun rows() = when {
         clipboardMode -> {
-            val items = clipboardItems.take(4).mapIndexed { index, item ->
+            val items = clipboardItems.take(6).mapIndexed { index, item ->
                 KeyboardKey(
                     android.text.TextUtils.ellipsize(item.replace("\\n", " "), android.text.TextPaint().apply { textSize = 12f * density }, 190f * density, android.text.TextUtils.TruncateAt.END).toString(),
                     "__CLIP_ITEM__$index",
@@ -166,8 +166,8 @@ class ErdinKeyboardView(
                     KeyboardKey.Kind.NORMAL
                 )
             }
-            val padded = items + List(4 - items.size) { KeyboardKey("", "", 1f, KeyboardKey.Kind.ACTION) }
-            listOf(padded.take(2), padded.drop(2)) +
+            val padded = items + List(6 - items.size) { KeyboardKey("", "", 1f, KeyboardKey.Kind.ACTION) }
+            listOf(padded.take(2), padded.slice(2..3), padded.drop(4)) +
                 listOf(listOf(KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.2f),
                     KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
                     KeyboardKey(" ", " ", 4.8f, KeyboardKey.Kind.SPACE),
@@ -196,7 +196,7 @@ class ErdinKeyboardView(
     }
 
     fun setClipboardItems(items: List<String>) {
-        clipboardItems = items.take(4)
+        clipboardItems = items.take(6)
         clipboardMode = true
         emojiMode = false
         symbols = false
