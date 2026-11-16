@@ -188,6 +188,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             value == "🌐" -> switchToNextInputMethod(false)
             else -> {
                 if (value == " ") {
+                    invalidateSpellCheckRequests()
                     val before = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
                     val doubleSpacePeriod = getSharedPreferences(
                         "erdin_keyboard_settings", MODE_PRIVATE
@@ -215,6 +216,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                         if (suggestionsEnabled) languageModel.nextWords(current, previous) else emptyList()
                     )
                 } else {
+                    if (!value.all { it.isLetter() }) invalidateSpellCheckRequests()
                     connection.commitText(value, 1)
                     updateAutoShift()
                     if (value.all { it.isLetter() }) requestSuggestionsSoon()
@@ -224,8 +226,15 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         }
     }
 
+    private fun invalidateSpellCheckRequests() {
+        suggestionRequestSequence++
+        lastQueriedWord = ""
+    }
+
     private fun requestSuggestionsSoon() {
         mainHandler.removeCallbacksAndMessages(null)
+        val requestSequence = ++suggestionRequestSequence
+        lastQueriedWord = ""
         if (!suggestionsEnabled) {
             keyboardView?.setSuggestions(emptyList())
             return
@@ -239,7 +248,6 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 return@postDelayed
             }
             lastQueriedWord = word
-            val requestSequence = ++suggestionRequestSequence
             val local = languageModel.completions(word)
             keyboardView?.setSuggestions((listOf(word) + local).take(3))
             spellCheckerSession?.getSuggestions(
@@ -253,6 +261,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val before = connection.getTextBeforeCursor(80, 0)?.toString().orEmpty()
         val currentWord = before.takeLastWhile { it.isLetter() }
         if (currentWord.isEmpty()) {
+            invalidateSpellCheckRequests()
             if (learningEnabled) {
                 languageModel.learn(replacement, lastContextWord, lastContextPreviousWord)
             }
