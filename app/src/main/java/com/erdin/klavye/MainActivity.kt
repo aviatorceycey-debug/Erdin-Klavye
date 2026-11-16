@@ -96,6 +96,35 @@ class MainActivity : Activity() {
         }
         root.addView(heightLabel); root.addView(heightSeek)
         root.addView(handLabel); root.addView(handGroup)
+
+        val themeLabel = TextView(this).apply {
+            text = "Klavye teması"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            setPadding(0, 24, 0, 8)
+        }
+        val themeGroup = RadioGroup(this).apply {
+            orientation = RadioGroup.HORIZONTAL
+        }
+        val themeOptions = listOf("Gece" to "midnight", "Okyanus" to "ocean", "Menekşe" to "violet")
+        themeOptions.forEach { (label, value) ->
+            themeGroup.addView(RadioButton(this).apply {
+                text = label
+                tag = value
+                setTextColor(0xFFEAF1FC.toInt())
+                id = View.generateViewId()
+            })
+        }
+        val selectedTheme = prefs.getString("keyboard_theme", "midnight") ?: "midnight"
+        for (i in 0 until themeGroup.childCount) {
+            val child = themeGroup.getChildAt(i) as RadioButton
+            if (child.tag == selectedTheme) themeGroup.check(child.id)
+        }
+        themeGroup.setOnCheckedChangeListener { group, checkedId ->
+            val selected = group.findViewById<RadioButton>(checkedId)?.tag as? String ?: "midnight"
+            prefs.edit().putString("keyboard_theme", selected).apply()
+        }
+        root.addView(themeLabel); root.addView(themeGroup)
         setContentView(root)
     }
 }
