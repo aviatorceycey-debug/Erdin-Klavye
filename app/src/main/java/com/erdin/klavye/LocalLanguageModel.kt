@@ -84,6 +84,9 @@ class LocalLanguageModel(context: Context) {
     private val pairCounts by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         readCounts("pair_counts")
     }
+    private val trigramCounts by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        readCounts("trigram_counts")
+    }
 
     private fun saveCounts(key: String, values: Map<String, Int>) {
         val json = JSONObject()
@@ -92,7 +95,7 @@ class LocalLanguageModel(context: Context) {
     }
 
     @Synchronized
-    fun learn(word: String, previousWord: String?) {
+    fun learn(word: String, previousWord: String?, previousPreviousWord: String? = null) {
         val clean = normalize(word)
         if (clean.length < 2 || clean.any { !it.isLetter() }) return
 
@@ -115,6 +118,20 @@ class LocalLanguageModel(context: Context) {
             }
             saveCounts("pair_counts", pairs)
         }
+
+        val previousPrevious = previousPreviousWord?.let(::normalize).orEmpty()
+        if (previousPrevious.isNotBlank() && previous.isNotBlank() &&
+            previousPrevious != previous && previous != clean
+        ) {
+            val trigrams = trigramCounts
+            val key = "$previousPrevious>$previous>$clean"
+            trigrams[key] = (trigrams[key] ?: 0) + 1
+            if (trigrams.size > 6000) {
+                trigrams.entries.sortedBy { it.value }.take(trigrams.size - 4500)
+                    .forEach { trigrams.remove(it.key) }
+            }
+            saveCounts("trigram_counts", trigrams)
+        }
     }
 
     @Synchronized
@@ -132,18 +149,26 @@ class LocalLanguageModel(context: Context) {
     }
 
     @Synchronized
-    fun nextWords(previousWord: String): List<String> {
+    fun nextWords(previousWord: String, previousPreviousWord: String? = null): List<String> {
         val previous = normalize(previousWord)
         if (previous.isBlank()) return emptyList()
 
         val learned = pairCounts.asSequence()
             .filter { (key, _) -> key.startsWith("$previous>") }
             .associate { (key, count) -> key.substringAfter('>') to count }
+        val previousPrevious = previousPreviousWord?.let(::normalize).orEmpty()
+        val trigramPrefix = if (previousPrevious.isBlank()) "" else "$previousPrevious>$previous>"
+        val contextual = if (trigramPrefix.isBlank()) emptyMap() else {
+            trigramCounts.asSequence()
+                .filter { (key, _) -> key.startsWith(trigramPrefix) }
+                .associate { (key, count) -> key.substringAfterLast('>') to count }
+        }
         val seeded = starterNextWords[previous].orEmpty()
-        return (seeded.asSequence() + learned.keys.asSequence())
+        return (seeded.asSequence() + learned.keys.asSequence() + contextual.keys.asSequence())
             .distinct()
             .sortedWith(
-                compareByDescending<String> { learned[it] ?: 0 }
+                compareByDescending<String> { contextual[it] ?: 0 }
+                    .thenByDescending { learned[it] ?: 0 }
                     .thenBy { seeded.indexOf(it).let { index -> if (index < 0) Int.MAX_VALUE else index } }
                     .thenBy { it.length }
             )
