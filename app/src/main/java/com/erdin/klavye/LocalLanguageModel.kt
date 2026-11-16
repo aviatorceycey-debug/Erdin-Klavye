@@ -179,6 +179,49 @@ class LocalLanguageModel(context: Context) {
             .toList()
     }
 
+    /**
+     * Conservative local swipe decoder. Only replaces the traced sequence when
+     * a known word is a very close spelling match; otherwise keeps the raw path.
+     */
+    @Synchronized
+    fun decodeSwipePath(path: String): String {
+        val clean = normalize(path).filter { it.isLetter() }
+        if (clean.length < 3) return clean
+        val candidates = (starterWords.asSequence() + wordCounts.keys.asSequence())
+            .filter { kotlin.math.abs(it.length - clean.length) <= 2 }
+            .distinct()
+            .toList()
+        if (candidates.isEmpty()) return clean
+
+        fun distance(a: String, b: String): Int {
+            var previous = IntArray(b.length + 1) { it }
+            for (i in a.indices) {
+                val current = IntArray(b.length + 1)
+                current[0] = i + 1
+                for (j in b.indices) {
+                    val substitution = if (a[i] == b[j]) 0 else 1
+                    current[j + 1] = minOf(
+                        current[j] + 1,
+                        previous[j + 1] + 1,
+                        previous[j] + substitution
+                    )
+                }
+                previous = current
+            }
+            return previous[b.length]
+        }
+
+        val ranked = candidates.map { it to distance(clean, it) }
+            .sortedWith(compareBy<Pair<String, Int>> { it.second }
+                .thenByDescending { wordCounts[it.first] ?: 0 })
+        val best = ranked.firstOrNull() ?: return clean
+        val maxDistance = if (clean.length >= 7) 1 else 1
+        val runnerUp = ranked.getOrNull(1)
+        return if (best.second <= maxDistance &&
+            (runnerUp == null || runnerUp.second > best.second)
+        ) best.first else clean
+    }
+
     @Synchronized
     fun nextWords(previousWord: String, previousPreviousWord: String? = null): List<String> {
         val previous = normalize(previousWord)
