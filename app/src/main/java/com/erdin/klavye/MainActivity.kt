@@ -1,6 +1,7 @@
 package com.erdin.klavye
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
@@ -14,6 +15,7 @@ import android.widget.SeekBar
 import android.widget.RadioGroup
 import android.widget.RadioButton
 import android.widget.Switch
+import android.widget.Toast
 
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,6 +94,34 @@ class MainActivity : Activity() {
         }
         autoCapsSwitch.setPadding(0, 10, 0, 8)
         root.addView(autoCapsSwitch)
+
+        val learningSwitch = Switch(this).apply {
+            text = "Kişisel kelime öğrenme"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            isChecked = prefs.getBoolean("personal_learning_enabled", true)
+            setOnCheckedChangeListener { _, checked ->
+                prefs.edit().putBoolean("personal_learning_enabled", checked).apply()
+            }
+        }
+        learningSwitch.setPadding(0, 10, 0, 8)
+        root.addView(learningSwitch)
+
+        val clearLearningButton = Button(this).apply {
+            text = "Öğrenilen kelimeleri temizle"
+            setOnClickListener {
+                AlertDialog.Builder(this@MainActivity)
+                    .setTitle("Kişisel kelime verileri silinsin mi?")
+                    .setMessage("Öğrenilen kelimeler ve kişisel kelime sıklıkları bu cihazdan silinecek. Hazır Türkçe öneriler etkilenmez.")
+                    .setNegativeButton("Vazgeç", null)
+                    .setPositiveButton("Temizle") { _, _ ->
+                        LocalLanguageModel(this@MainActivity).clearPersonalData()
+                        Toast.makeText(this@MainActivity, "Kişisel kelime verileri temizlendi", Toast.LENGTH_SHORT).show()
+                    }
+                    .show()
+            }
+        }
+        root.addView(clearLearningButton)
         val handLabel = TextView(this).apply {
             text = "Tek elle kullanım"
             textSize = 15f
