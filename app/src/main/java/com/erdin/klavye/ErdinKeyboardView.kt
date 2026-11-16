@@ -128,18 +128,31 @@ class ErdinKeyboardView(
         )
     )
 
-    private val emojiRows = listOf(
-        listOf("😀","😃","😄","😁","😆","😅","😂","🤣").map { KeyboardKey(it) },
-        listOf("😊","😍","🥰","😘","😎","🤩","🥳","😭").map { KeyboardKey(it) },
-        listOf("👍","👎","👏","🙏","❤️","🔥","✨","💯").map { KeyboardKey(it) },
-        listOf("🎉","🌹","☀️","🌙","🐱","🐶","🍀","☕").map { KeyboardKey(it) },
-        listOf(
+    private fun emojiRows(): List<List<KeyboardKey>> {
+        val prefs = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+        val recent = prefs.getString("recent_emojis", "").orEmpty()
+            .split("|").filter { it.isNotBlank() }.distinct().take(8)
+        val rows = mutableListOf<List<KeyboardKey>>()
+        if (recent.isNotEmpty()) rows += recent.map { KeyboardKey(it) }
+        rows += listOf("😀","😃","😄","😁","😆","😅","😂","🤣").map { KeyboardKey(it) }
+        rows += listOf("😊","😍","🥰","😘","😎","🤩","🥳","😭").map { KeyboardKey(it) }
+        rows += listOf("👍","👎","👏","🙏","❤️","🔥","✨","💯").map { KeyboardKey(it) }
+        rows += listOf("🎉","🌹","☀️","🌙","🐱","🐶","🍀","☕").map { KeyboardKey(it) }
+        rows += listOf(
             KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.2f),
             KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
             KeyboardKey(" ", " ", 4.8f, KeyboardKey.Kind.SPACE),
             KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f)
         )
-    )
+        return rows
+    }
+
+    private fun rememberEmoji(value: String) {
+        val prefs = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+        val recent = prefs.getString("recent_emojis", "").orEmpty()
+            .split("|").filter { it.isNotBlank() && it != value }
+        prefs.edit().putString("recent_emojis", (listOf(value) + recent).take(8).joinToString("|")).apply()
+    }
 
     private val symbolRows = listOf(
         listOf("1","2","3","4","5","6","7","8","9","0").map { KeyboardKey(it) },
@@ -175,7 +188,7 @@ class ErdinKeyboardView(
                     KeyboardKey(" ", " ", 4.8f, KeyboardKey.Kind.SPACE),
                     KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f)))
         }
-        emojiMode -> emojiRows
+        emojiMode -> emojiRows()
         symbols -> symbolRows
         else -> letterRows
     }
@@ -574,6 +587,7 @@ class ErdinKeyboardView(
                         "🌐" -> onKey("🌐")
                         "Türkçe  •  English" -> onKey(" ")
                         else -> {
+                            if (emojiMode && key.value.isNotEmpty()) rememberEmoji(key.value)
                             if (key.value.isNotEmpty()) onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) upper(key.value) else key.value)
                             if (shift && !capsLock && !symbols && !emojiMode && key.value.length == 1) shift = false
                         }
