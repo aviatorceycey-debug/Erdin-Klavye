@@ -26,6 +26,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private lateinit var languageModel: LocalLanguageModel
     private var learningEnabled = true
     private var suggestionsEnabled = true
+    private var doubleSpacePeriodEnabled = true
     private var clipboardEnabled = true
     private val clipboardHistory = mutableListOf<String>()
 
@@ -73,6 +74,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             .getBoolean("suggestions_enabled", true)
         suggestionsEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
             suggestionsPreference
+        doubleSpacePeriodEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
         clipboardEnabled = !passwordField && inputClass != InputType.TYPE_CLASS_NUMBER
         keyboardView?.hideClipboard()
         keyboardView?.setSuggestions(emptyList())
@@ -166,7 +168,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     val doubleSpacePeriod = getSharedPreferences(
                         "erdin_keyboard_settings", MODE_PRIVATE
                     ).getBoolean("double_space_period", true)
-                    if (suggestionsEnabled && doubleSpacePeriod && before.endsWith(" ") &&
+                    if (doubleSpacePeriodEnabled && doubleSpacePeriod && before.endsWith(" ") &&
                         before.dropLast(1).lastOrNull()?.isLetter() == true
                     ) {
                         connection.deleteSurroundingText(1, 0)
