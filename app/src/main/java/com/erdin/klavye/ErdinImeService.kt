@@ -162,6 +162,12 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             )
             return
         }
+        if (learningEnabled && !replacement.equals(currentWord, ignoreCase = true)) {
+            val words = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
+            val previous = words.getOrNull(words.lastIndex - 1)
+            val previousPrevious = words.getOrNull(words.lastIndex - 2)
+            languageModel.learn(replacement, previous, previousPrevious)
+        }
         val count = currentWord.codePointCount(0, currentWord.length)
         if (!connection.deleteSurroundingTextInCodePoints(count, 0)) {
             connection.deleteSurroundingText(currentWord.length, 0)
