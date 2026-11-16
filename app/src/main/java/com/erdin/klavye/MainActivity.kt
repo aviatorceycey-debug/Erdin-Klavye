@@ -13,6 +13,7 @@ import android.widget.TextView
 import android.widget.SeekBar
 import android.widget.RadioGroup
 import android.widget.RadioButton
+import android.widget.Switch
 
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,6 +68,18 @@ class MainActivity : Activity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
         })
         root.addView(title); root.addView(info); root.addView(enable); root.addView(choose)
+
+        val hapticSwitch = Switch(this).apply {
+            text = "Tuş titreşimi"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            isChecked = prefs.getBoolean("haptic_enabled", true)
+            setOnCheckedChangeListener { _, checked ->
+                prefs.edit().putBoolean("haptic_enabled", checked).apply()
+            }
+        }
+        hapticSwitch.setPadding(0, 22, 0, 8)
+        root.addView(hapticSwitch)
         val handLabel = TextView(this).apply {
             text = "Tek elle kullanım"
             textSize = 15f
