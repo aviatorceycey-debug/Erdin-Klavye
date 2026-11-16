@@ -291,6 +291,12 @@ class ErdinKeyboardView(
         paint.textSize = 17f * density
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("▣", 28f * density, 26f * density, paint)
+        if (!clipboardMode) {
+            paint.color = palette().accentOutline
+            paint.textSize = 17f * density
+            paint.textAlign = Paint.Align.CENTER
+            canvas.drawText("◐", width - 28f * density, 26f * density, paint)
+        }
         if (clipboardMode) {
             paint.color = 0xFFB8C9E4.toInt()
             paint.textSize = 11f * density
@@ -377,6 +383,18 @@ class ErdinKeyboardView(
                 }
                 if (event.y < topInset && event.x > width - 58f * density && clipboardMode) {
                     onKey("__CLIP_CLEAR__")
+                    return true
+                }
+                if (event.y < topInset && event.x > width - 58f * density && !clipboardMode) {
+                    val prefs = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+                    val current = prefs.getString("keyboard_theme", "midnight")
+                    val next = when (current) {
+                        "midnight" -> "ocean"
+                        "ocean" -> "violet"
+                        else -> "midnight"
+                    }
+                    prefs.edit().putString("keyboard_theme", next).apply()
+                    invalidate()
                     return true
                 }
                 if (!emojiMode && !symbols && !clipboardMode) {
