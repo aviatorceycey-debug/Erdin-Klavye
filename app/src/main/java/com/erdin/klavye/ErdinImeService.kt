@@ -65,7 +65,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
         suggestionsEnabled = learningEnabled
         clipboardEnabled = !passwordField && inputClass != InputType.TYPE_CLASS_NUMBER
-        keyboardView?.setClipboardItems(emptyList())
+        keyboardView?.hideClipboard()
         keyboardView?.setSuggestions(emptyList())
         if (suggestionsEnabled && spellCheckerSession == null) {
             val manager = getSystemService(TEXT_SERVICES_MANAGER_SERVICE) as? TextServicesManager
@@ -109,7 +109,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 val item = index?.let { clipboardHistory.getOrNull(it) }
                 if (item != null) {
                     currentInputConnection?.commitText(item, 1)
-                    keyboardView?.setClipboardItems(emptyList())
+                    keyboardView?.hideClipboard()
                     requestSuggestionsSoon()
                 }
             }
