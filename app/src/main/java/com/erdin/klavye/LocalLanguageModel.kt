@@ -107,6 +107,25 @@ class LocalLanguageModel(context: Context) {
     }
 
     @Synchronized
+    fun learnedWords(): List<Pair<String, Int>> =
+        wordCounts.entries
+            .filter { it.value > 0 }
+            .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
+            .map { it.key to it.value }
+
+    @Synchronized
+    fun deletePersonalWord(word: String) {
+        val clean = normalize(word)
+        if (clean.isBlank()) return
+        wordCounts.remove(clean)
+        pairCounts.keys.removeAll { it.endsWith(">$clean") }
+        trigramCounts.keys.removeAll { it.endsWith(">$clean") }
+        saveCounts("word_counts", wordCounts)
+        saveCounts("pair_counts", pairCounts)
+        saveCounts("trigram_counts", trigramCounts)
+    }
+
+    @Synchronized
     fun learn(word: String, previousWord: String?, previousPreviousWord: String? = null) {
         val clean = normalize(word)
         if (clean.length < 2 || clean.any { !it.isLetter() }) return
