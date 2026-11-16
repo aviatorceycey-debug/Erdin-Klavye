@@ -43,8 +43,34 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         super.onCurrentInputMethodSubtypeChanged(subtype)
         activeSubtypeLocale = subtype.locale.ifBlank { "tr_TR" }
         keyboardView?.setInputLanguage(activeSubtypeLocale)
-        if (currentInputEditorInfo != null && suggestionsEnabled) {
-            refreshSpellCheckerSession()
+        invalidateSpellCheckRequests()
+        keyboardView?.setSuggestions(emptyList())
+        currentInputEditorInfo?.let { attribute ->
+            val inputType = attribute.inputType
+            val inputClass = inputType and InputType.TYPE_MASK_CLASS
+            val variation = inputType and InputType.TYPE_MASK_VARIATION
+            val plainTextField = inputClass == InputType.TYPE_CLASS_TEXT &&
+                variation == InputType.TYPE_TEXT_VARIATION_NORMAL
+            val passwordField = (inputClass == InputType.TYPE_CLASS_TEXT &&
+                variation in setOf(
+                    InputType.TYPE_TEXT_VARIATION_PASSWORD,
+                    InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+                    InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
+                )) || (inputClass == InputType.TYPE_CLASS_NUMBER &&
+                variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
+            val explicitlyNoSuggestions = inputClass == InputType.TYPE_CLASS_TEXT &&
+                (inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0
+            val personalLearningEnabled = getSharedPreferences(
+                "erdin_keyboard_settings", MODE_PRIVATE
+            ).getBoolean("personal_learning_enabled", true)
+            val editorDisablesPersonalLearning =
+                attribute.imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0
+            learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
+                personalLearningEnabled && !editorDisablesPersonalLearning && usesTurkishModel()
+            if (suggestionsEnabled) {
+                refreshSpellCheckerSession()
+                requestSuggestionsSoon()
+            }
         }
     }
 
@@ -247,7 +273,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     val previousPrevious = words.getOrNull(words.lastIndex - 2)
                     lastContextWord = current
                     lastContextPreviousWord = previous.orEmpty()
-                    if (learningEnabled && current.isNotBlank()) {
+                    if (learningEnabled && usesTurkishModel() && current.isNotBlank()) {
                         languageModel.learn(current, previous, previousPrevious)
                     }
                     connection.commitText(value, 1)
@@ -314,7 +340,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             )
             return
         }
-        if (learningEnabled && !replacement.equals(currentWord, ignoreCase = true)) {
+        if (learningEnabled && usesTurkishModel() && !replacement.equals(currentWord, ignoreCase = true)) {
             val words = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
             val previous = words.getOrNull(words.lastIndex - 1)
             val previousPrevious = words.getOrNull(words.lastIndex - 2)
