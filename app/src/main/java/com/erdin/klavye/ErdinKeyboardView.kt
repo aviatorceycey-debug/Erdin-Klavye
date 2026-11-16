@@ -141,7 +141,9 @@ class ErdinKeyboardView(
     init { isFocusable = true }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), (density * 310).toInt())
+        val preferredHeight = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+            .getInt("keyboard_height_dp", 310)
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), (density * preferredHeight.coerceIn(260, 380)).toInt())
     }
 
     private fun keyRects(): List<Pair<KeyboardKey, RectF>> {
