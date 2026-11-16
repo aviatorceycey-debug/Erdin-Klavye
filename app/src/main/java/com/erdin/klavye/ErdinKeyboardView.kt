@@ -528,9 +528,7 @@ class ErdinKeyboardView(
                         }
                     }
                     if (word.length >= 3) {
-                        word.forEach { character ->
-                            onKey(if (shift || capsLock) upper(character.toString()) else character.toString())
-                        }
+                        onKey(if (shift || capsLock) upper(word) else word)
                         if (shift && !capsLock) shift = false
                     } else if (key != null) {
                         onKey(if (shift || capsLock) upper(key.value) else key.value)
