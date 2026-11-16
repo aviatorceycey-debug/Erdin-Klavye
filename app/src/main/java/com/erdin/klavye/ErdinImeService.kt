@@ -19,6 +19,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private var keyboardView: ErdinKeyboardView? = null
     private var lastQueriedWord = ""
     private var lastContextWord = ""
+    private var lastContextPreviousWord = ""
     private lateinit var languageModel: LocalLanguageModel
     private var learningEnabled = true
     private var suggestionsEnabled = true
@@ -41,6 +42,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         mainHandler.removeCallbacksAndMessages(null)
         lastQueriedWord = ""
         lastContextWord = ""
+        lastContextPreviousWord = ""
         val inputType = attribute?.inputType ?: InputType.TYPE_NULL
         val inputClass = inputType and InputType.TYPE_MASK_CLASS
         val variation = inputType and InputType.TYPE_MASK_VARIATION
@@ -103,13 +105,15 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     val words = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
                     val current = words.lastOrNull().orEmpty()
                     val previous = words.getOrNull(words.lastIndex - 1)
+                    val previousPrevious = words.getOrNull(words.lastIndex - 2)
                     lastContextWord = current
+                    lastContextPreviousWord = previous.orEmpty()
                     if (learningEnabled && current.isNotBlank()) {
-                        languageModel.learn(current, previous)
+                        languageModel.learn(current, previous, previousPrevious)
                     }
                     connection.commitText(value, 1)
                     keyboardView?.setSuggestions(
-                        if (suggestionsEnabled) languageModel.nextWords(current) else emptyList()
+                        if (suggestionsEnabled) languageModel.nextWords(current, previous) else emptyList()
                     )
                 } else {
                     connection.commitText(value, 1)
@@ -146,9 +150,15 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val before = connection.getTextBeforeCursor(80, 0)?.toString().orEmpty()
         val currentWord = before.takeLastWhile { it.isLetter() }
         if (currentWord.isEmpty()) {
+            if (learningEnabled) {
+                languageModel.learn(replacement, lastContextWord, lastContextPreviousWord)
+            }
             connection.commitText("$replacement ", 1)
+            val previousContext = lastContextWord
+            lastContextWord = replacement
+            lastContextPreviousWord = previousContext
             keyboardView?.setSuggestions(
-                if (suggestionsEnabled) languageModel.nextWords(replacement) else emptyList()
+                if (suggestionsEnabled) languageModel.nextWords(replacement, previousContext) else emptyList()
             )
             return
         }
