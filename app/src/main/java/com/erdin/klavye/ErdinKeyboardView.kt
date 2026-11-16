@@ -407,7 +407,10 @@ class ErdinKeyboardView(
                 val hit = findKey(event.x, event.y)
                 downKey = hit?.first
                 downRect = hit?.second
-                if (hit != null) performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                if (hit != null && context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+                        .getBoolean("haptic_enabled", true)) {
+                    performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                }
                 longPressed = false
                 cursorMoved = false
                 lastCursorX = event.x
