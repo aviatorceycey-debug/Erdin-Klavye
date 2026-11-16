@@ -203,6 +203,18 @@ class MainActivity : Activity() {
         keyPreviewSwitch.setPadding(0, 10, 0, 8)
         root.addView(keyPreviewSwitch)
 
+        val swipeTypingSwitch = Switch(this).apply {
+            text = "Kaydırarak yazma (deneysel)"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            isChecked = prefs.getBoolean("swipe_typing_enabled", false)
+            setOnCheckedChangeListener { _, checked ->
+                prefs.edit().putBoolean("swipe_typing_enabled", checked).apply()
+            }
+        }
+        swipeTypingSwitch.setPadding(0, 10, 0, 8)
+        root.addView(swipeTypingSwitch)
+
         val autoCapsSwitch = Switch(this).apply {
             text = "Otomatik büyük harf"
             textSize = 15f
