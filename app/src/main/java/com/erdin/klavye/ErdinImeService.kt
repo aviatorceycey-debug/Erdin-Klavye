@@ -43,6 +43,9 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         super.onCurrentInputMethodSubtypeChanged(subtype)
         activeSubtypeLocale = subtype.locale.ifBlank { "tr_TR" }
         keyboardView?.setInputLanguage(activeSubtypeLocale)
+        if (currentInputEditorInfo != null && suggestionsEnabled) {
+            refreshSpellCheckerSession()
+        }
     }
 
     override fun onCreateInputView(): View {
@@ -97,22 +100,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         keyboardView?.hideClipboard()
         keyboardView?.setSuggestions(emptyList())
         updateAutoShift()
-        if (suggestionsEnabled) {
-            // Respect the language hint supplied by the focused app. Fall back
-            // to Turkish for editors that do not declare a preferred locale.
-            val requestedLocale = activeEditorLocale()
-            if (spellCheckerLocale != requestedLocale) {
-                spellCheckerSession?.close()
-                spellCheckerSession = null
-                spellCheckerLocale = requestedLocale
-            }
-            if (spellCheckerSession == null) {
-                val manager = getSystemService(TEXT_SERVICES_MANAGER_SERVICE) as? TextServicesManager
-                spellCheckerSession = manager?.newSpellCheckerSession(
-                    null, requestedLocale, this, true
-                )
-            }
-        }
+        if (suggestionsEnabled) refreshSpellCheckerSession()
     }
 
     override fun onFinishInput() {
@@ -137,14 +125,35 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         keyboardView?.setAutoShift(enabled && capsMode != 0)
     }
 
+    // The language explicitly selected on the keyboard takes priority over an
+    // app's locale hint, so switching to English works inside the same editor.
     private fun activeEditorLocale(): Locale {
+        val subtype = activeSubtypeLocale
+            .takeIf { it.isNotBlank() }
+            ?.replace('_', '-')
+            ?.let(Locale::forLanguageTag)
+        if (subtype != null && subtype.language.isNotBlank()) return subtype
         currentInputEditorInfo?.hintLocales?.get(0)?.let { return it }
-        val subtypeLocale = activeSubtypeLocale
-        return if (subtypeLocale.isBlank()) Locale("tr", "TR")
-        else Locale.forLanguageTag(subtypeLocale.replace('_', '-'))
+        return Locale("tr", "TR")
     }
 
-    private fun usesTurkishModel(): Boolean = activeEditorLocale().language.equals("tr", ignoreCase = true)
+    private fun refreshSpellCheckerSession() {
+        val requestedLocale = activeEditorLocale()
+        if (spellCheckerLocale != requestedLocale) {
+            spellCheckerSession?.close()
+            spellCheckerSession = null
+            spellCheckerLocale = requestedLocale
+        }
+        if (spellCheckerSession == null) {
+            val manager = getSystemService(TEXT_SERVICES_MANAGER_SERVICE) as? TextServicesManager
+            spellCheckerSession = manager?.newSpellCheckerSession(
+                null, requestedLocale, this, true
+            )
+        }
+    }
+
+    private fun usesTurkishModel(): Boolean =
+        activeEditorLocale().language.equals("tr", ignoreCase = true)
 
     private fun handleKey(value: String) {
         val connection = currentInputConnection ?: return
