@@ -160,7 +160,7 @@ class ErdinKeyboardView(
         clipboardMode -> {
             val items = clipboardItems.take(6).mapIndexed { index, item ->
                 KeyboardKey(
-                    android.text.TextUtils.ellipsize(item.replace("\\n", " "), android.text.TextPaint().apply { textSize = 12f * density }, 190f * density, android.text.TextUtils.TruncateAt.END).toString(),
+                    android.text.TextUtils.ellipsize(item.replace("\n", " ").replace("\r", " "), android.text.TextPaint().apply { textSize = 12f * density }, 190f * density, android.text.TextUtils.TruncateAt.END).toString(),
                     "__CLIP_ITEM__$index",
                     1f,
                     KeyboardKey.Kind.NORMAL
