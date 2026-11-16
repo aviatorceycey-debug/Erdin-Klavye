@@ -490,7 +490,22 @@ class ErdinKeyboardView(
                         swipePath.clear()
                         downRect?.let { swipePath += it.centerX() to it.centerY() }
                     }
-                    if (swipeTyping) swipePath += event.x to event.y
+                    if (swipeTyping) {
+                        val last = swipePath.lastOrNull()
+                        if (last == null) {
+                            swipePath += event.x to event.y
+                        } else {
+                            val dxPath = event.x - last.first
+                            val dyPath = event.y - last.second
+                            val distance = kotlin.math.hypot(dxPath.toDouble(), dyPath.toDouble())
+                            val steps = (distance / (10f * density)).toInt().coerceIn(1, 12)
+                            for (step in 1..steps) {
+                                val fraction = step.toFloat() / steps
+                                swipePath += (last.first + dxPath * fraction) to
+                                    (last.second + dyPath * fraction)
+                            }
+                        }
+                    }
                 } else if (downKey?.kind == KeyboardKey.Kind.SPACE) {
                     val threshold = 22f * density
                     val delta = event.x - lastCursorX
