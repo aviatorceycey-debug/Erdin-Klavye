@@ -18,6 +18,40 @@ import android.widget.Switch
 import android.widget.Toast
 
 class MainActivity : Activity() {
+    private fun showPersonalDictionary() {
+        val model = LocalLanguageModel(this)
+        fun showWords() {
+            val words = model.learnedWords()
+            if (words.isEmpty()) {
+                AlertDialog.Builder(this)
+                    .setTitle("Kişisel sözlük")
+                    .setMessage("Henüz öğrenilmiş kelime yok. Klavye, kişisel öğrenme açıkken kullandığın kelimeleri cihazında öğrenir.")
+                    .setPositiveButton("Tamam", null)
+                    .show()
+                return
+            }
+            val labels = words.map { (word, count) -> "$word   ·   $count" }.toTypedArray()
+            AlertDialog.Builder(this)
+                .setTitle("Kişisel sözlük  ·  ${words.size} kelime")
+                .setItems(labels) { _, index ->
+                    val selected = words[index].first
+                    AlertDialog.Builder(this)
+                        .setTitle("\"$selected\" silinsin mi?")
+                        .setMessage("Bu kelimenin öğrenilmiş kullanım sayısı ve ona bağlı kelime tahmin kayıtları silinecek.")
+                        .setNegativeButton("Vazgeç", null)
+                        .setPositiveButton("Sil") { _, _ ->
+                            model.deletePersonalWord(selected)
+                            Toast.makeText(this, "\"$selected\" silindi", Toast.LENGTH_SHORT).show()
+                            showWords()
+                        }
+                        .show()
+                }
+                .setPositiveButton("Kapat", null)
+                .show()
+        }
+        showWords()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val root = LinearLayout(this).apply {
@@ -122,6 +156,12 @@ class MainActivity : Activity() {
             }
         }
         root.addView(clearLearningButton)
+
+        val dictionaryButton = Button(this).apply {
+            text = "Kişisel sözlüğü görüntüle"
+            setOnClickListener { showPersonalDictionary() }
+        }
+        root.addView(dictionaryButton)
         val handLabel = TextView(this).apply {
             text = "Tek elle kullanım"
             textSize = 15f
