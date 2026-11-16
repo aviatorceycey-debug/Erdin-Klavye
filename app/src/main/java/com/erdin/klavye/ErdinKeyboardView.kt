@@ -181,10 +181,18 @@ class ErdinKeyboardView(
         val current = rows()
         val rowHeight = (height - topInset - gap * (current.size + 1)) / current.size
         val result = mutableListOf<Pair<KeyboardKey, RectF>>()
+        val mode = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+            .getString("one_handed_mode", "normal") ?: "normal"
+        val contentWidth = if (mode == "normal") width.toFloat() else width * 0.82f
+        val offset = when (mode) {
+            "left" -> 0f
+            "right" -> width - contentWidth
+            else -> 0f
+        }
         current.forEachIndexed { rowIndex, row ->
             val totalWeight = row.sumOf { it.weight.toDouble() }.toFloat()
-            val available = width - gap * (row.size + 1)
-            var x = gap
+            val available = contentWidth - gap * (row.size + 1)
+            var x = offset + gap
             row.forEach { key ->
                 val keyWidth = available * key.weight / totalWeight
                 val y = topInset + gap + rowIndex * (rowHeight + gap)
