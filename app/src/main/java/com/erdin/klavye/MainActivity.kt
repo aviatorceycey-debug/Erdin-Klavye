@@ -203,6 +203,18 @@ class MainActivity : Activity() {
         autoCapsSwitch.setPadding(0, 10, 0, 8)
         root.addView(autoCapsSwitch)
 
+        val doubleSpaceSwitch = Switch(this).apply {
+            text = "Çift boşlukla nokta koy"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            isChecked = prefs.getBoolean("double_space_period", true)
+            setOnCheckedChangeListener { _, checked ->
+                prefs.edit().putBoolean("double_space_period", checked).apply()
+            }
+        }
+        doubleSpaceSwitch.setPadding(0, 10, 0, 8)
+        root.addView(doubleSpaceSwitch)
+
         val learningSwitch = Switch(this).apply {
             text = "Kişisel kelime öğrenme"
             textSize = 15f
