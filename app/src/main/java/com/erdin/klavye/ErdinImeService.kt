@@ -308,7 +308,13 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             .distinct()
             .take(3)
         mainHandler.post {
-            if (lastQueriedWord == queriedWord) keyboardView?.setSuggestions(candidates)
+            // A newer request can start after this callback arrives but before
+            // this UI update runs. Check both the word and request token again.
+            if (suggestionRequestSequence == activeSequence &&
+                lastQueriedWord == queriedWord
+            ) {
+                keyboardView?.setSuggestions(candidates)
+            }
         }
     }
 
