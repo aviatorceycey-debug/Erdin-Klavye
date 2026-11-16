@@ -1,6 +1,8 @@
 package com.erdin.klavye
 
 import android.inputmethodservice.InputMethodService
+import android.content.ClipDescription
+import android.content.ClipboardManager
 import android.os.Handler
 import android.os.Looper
 import android.view.View
@@ -24,6 +26,8 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private lateinit var languageModel: LocalLanguageModel
     private var learningEnabled = true
     private var suggestionsEnabled = true
+    private var clipboardEnabled = true
+    private val clipboardHistory = mutableListOf<String>()
 
     override fun onCreate() {
         super.onCreate()
@@ -60,6 +64,8 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             (inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0
         learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
         suggestionsEnabled = learningEnabled
+        clipboardEnabled = !passwordField && inputClass != InputType.TYPE_CLASS_NUMBER
+        keyboardView?.setClipboardItems(emptyList())
         keyboardView?.setSuggestions(emptyList())
         if (suggestionsEnabled && spellCheckerSession == null) {
             val manager = getSystemService(TEXT_SERVICES_MANAGER_SERVICE) as? TextServicesManager
@@ -79,22 +85,49 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
     private fun handleKey(value: String) {
         val connection = currentInputConnection ?: return
-        when (value) {
-            "__CURSOR_LEFT__" -> {
+        when {
+            value == "__CLIPBOARD__" -> {
+                if (!clipboardEnabled) return
+                val clipboard = getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager
+                val clip = clipboard?.primaryClip
+                if (clip != null && clip.itemCount > 0) {
+                    val text = clip.getItemAt(0).coerceToText(this)?.toString()?.trim().orEmpty()
+                    if (text.isNotBlank() && text.length <= 2000) {
+                        clipboardHistory.remove(text)
+                        clipboardHistory.add(0, text)
+                        while (clipboardHistory.size > 10) clipboardHistory.removeAt(clipboardHistory.lastIndex)
+                    }
+                }
+                keyboardView?.setClipboardItems(clipboardHistory.toList())
+            }
+            value == "__CLIP_CLEAR__" -> {
+                clipboardHistory.clear()
+                keyboardView?.setClipboardItems(emptyList())
+            }
+            value.startsWith("__CLIP_ITEM__") -> {
+                val index = value.removePrefix("__CLIP_ITEM__").toIntOrNull()
+                val item = index?.let { clipboardHistory.getOrNull(it) }
+                if (item != null) {
+                    currentInputConnection?.commitText(item, 1)
+                    keyboardView?.setClipboardItems(emptyList())
+                    requestSuggestionsSoon()
+                }
+            }
+            value == "__CURSOR_LEFT__" -> {
                 connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT))
                 connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_LEFT))
             }
-            "__CURSOR_RIGHT__" -> {
+            value == "__CURSOR_RIGHT__" -> {
                 connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT))
                 connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_RIGHT))
             }
-            "⌫" -> {
+            value == "⌫" -> {
                 if (!connection.deleteSurroundingTextInCodePoints(1, 0)) {
                     connection.deleteSurroundingText(1, 0)
                 }
                 requestSuggestionsSoon()
             }
-            "↵" -> {
+            value == "↵" -> {
                 val action = currentInputEditorInfo?.imeOptions
                     ?.and(EditorInfo.IME_MASK_ACTION)
                     ?: EditorInfo.IME_ACTION_NONE
@@ -107,7 +140,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 }
                 keyboardView?.setSuggestions(emptyList())
             }
-            "🌐" -> switchToNextInputMethod(false)
+            value == "🌐" -> switchToNextInputMethod(false)
             else -> {
                 if (value == " ") {
                     val before = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
