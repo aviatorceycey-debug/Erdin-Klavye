@@ -19,6 +19,7 @@ import java.util.Locale
 class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSessionListener {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var spellCheckerSession: SpellCheckerSession? = null
+    private var spellCheckerLocale: Locale? = null
     private var keyboardView: ErdinKeyboardView? = null
     private var lastQueriedWord = ""
     private var suggestionRequestSequence = 0
@@ -86,11 +87,21 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         keyboardView?.hideClipboard()
         keyboardView?.setSuggestions(emptyList())
         updateAutoShift()
-        if (suggestionsEnabled && spellCheckerSession == null) {
-            val manager = getSystemService(TEXT_SERVICES_MANAGER_SERVICE) as? TextServicesManager
-            spellCheckerSession = manager?.newSpellCheckerSession(
-                null, Locale("tr", "TR"), this, true
-            )
+        if (suggestionsEnabled) {
+            // Respect the language hint supplied by the focused app. Fall back
+            // to Turkish for editors that do not declare a preferred locale.
+            val requestedLocale = attribute?.hintLocales?.get(0) ?: Locale("tr", "TR")
+            if (spellCheckerLocale != requestedLocale) {
+                spellCheckerSession?.close()
+                spellCheckerSession = null
+                spellCheckerLocale = requestedLocale
+            }
+            if (spellCheckerSession == null) {
+                val manager = getSystemService(TEXT_SERVICES_MANAGER_SERVICE) as? TextServicesManager
+                spellCheckerSession = manager?.newSpellCheckerSession(
+                    null, requestedLocale, this, true
+                )
+            }
         }
     }
 
@@ -104,6 +115,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         keyboardView?.setClipboardItems(emptyList())
         spellCheckerSession?.close()
         spellCheckerSession = null
+        spellCheckerLocale = null
         keyboardView?.setSuggestions(emptyList())
         super.onFinishInput()
     }
