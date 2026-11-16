@@ -62,8 +62,11 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
         val explicitlyNoSuggestions = inputClass == InputType.TYPE_CLASS_TEXT &&
             (inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0
-        learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
-        suggestionsEnabled = learningEnabled
+        val personalLearningEnabled = getSharedPreferences("erdin_keyboard_settings", MODE_PRIVATE)
+            .getBoolean("personal_learning_enabled", true)
+        learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
+            personalLearningEnabled
+        suggestionsEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
         clipboardEnabled = !passwordField && inputClass != InputType.TYPE_CLASS_NUMBER
         keyboardView?.hideClipboard()
         keyboardView?.setSuggestions(emptyList())
