@@ -136,9 +136,9 @@ class LocalLanguageModel(context: Context) {
         val previous = normalize(previousWord)
         if (previous.isBlank()) return emptyList()
 
-        val learned = readCounts("pair_counts")
-            .filterKeys { it.startsWith("$previous>") }
-            .mapKeys { it.key.substringAfter('>') }
+        val learned = pairCounts.asSequence()
+            .filter { (key, _) -> key.startsWith("$previous>") }
+            .associate { (key, count) -> key.substringAfter('>') to count }
         val seeded = starterNextWords[previous].orEmpty()
         return (seeded.asSequence() + learned.keys.asSequence())
             .distinct()
