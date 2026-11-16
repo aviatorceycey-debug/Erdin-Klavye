@@ -215,6 +215,18 @@ class MainActivity : Activity() {
         doubleSpaceSwitch.setPadding(0, 10, 0, 8)
         root.addView(doubleSpaceSwitch)
 
+        val suggestionsSwitch = Switch(this).apply {
+            text = "Kelime önerileri ve düzeltme"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            isChecked = prefs.getBoolean("suggestions_enabled", true)
+            setOnCheckedChangeListener { _, checked ->
+                prefs.edit().putBoolean("suggestions_enabled", checked).apply()
+            }
+        }
+        suggestionsSwitch.setPadding(0, 10, 0, 8)
+        root.addView(suggestionsSwitch)
+
         val learningSwitch = Switch(this).apply {
             text = "Kişisel kelime öğrenme"
             textSize = 15f
