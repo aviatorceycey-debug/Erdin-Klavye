@@ -157,7 +157,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             else -> {
                 if (value == " ") {
                     val before = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
-                    if (suggestionsEnabled && before.endsWith(" ") &&
+                    val doubleSpacePeriod = getSharedPreferences(
+                        "erdin_keyboard_settings", MODE_PRIVATE
+                    ).getBoolean("double_space_period", true)
+                    if (suggestionsEnabled && doubleSpacePeriod && before.endsWith(" ") &&
                         before.dropLast(1).lastOrNull()?.isLetter() == true
                     ) {
                         connection.deleteSurroundingText(1, 0)
