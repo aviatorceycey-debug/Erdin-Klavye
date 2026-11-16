@@ -9,6 +9,7 @@ import android.content.Context
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.SeekBar
 
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +40,31 @@ class MainActivity : Activity() {
                 (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
             }
         }
+        val heightLabel = TextView(this).apply {
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            setPadding(0, 28, 0, 8)
+        }
+        val prefs = getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+        val heightSeek = SeekBar(this).apply {
+            max = 120
+            progress = (prefs.getInt("keyboard_height_dp", 310) - 260).coerceIn(0, 120)
+        }
+        fun updateHeightLabel(value: Int) {
+            heightLabel.text = "Klavye yüksekliği  •  $value dp"
+        }
+        updateHeightLabel(heightSeek.progress + 260)
+        heightSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val value = progress + 260
+                updateHeightLabel(value)
+                prefs.edit().putInt("keyboard_height_dp", value).apply()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
         root.addView(title); root.addView(info); root.addView(enable); root.addView(choose)
+        root.addView(heightLabel); root.addView(heightSeek)
         setContentView(root)
     }
 }
