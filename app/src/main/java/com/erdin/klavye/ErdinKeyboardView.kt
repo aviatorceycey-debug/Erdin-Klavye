@@ -43,6 +43,8 @@ class ErdinKeyboardView(
     private var alternateOptions: List<String> = emptyList()
     private var popupRect: RectF? = null
     private var selectedAlternate = -1
+    private var lastCursorX = 0f
+    private var cursorMoved = false
     private val deleteRepeatRunnable = object : Runnable {
         override fun run() {
             if (downKey?.label == "⌫" && longPressed) {
@@ -287,6 +289,8 @@ class ErdinKeyboardView(
                 downRect = hit?.second
                 if (hit != null) performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                 longPressed = false
+                cursorMoved = false
+                lastCursorX = event.x
                 alternateOptions = emptyList()
                 popupRect = null
                 selectedAlternate = -1
@@ -294,7 +298,18 @@ class ErdinKeyboardView(
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
-                if (longPressed && alternateOptions.isNotEmpty()) updateAlternateSelection(event.x)
+                if (longPressed && alternateOptions.isNotEmpty()) {
+                    updateAlternateSelection(event.x)
+                } else if (downKey?.kind == KeyboardKey.Kind.SPACE) {
+                    val threshold = 22f * density
+                    val delta = event.x - lastCursorX
+                    if (kotlin.math.abs(delta) >= threshold) {
+                        val steps = (kotlin.math.abs(delta) / threshold).toInt().coerceAtMost(5)
+                        repeat(steps) { onKey(if (delta < 0) "__CURSOR_LEFT__" else "__CURSOR_RIGHT__") }
+                        lastCursorX += (if (delta < 0) -1 else 1) * steps * threshold
+                        cursorMoved = true
+                    }
+                }
                 return true
             }
             MotionEvent.ACTION_UP -> {
@@ -307,7 +322,7 @@ class ErdinKeyboardView(
                     } else if (key != null) {
                         onKey(if (shift) key.value.uppercase() else key.value)
                     }
-                } else if (key != null && !longPressed) {
+                } else if (key != null && !longPressed && !cursorMoved) {
                     when (key.label) {
                         "⇧" -> { shift = !shift; invalidate() }
                         "⌫" -> onKey("⌫")
