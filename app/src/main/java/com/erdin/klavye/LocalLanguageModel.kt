@@ -95,6 +95,18 @@ class LocalLanguageModel(context: Context) {
     }
 
     @Synchronized
+    fun clearPersonalData() {
+        wordCounts.clear()
+        pairCounts.clear()
+        trigramCounts.clear()
+        prefs.edit()
+            .remove("word_counts")
+            .remove("pair_counts")
+            .remove("trigram_counts")
+            .apply()
+    }
+
+    @Synchronized
     fun learn(word: String, previousWord: String?, previousPreviousWord: String? = null) {
         val clean = normalize(word)
         if (clean.length < 2 || clean.any { !it.isLetter() }) return
