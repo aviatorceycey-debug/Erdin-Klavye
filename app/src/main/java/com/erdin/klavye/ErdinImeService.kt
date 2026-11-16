@@ -81,7 +81,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val editorDisablesPersonalLearning =
             (attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0
         learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
-            personalLearningEnabled && !editorDisablesPersonalLearning
+            personalLearningEnabled && !editorDisablesPersonalLearning && usesTurkishModel()
         val suggestionsPreference = getSharedPreferences("erdin_keyboard_settings", MODE_PRIVATE)
             .getBoolean("suggestions_enabled", true)
         suggestionsEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
@@ -98,7 +98,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         if (suggestionsEnabled) {
             // Respect the language hint supplied by the focused app. Fall back
             // to Turkish for editors that do not declare a preferred locale.
-            val requestedLocale = attribute?.hintLocales?.get(0) ?: Locale("tr", "TR")
+            val requestedLocale = activeEditorLocale()
             if (spellCheckerLocale != requestedLocale) {
                 spellCheckerSession?.close()
                 spellCheckerSession = null
@@ -134,6 +134,15 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val capsMode = currentInputConnection?.getCursorCapsMode(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES) ?: 0
         keyboardView?.setAutoShift(enabled && capsMode != 0)
     }
+
+    private fun activeEditorLocale(): Locale {
+        currentInputEditorInfo?.hintLocales?.get(0)?.let { return it }
+        val subtypeLocale = currentInputMethodSubtype.locale
+        return if (subtypeLocale.isBlank()) Locale("tr", "TR")
+        else Locale.forLanguageTag(subtypeLocale.replace('_', '-'))
+    }
+
+    private fun usesTurkishModel(): Boolean = activeEditorLocale().language.equals("tr", ignoreCase = true)
 
     private fun handleKey(value: String) {
         val connection = currentInputConnection ?: return
@@ -233,7 +242,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     connection.commitText(value, 1)
                     updateAutoShift()
                     keyboardView?.setSuggestions(
-                        if (suggestionsEnabled) languageModel.nextWords(current, previous) else emptyList()
+                        if (suggestionsEnabled && usesTurkishModel()) languageModel.nextWords(current, previous) else emptyList()
                     )
                 } else {
                     if (!value.all { it.isLetter() }) invalidateSpellCheckRequests()
@@ -268,7 +277,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 return@postDelayed
             }
             lastQueriedWord = word
-            val local = languageModel.completions(word)
+            val local = if (usesTurkishModel()) languageModel.completions(word) else emptyList()
             keyboardView?.setSuggestions((listOf(word) + local).take(3))
             spellCheckerSession?.getSuggestions(
                 arrayOf(TextInfo(word, 0, requestSequence)), 3, false
@@ -290,7 +299,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             lastContextWord = replacement
             lastContextPreviousWord = previousContext
             keyboardView?.setSuggestions(
-                if (suggestionsEnabled) languageModel.nextWords(replacement, previousContext) else emptyList()
+                if (suggestionsEnabled && usesTurkishModel()) languageModel.nextWords(replacement, previousContext) else emptyList()
             )
             return
         }
@@ -324,7 +333,8 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             .filter { it.isNotBlank() && !it.equals(queriedWord, ignoreCase = true) }
             .distinct()
             .take(2)
-        val candidates = (listOf(queriedWord) + corrections + languageModel.completions(queriedWord))
+        val localCompletions = if (usesTurkishModel()) languageModel.completions(queriedWord) else emptyList()
+        val candidates = (listOf(queriedWord) + corrections + localCompletions)
             .distinct()
             .take(3)
         mainHandler.post {
