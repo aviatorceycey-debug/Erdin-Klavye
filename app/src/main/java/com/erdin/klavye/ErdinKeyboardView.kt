@@ -556,7 +556,7 @@ class ErdinKeyboardView(
                         }
                     }
                     if (word.length >= 3) {
-                        onKey(if (shift || capsLock) upper(word) else word)
+                        onKey("__SWIPE_WORD__" + if (shift || capsLock) upper(word) else word)
                         if (shift && !capsLock) shift = false
                     } else if (key != null) {
                         onKey(if (shift || capsLock) upper(key.value) else key.value)
