@@ -122,11 +122,12 @@ class ErdinKeyboardView(
                     KeyboardKey.Kind.NORMAL
                 )
             }
-            (items + List(4 - items.size) { KeyboardKey("", "", 1f, KeyboardKey.Kind.ACTION) }) +
-                listOf(KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.2f),
+            val padded = items + List(4 - items.size) { KeyboardKey("", "", 1f, KeyboardKey.Kind.ACTION) }
+            listOf(padded.take(2), padded.drop(2)) +
+                listOf(listOf(KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.2f),
                     KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
                     KeyboardKey(" ", " ", 4.8f, KeyboardKey.Kind.SPACE),
-                    KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f))
+                    KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f)))
         }
         emojiMode -> emojiRows
         symbols -> symbolRows
@@ -155,6 +156,11 @@ class ErdinKeyboardView(
         clipboardMode = true
         emojiMode = false
         symbols = false
+        invalidate()
+    }
+
+    fun hideClipboard() {
+        clipboardMode = false
         invalidate()
     }
 
@@ -236,11 +242,17 @@ class ErdinKeyboardView(
 
     private fun drawSuggestionStrip(canvas: Canvas) {
         suggestionRects.clear()
+        paint.color = 0xFF9FCBFF.toInt()
+        paint.textSize = 17f * density
+        paint.textAlign = Paint.Align.CENTER
+        canvas.drawText("▣", 28f * density, 26f * density, paint)
         if (clipboardMode) {
             paint.color = 0xFFB8C9E4.toInt()
             paint.textSize = 11f * density
             paint.textAlign = Paint.Align.CENTER
-            canvas.drawText("📋  PANO  •  SON KOPYALANANLAR", width / 2f, 25f * density, paint)
+            canvas.drawText(if (clipboardItems.isEmpty()) "PANO BOŞ" else "PANO  •  SON KOPYALANANLAR", width / 2f, 25f * density, paint)
+            paint.textSize = 10f * density
+            canvas.drawText("TEMİZLE", width - 32f * density, 25f * density, paint)
             return
         }
         if (emojiMode || symbols) return
