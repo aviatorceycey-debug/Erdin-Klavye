@@ -81,9 +81,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             suggestionsPreference
         doubleSpacePeriodEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
         clipboardEnabled = !passwordField && inputClass != InputType.TYPE_CLASS_NUMBER
-        // Never carry clipboard history from a previous app/input session into
-        // a password or otherwise restricted field.
-        if (!clipboardEnabled) clipboardHistory.clear()
+        // Each editor session starts with an empty clipboard panel. This
+        // prevents snippets copied in one app or field from appearing in another.
+        clipboardHistory.clear()
+        keyboardView?.setClipboardItems(emptyList())
         keyboardView?.hideClipboard()
         keyboardView?.setSuggestions(emptyList())
         updateAutoShift()
