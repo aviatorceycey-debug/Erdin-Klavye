@@ -67,6 +67,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         clipboardEnabled = !passwordField && inputClass != InputType.TYPE_CLASS_NUMBER
         keyboardView?.hideClipboard()
         keyboardView?.setSuggestions(emptyList())
+        updateAutoShift()
         if (suggestionsEnabled && spellCheckerSession == null) {
             val manager = getSystemService(TEXT_SERVICES_MANAGER_SERVICE) as? TextServicesManager
             spellCheckerSession = manager?.newSpellCheckerSession(
@@ -81,6 +82,13 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         spellCheckerSession = null
         keyboardView?.setSuggestions(emptyList())
         super.onFinishInput()
+    }
+
+    private fun updateAutoShift() {
+        val enabled = getSharedPreferences("erdin_keyboard_settings", MODE_PRIVATE)
+            .getBoolean("auto_capitalization", true)
+        val capsMode = currentInputConnection?.getCursorCapsMode(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES) ?: 0
+        keyboardView?.setAutoShift(enabled && capsMode != 0)
     }
 
     private fun handleKey(value: String) {
@@ -125,6 +133,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 if (!connection.deleteSurroundingTextInCodePoints(1, 0)) {
                     connection.deleteSurroundingText(1, 0)
                 }
+                updateAutoShift()
                 requestSuggestionsSoon()
             }
             value == "↵" -> {
@@ -139,6 +148,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     connection.commitText("\n", 1)
                 }
                 keyboardView?.setSuggestions(emptyList())
+                updateAutoShift()
             }
             value == "🌐" -> switchToNextInputMethod(false)
             else -> {
@@ -162,11 +172,13 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                         languageModel.learn(current, previous, previousPrevious)
                     }
                     connection.commitText(value, 1)
+                    updateAutoShift()
                     keyboardView?.setSuggestions(
                         if (suggestionsEnabled) languageModel.nextWords(current, previous) else emptyList()
                     )
                 } else {
                     connection.commitText(value, 1)
+                    updateAutoShift()
                     if (value.all { it.isLetter() }) requestSuggestionsSoon()
                     else keyboardView?.setSuggestions(emptyList())
                 }
