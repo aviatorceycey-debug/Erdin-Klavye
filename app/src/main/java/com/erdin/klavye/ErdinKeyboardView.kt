@@ -35,6 +35,7 @@ class ErdinKeyboardView(
     private val suggestionRects = mutableListOf<RectF>()
     private val handler = Handler(Looper.getMainLooper())
     private var shift = false
+    private var capsLock = false
     private var symbols = false
     private var emojiMode = false
     private var downKey: KeyboardKey? = null
@@ -187,7 +188,7 @@ class ErdinKeyboardView(
             }
             val label = when {
                 key.kind == KeyboardKey.Kind.SPACE -> key.label
-                shift && !symbols && key.label.length == 1 -> key.label.uppercase()
+                (shift || capsLock) && !symbols && key.label.length == 1 -> key.label.uppercase()
                 else -> key.label
             }
             paint.color = if (key.kind == KeyboardKey.Kind.SPACE) 0xFFC5D5EE.toInt() else 0xFFF5F8FF.toInt()
@@ -320,11 +321,21 @@ class ErdinKeyboardView(
                     if (selectedAlternate >= 0) {
                         onKey(alternateOptions[selectedAlternate])
                     } else if (key != null) {
-                        onKey(if (shift) key.value.uppercase() else key.value)
+                        onKey(if (shift || capsLock) key.value.uppercase() else key.value)
                     }
                 } else if (key != null && !longPressed && !cursorMoved) {
                     when (key.label) {
-                        "⇧" -> { shift = !shift; invalidate() }
+                        "⇧" -> {
+                            if (shift && !capsLock) {
+                                capsLock = true
+                            } else if (capsLock) {
+                                capsLock = false
+                                shift = false
+                            } else {
+                                shift = true
+                            }
+                            invalidate()
+                        }
                         "⌫" -> onKey("⌫")
                         "?123" -> { symbols = true; emojiMode = false; invalidate() }
                         "ABC" -> { symbols = false; emojiMode = false; invalidate() }
@@ -332,8 +343,8 @@ class ErdinKeyboardView(
                         "🌐" -> onKey("🌐")
                         "Türkçe  •  English" -> onKey(" ")
                         else -> {
-                            onKey(if (shift && !symbols && !emojiMode && key.value.length == 1) key.value.uppercase() else key.value)
-                            if (shift && !symbols && !emojiMode && key.value.length == 1) shift = false
+                            onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) key.value.uppercase() else key.value)
+                            if (shift && !capsLock && !symbols && !emojiMode && key.value.length == 1) shift = false
                         }
                     }
                 }
