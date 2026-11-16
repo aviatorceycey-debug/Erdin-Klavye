@@ -88,7 +88,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 return@postDelayed
             }
             lastQueriedWord = word
-            spellCheckerSession?.getSuggestions(TextInfo(word), 3, false)
+            spellCheckerSession?.getSuggestions(arrayOf(TextInfo(word)), 3, false)
         }, 180)
     }
 
@@ -106,7 +106,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         requestSuggestionsSoon()
     }
 
-    override fun onGetSuggestions(results: Array<SuggestionsInfo>, sequence: Int) {
+    override fun onGetSuggestions(results: Array<SuggestionsInfo>) {
         val queriedWord = lastQueriedWord
         if (queriedWord.isBlank()) return
         val corrections = results
@@ -124,5 +124,5 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         }
     }
 
-    override fun onGetSentenceSuggestions(results: Array<SentenceSuggestionsInfo>, sequence: Int) = Unit
+    override fun onGetSentenceSuggestions(results: Array<SentenceSuggestionsInfo>) = Unit
 }
