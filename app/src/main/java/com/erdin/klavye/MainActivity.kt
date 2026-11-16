@@ -220,6 +220,11 @@ class MainActivity : Activity() {
             prefs.edit().putString("keyboard_theme", selected).apply()
         }
         root.addView(themeLabel); root.addView(themeGroup)
-        setContentView(root)
+        val settingsScroll = android.widget.ScrollView(this).apply {
+            isFillViewport = true
+            clipToPadding = false
+            addView(root)
+        }
+        setContentView(settingsScroll)
     }
 }
