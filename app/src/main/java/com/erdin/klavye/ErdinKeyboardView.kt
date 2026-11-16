@@ -201,6 +201,13 @@ class ErdinKeyboardView(
         invalidate()
     }
 
+    fun setAutoShift(enabled: Boolean) {
+        if (!capsLock) {
+            shift = enabled
+            invalidate()
+        }
+    }
+
     fun setSuggestions(items: List<String>) {
         suggestions = items.distinct().take(3)
         invalidate()
