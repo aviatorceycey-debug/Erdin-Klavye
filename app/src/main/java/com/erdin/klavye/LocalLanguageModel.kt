@@ -43,14 +43,14 @@ class LocalLanguageModel(context: Context) {
         "ne" to listOf("zaman", "kadar", "oldu", "yapıyorsun"),
         "merhaba" to listOf("nasılsın", "arkadaşlar", "herkese"),
         "günaydın" to listOf("herkese", "nasılsın"),
-        "teşekkür" to listOf("ederim", "ler", "ederiz"),
+        "teşekkür" to listOf("ederim", "ederiz", "çok"),
         "rica" to listOf("ederim", "ederiz"),
         "nasıl" to listOf("oldu", "yapılır", "gidiyor", "istersen"),
         "bugün" to listOf("çok", "hava", "nasıl", "için"),
         "şimdi" to listOf("ne", "bir", "hemen", "başlayalım"),
         "daha" to listOf("iyi", "güzel", "fazla", "sonra"),
         "bence" to listOf("de", "çok", "bu", "şöyle"),
-        "tamam" to listOf("dır", "olur", "devam", "teşekkür"),
+        "tamam" to listOf("olur", "devam", "teşekkür", "anladım"),
         "evet" to listOf("ama", "tabii", "kesinlikle"),
         "hayır" to listOf("teşekkürler", "öyle", "henüz"),
         "ben" to listOf("de", "değil", "sana", "bunu", "istiyorum"),
@@ -108,7 +108,7 @@ class LocalLanguageModel(context: Context) {
         saveCounts("word_counts", words)
 
         val previous = previousWord?.let(::normalize).orEmpty()
-        if (previous.isNotBlank() && previous != clean) {
+        if (previous.isNotBlank()) {
             val pairs = pairCounts
             val key = "$previous>$clean"
             pairs[key] = (pairs[key] ?: 0) + 1
@@ -120,9 +120,7 @@ class LocalLanguageModel(context: Context) {
         }
 
         val previousPrevious = previousPreviousWord?.let(::normalize).orEmpty()
-        if (previousPrevious.isNotBlank() && previous.isNotBlank() &&
-            previousPrevious != previous && previous != clean
-        ) {
+        if (previousPrevious.isNotBlank() && previous.isNotBlank()) {
             val trigrams = trigramCounts
             val key = "$previousPrevious>$previous>$clean"
             trigrams[key] = (trigrams[key] ?: 0) + 1
