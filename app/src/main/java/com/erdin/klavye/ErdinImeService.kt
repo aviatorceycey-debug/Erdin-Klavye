@@ -17,7 +17,8 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private val mainHandler = Handler(Looper.getMainLooper())
     private var spellCheckerSession: SpellCheckerSession? = null
     private var keyboardView: ErdinKeyboardView? = null
-    private var lastQueriedWord = ""\n    private var lastContextWord = ""
+    private var lastQueriedWord = ""
+    private var lastContextWord = ""
     private lateinit var languageModel: LocalLanguageModel
     private var learningEnabled = true
     private var suggestionsEnabled = true
@@ -100,7 +101,8 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     val words = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
                     val current = words.lastOrNull().orEmpty()
                     val previous = words.getOrNull(words.lastIndex - 1)
-                    lastContextWord = current\n                    if (learningEnabled && current.isNotBlank()) {
+                    lastContextWord = current
+                    if (learningEnabled && current.isNotBlank()) {
                         languageModel.learn(current, previous)
                     }
                     connection.commitText(value, 1)
