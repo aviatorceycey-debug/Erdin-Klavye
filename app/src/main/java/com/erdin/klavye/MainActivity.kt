@@ -20,36 +20,85 @@ import android.widget.Toast
 class MainActivity : Activity() {
     private fun showPersonalDictionary() {
         val model = LocalLanguageModel(this)
-        fun showWords() {
-            val words = model.learnedWords()
-            if (words.isEmpty()) {
-                AlertDialog.Builder(this)
-                    .setTitle("Kişisel sözlük")
-                    .setMessage("Henüz öğrenilmiş kelime yok. Klavye, kişisel öğrenme açıkken kullandığın kelimeleri cihazında öğrenir.")
-                    .setPositiveButton("Tamam", null)
-                    .show()
-                return
+        val search = android.widget.EditText(this).apply {
+            hint = "Kelime ara"
+            singleLine = true
+            setTextColor(0xFFF4F7FF.toInt())
+            setHintTextColor(0xFF8492AA.toInt())
+            setPadding(24, 18, 24, 18)
+        }
+        val list = android.widget.ListView(this).apply {
+            divider = android.graphics.drawable.ColorDrawable(0x263D5275)
+            dividerHeight = 1
+            isFastScrollEnabled = true
+        }
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24, 8, 24, 0)
+            addView(search, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ))
+            addView(list, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+            ))
+        }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Kişisel sözlük")
+            .setView(content)
+            .setPositiveButton("Kapat", null)
+            .create()
+
+        var allWords = model.learnedWords()
+        var visibleWords = allWords
+        val adapter = android.widget.ArrayAdapter(
+            this, android.R.layout.simple_list_item_1,
+            visibleWords.map { (word, count) -> "$word     ·     $count kullanım" }
+        )
+        list.adapter = adapter
+
+        fun refresh(query: String = search.text.toString()) {
+            allWords = model.learnedWords()
+            visibleWords = allWords.filter { it.first.contains(query.trim(), ignoreCase = true) }
+            adapter.clear()
+            adapter.addAll(visibleWords.map { (word, count) -> "$word     ·     $count kullanım" })
+            adapter.notifyDataSetChanged()
+            dialog.setTitle("Kişisel sözlük  ·  ${visibleWords.size}/${allWords.size}")
+        }
+
+        search.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                refresh(s?.toString().orEmpty())
             }
-            val labels = words.map { (word, count) -> "$word   ·   $count" }.toTypedArray()
+            override fun afterTextChanged(s: android.text.Editable?) = Unit
+        })
+
+        list.setOnItemClickListener { _, _, position, _ ->
+            val selected = visibleWords.getOrNull(position)?.first ?: return@setOnItemClickListener
             AlertDialog.Builder(this)
-                .setTitle("Kişisel sözlük  ·  ${words.size} kelime")
-                .setItems(labels) { _, index ->
-                    val selected = words[index].first
-                    AlertDialog.Builder(this)
-                        .setTitle("\"$selected\" silinsin mi?")
-                        .setMessage("Bu kelimenin öğrenilmiş kullanım sayısı ve ona bağlı kelime tahmin kayıtları silinecek.")
-                        .setNegativeButton("Vazgeç", null)
-                        .setPositiveButton("Sil") { _, _ ->
-                            model.deletePersonalWord(selected)
-                            Toast.makeText(this, "\"$selected\" silindi", Toast.LENGTH_SHORT).show()
-                            showWords()
-                        }
-                        .show()
+                .setTitle("\"$selected\" silinsin mi?")
+                .setMessage("Kelimenin öğrenilmiş kullanım sayısı ve ona bağlı tahmin kayıtları silinecek.")
+                .setNegativeButton("Vazgeç", null)
+                .setPositiveButton("Sil") { _, _ ->
+                    model.deletePersonalWord(selected)
+                    Toast.makeText(this, "\"$selected\" silindi", Toast.LENGTH_SHORT).show()
+                    refresh()
                 }
-                .setPositiveButton("Kapat", null)
                 .show()
         }
-        showWords()
+
+        dialog.setOnShowListener {
+            if (allWords.isEmpty()) {
+                list.visibility = View.GONE
+                search.visibility = View.GONE
+                dialog.setTitle("Kişisel sözlük")
+                dialog.setMessage("Henüz öğrenilmiş kelime yok. Kişisel öğrenme açıkken klavye kullandığın kelimeleri cihazında öğrenir.")
+            } else {
+                refresh("")
+            }
+        }
+        dialog.show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
