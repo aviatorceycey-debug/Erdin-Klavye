@@ -12,6 +12,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.HapticFeedbackConstants
 import kotlin.math.floor
+import java.util.Locale
 
 private data class KeyboardKey(
     val label: String,
@@ -28,6 +29,7 @@ class ErdinKeyboardView(
     private val onSuggestion: (String) -> Unit
 ) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private fun upper(value: String) = value.uppercase(Locale("tr", "TR"))
     private val density = resources.displayMetrics.density
     private val gap = 5f * density
     private val topInset = 42f * density
@@ -188,7 +190,7 @@ class ErdinKeyboardView(
             }
             val label = when {
                 key.kind == KeyboardKey.Kind.SPACE -> key.label
-                (shift || capsLock) && !symbols && key.label.length == 1 -> key.label.uppercase()
+                (shift || capsLock) && !symbols && key.label.length == 1 -> upper(key.label)
                 else -> key.label
             }
             paint.color = if (key.kind == KeyboardKey.Kind.SPACE) 0xFFC5D5EE.toInt() else 0xFFF5F8FF.toInt()
@@ -321,7 +323,7 @@ class ErdinKeyboardView(
                     if (selectedAlternate >= 0) {
                         onKey(alternateOptions[selectedAlternate])
                     } else if (key != null) {
-                        onKey(if (shift || capsLock) key.value.uppercase() else key.value)
+                        onKey(if (shift || capsLock) upper(key.value) else key.value)
                     }
                 } else if (key != null && !longPressed && !cursorMoved) {
                     when (key.label) {
