@@ -107,6 +107,15 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private fun handleKey(value: String) {
         val connection = currentInputConnection ?: return
         when {
+            value.startsWith("__SWIPE_WORD__") -> {
+                val traced = value.removePrefix("__SWIPE_WORD__")
+                val decoded = languageModel.decodeSwipePath(traced)
+                if (decoded.isNotBlank()) {
+                    connection.commitText(decoded, 1)
+                    updateAutoShift()
+                    requestSuggestionsSoon()
+                }
+            }
             value == "__CLIPBOARD__" -> {
                 if (!clipboardEnabled) return
                 val clipboard = getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager
