@@ -22,7 +22,7 @@ class MainActivity : Activity() {
         val model = LocalLanguageModel(this)
         val search = android.widget.EditText(this).apply {
             hint = "Kelime ara"
-            singleLine = true
+            setSingleLine(true)
             setTextColor(0xFFF4F7FF.toInt())
             setHintTextColor(0xFF8492AA.toInt())
             setPadding(24, 18, 24, 18)
