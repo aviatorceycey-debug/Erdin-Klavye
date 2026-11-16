@@ -78,6 +78,9 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             suggestionsPreference
         doubleSpacePeriodEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
         clipboardEnabled = !passwordField && inputClass != InputType.TYPE_CLASS_NUMBER
+        // Never carry clipboard history from a previous app/input session into
+        // a password or otherwise restricted field.
+        if (!clipboardEnabled) clipboardHistory.clear()
         keyboardView?.hideClipboard()
         keyboardView?.setSuggestions(emptyList())
         updateAutoShift()
@@ -91,6 +94,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
     override fun onFinishInput() {
         mainHandler.removeCallbacksAndMessages(null)
+        // Clipboard snippets are intentionally session-only; discard them when
+        // the input session ends so they cannot linger across apps.
+        clipboardHistory.clear()
+        keyboardView?.setClipboardItems(emptyList())
         spellCheckerSession?.close()
         spellCheckerSession = null
         keyboardView?.setSuggestions(emptyList())
@@ -120,7 +127,9 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 if (!clipboardEnabled) return
                 val clipboard = getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager
                 val clip = clipboard?.primaryClip
-                if (clip != null && clip.itemCount > 0) {
+                val markedSensitive = clipboard?.primaryClipDescription?.extras
+                    ?.getBoolean(ClipDescription.EXTRA_IS_SENSITIVE, false) == true
+                if (!markedSensitive && clip != null && clip.itemCount > 0) {
                     val text = clip.getItemAt(0).coerceToText(this)?.toString()?.trim().orEmpty()
                     if (text.isNotBlank() && text.length <= 2000) {
                         clipboardHistory.remove(text)
