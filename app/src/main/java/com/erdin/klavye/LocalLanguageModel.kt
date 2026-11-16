@@ -76,6 +76,15 @@ class LocalLanguageModel(context: Context) {
         return result
     }
 
+    // Keep the small personal model in memory while the keyboard is open.
+    // This avoids parsing JSON on every key press.
+    private val wordCounts by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        readCounts("word_counts")
+    }
+    private val pairCounts by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        readCounts("pair_counts")
+    }
+
     private fun saveCounts(key: String, values: Map<String, Int>) {
         val json = JSONObject()
         values.forEach { (word, count) -> json.put(word, count) }
@@ -87,7 +96,7 @@ class LocalLanguageModel(context: Context) {
         val clean = normalize(word)
         if (clean.length < 2 || clean.any { !it.isLetter() }) return
 
-        val words = readCounts("word_counts")
+        val words = wordCounts
         words[clean] = (words[clean] ?: 0) + 1
         if (words.size > 2500) {
             words.entries.sortedBy { it.value }.take(words.size - 2000)
@@ -97,7 +106,7 @@ class LocalLanguageModel(context: Context) {
 
         val previous = previousWord?.let(::normalize).orEmpty()
         if (previous.isNotBlank() && previous != clean) {
-            val pairs = readCounts("pair_counts")
+            val pairs = pairCounts
             val key = "$previous>$clean"
             pairs[key] = (pairs[key] ?: 0) + 1
             if (pairs.size > 5000) {
@@ -112,7 +121,7 @@ class LocalLanguageModel(context: Context) {
     fun completions(prefix: String): List<String> {
         val key = normalize(prefix)
         if (key.length < 2) return emptyList()
-        val learned = readCounts("word_counts")
+        val learned = wordCounts
         return (starterWords.asSequence().filter { it.startsWith(key) } +
             learned.keys.asSequence().filter { it.startsWith(key) })
             .distinct()
