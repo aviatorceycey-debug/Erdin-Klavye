@@ -80,6 +80,18 @@ class MainActivity : Activity() {
         }
         hapticSwitch.setPadding(0, 22, 0, 8)
         root.addView(hapticSwitch)
+
+        val autoCapsSwitch = Switch(this).apply {
+            text = "Otomatik büyük harf"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            isChecked = prefs.getBoolean("auto_capitalization", true)
+            setOnCheckedChangeListener { _, checked ->
+                prefs.edit().putBoolean("auto_capitalization", checked).apply()
+            }
+        }
+        autoCapsSwitch.setPadding(0, 10, 0, 8)
+        root.addView(autoCapsSwitch)
         val handLabel = TextView(this).apply {
             text = "Tek elle kullanım"
             textSize = 15f
