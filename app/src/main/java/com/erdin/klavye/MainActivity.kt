@@ -23,9 +23,17 @@ class MainActivity : Activity() {
         val search = android.widget.EditText(this).apply {
             hint = "Kelime ara"
             setSingleLine(true)
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
             setTextColor(0xFFF4F7FF.toInt())
             setHintTextColor(0xFF8492AA.toInt())
             setPadding(24, 18, 24, 18)
+        }
+        val emptyLabel = TextView(this).apply {
+            text = "Henüz öğrenilmiş kelime yok. Kişisel öğrenme açıkken klavye kullandığın kelimeleri cihazında öğrenir."
+            textSize = 14f
+            setTextColor(0xFFB8C3D9.toInt())
+            setPadding(16, 28, 16, 28)
+            visibility = View.GONE
         }
         val list = android.widget.ListView(this).apply {
             divider = android.graphics.drawable.ColorDrawable(0x263D5275)
@@ -39,8 +47,12 @@ class MainActivity : Activity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ))
+            addView(emptyLabel, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ))
             addView(list, LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+                LinearLayout.LayoutParams.MATCH_PARENT, (280 * resources.displayMetrics.density).toInt()
             ))
         }
         val dialog = AlertDialog.Builder(this)
@@ -92,9 +104,10 @@ class MainActivity : Activity() {
             if (allWords.isEmpty()) {
                 list.visibility = View.GONE
                 search.visibility = View.GONE
+                emptyLabel.visibility = View.VISIBLE
                 dialog.setTitle("Kişisel sözlük")
-                dialog.setMessage("Henüz öğrenilmiş kelime yok. Kişisel öğrenme açıkken klavye kullandığın kelimeleri cihazında öğrenir.")
             } else {
+                emptyLabel.visibility = View.GONE
                 refresh("")
             }
         }
