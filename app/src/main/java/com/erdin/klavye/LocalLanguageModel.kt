@@ -188,32 +188,43 @@ class LocalLanguageModel(context: Context) {
         val clean = normalize(path).filter { it.isLetter() }
         if (clean.length < 3) return clean
         val candidates = (starterWords.asSequence() + wordCounts.keys.asSequence())
-            .filter { kotlin.math.abs(it.length - clean.length) <= 2 }
+            .filter { kotlin.math.abs(it.length - clean.length) <= 1 }
             .distinct()
             .toList()
         if (candidates.isEmpty()) return clean
 
         fun distance(a: String, b: String): Int {
-            // Also tolerate one adjacent transposition in a noisy swipe trace.
-            val dp = Array(a.length + 1) { IntArray(b.length + 1) }
-            for (i in 0..a.length) dp[i][0] = i
-            for (j in 0..b.length) dp[0][j] = j
+            // Only distance 0 or 1 can be accepted, so stop as soon as
+            // a candidate is provably outside that range.
+            if (kotlin.math.abs(a.length - b.length) > 1) return 2
+            var twoRowsBack = IntArray(b.length + 1) { Int.MAX_VALUE / 4 }
+            var previous = IntArray(b.length + 1) { it }
             for (i in 1..a.length) {
-                for (j in 1..b.length) {
+                val current = IntArray(b.length + 1) { 2 }
+                current[0] = i
+                var rowMinimum = current[0]
+                val from = maxOf(1, i - 1)
+                val to = minOf(b.length, i + 1)
+                for (j in from..to) {
                     val substitution = if (a[i - 1] == b[j - 1]) 0 else 1
-                    dp[i][j] = minOf(
-                        dp[i - 1][j] + 1,
-                        dp[i][j - 1] + 1,
-                        dp[i - 1][j - 1] + substitution
+                    var score = minOf(
+                        previous[j] + 1,
+                        current[j - 1] + 1,
+                        previous[j - 1] + substitution
                     )
                     if (i > 1 && j > 1 &&
                         a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]
                     ) {
-                        dp[i][j] = minOf(dp[i][j], dp[i - 2][j - 2] + 1)
+                        score = minOf(score, twoRowsBack[j - 2] + 1)
                     }
+                    current[j] = score
+                    rowMinimum = minOf(rowMinimum, score)
                 }
+                if (rowMinimum > 1) return 2
+                twoRowsBack = previous
+                previous = current
             }
-            return dp[a.length][b.length]
+            return previous[b.length].coerceAtMost(2)
         }
 
         val ranked = candidates.map { it to distance(clean, it) }
