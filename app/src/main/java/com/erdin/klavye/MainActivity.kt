@@ -179,6 +179,18 @@ class MainActivity : Activity() {
         hapticSwitch.setPadding(0, 22, 0, 8)
         root.addView(hapticSwitch)
 
+        val keySoundSwitch = Switch(this).apply {
+            text = "Tuş sesi"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            isChecked = prefs.getBoolean("key_sound_enabled", false)
+            setOnCheckedChangeListener { _, checked ->
+                prefs.edit().putBoolean("key_sound_enabled", checked).apply()
+            }
+        }
+        keySoundSwitch.setPadding(0, 10, 0, 8)
+        root.addView(keySoundSwitch)
+
         val autoCapsSwitch = Switch(this).apply {
             text = "Otomatik büyük harf"
             textSize = 15f
