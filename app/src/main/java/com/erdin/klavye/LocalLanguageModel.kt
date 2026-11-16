@@ -194,32 +194,44 @@ class LocalLanguageModel(context: Context) {
         if (candidates.isEmpty()) return clean
 
         fun distance(a: String, b: String): Int {
-            var previous = IntArray(b.length + 1) { it }
-            for (i in a.indices) {
-                val current = IntArray(b.length + 1)
-                current[0] = i + 1
-                for (j in b.indices) {
-                    val substitution = if (a[i] == b[j]) 0 else 1
-                    current[j + 1] = minOf(
-                        current[j] + 1,
-                        previous[j + 1] + 1,
-                        previous[j] + substitution
+            // Also tolerate one adjacent transposition in a noisy swipe trace.
+            val dp = Array(a.length + 1) { IntArray(b.length + 1) }
+            for (i in 0..a.length) dp[i][0] = i
+            for (j in 0..b.length) dp[0][j] = j
+            for (i in 1..a.length) {
+                for (j in 1..b.length) {
+                    val substitution = if (a[i - 1] == b[j - 1]) 0 else 1
+                    dp[i][j] = minOf(
+                        dp[i - 1][j] + 1,
+                        dp[i][j - 1] + 1,
+                        dp[i - 1][j - 1] + substitution
                     )
+                    if (i > 1 && j > 1 &&
+                        a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]
+                    ) {
+                        dp[i][j] = minOf(dp[i][j], dp[i - 2][j - 2] + 1)
+                    }
                 }
-                previous = current
             }
-            return previous[b.length]
+            return dp[a.length][b.length]
         }
 
         val ranked = candidates.map { it to distance(clean, it) }
             .sortedWith(compareBy<Pair<String, Int>> { it.second }
                 .thenByDescending { wordCounts[it.first] ?: 0 })
         val best = ranked.firstOrNull() ?: return clean
-        val maxDistance = if (clean.length >= 7) 1 else 1
+        val maxDistance = 1
         val runnerUp = ranked.getOrNull(1)
-        return if (best.second <= maxDistance &&
-            (runnerUp == null || runnerUp.second > best.second)
-        ) best.first else clean
+        val bestPersonalCount = wordCounts[best.first] ?: 0
+        val runnerUpPersonalCount = runnerUp?.let { wordCounts[it.first] ?: 0 } ?: 0
+        val clearlyLearned = bestPersonalCount >= 3 &&
+            bestPersonalCount >= runnerUpPersonalCount * 2
+        val unambiguous = runnerUp == null || runnerUp.second > best.second
+        return if (best.second <= maxDistance && (unambiguous || clearlyLearned)) {
+            best.first
+        } else {
+            clean
+        }
     }
 
     @Synchronized
