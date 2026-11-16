@@ -345,7 +345,7 @@ class ErdinKeyboardView(
                         "🌐" -> onKey("🌐")
                         "Türkçe  •  English" -> onKey(" ")
                         else -> {
-                            onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) key.value.uppercase() else key.value)
+                            onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) upper(key.value) else key.value)
                             if (shift && !capsLock && !symbols && !emojiMode && key.value.length == 1) shift = false
                         }
                     }
