@@ -112,7 +112,7 @@ class ErdinKeyboardView(
         "o" to listOf("ö", "Ö"), "i" to listOf("ı", "İ")
     )
 
-    private val letterRows = listOf(
+    private fun letterRows() = listOf(
         listOf("1","2","3","4","5","6","7","8","9","0").map { KeyboardKey(it) },
         "qwertyuiop".map { KeyboardKey(it.toString()) },
         "asdfghjkl".map { KeyboardKey(it.toString()) },
@@ -155,7 +155,7 @@ class ErdinKeyboardView(
         prefs.edit().putString("recent_emojis", (listOf(value) + recent).take(8).joinToString("|")).apply()
     }
 
-    private val symbolRows = listOf(
+    private fun symbolRows() = listOf(
         listOf("1","2","3","4","5","6","7","8","9","0").map { KeyboardKey(it) },
         listOf("@","#","₺","%","&","-","+","(",")","/").map { KeyboardKey(it) },
         listOf("*","\"","'",":",";","!","?","€","£","₺").map { KeyboardKey(it) },
@@ -166,7 +166,7 @@ class ErdinKeyboardView(
             KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.55f),
             KeyboardKey(",", weight = .8f),
             KeyboardKey("😊", kind = KeyboardKey.Kind.ACTION, weight = .9f),
-            KeyboardKey("Türkçe  •  English", " ", 4.2f, KeyboardKey.Kind.SPACE),
+            KeyboardKey(activeLanguageLabel, " ", 4.2f, KeyboardKey.Kind.SPACE),
             KeyboardKey(".", weight = .8f),
             KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.25f)
         )
@@ -190,8 +190,8 @@ class ErdinKeyboardView(
                     KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f)))
         }
         emojiMode -> emojiRows()
-        symbols -> symbolRows
-        else -> letterRows
+        symbols -> symbolRows()
+        else -> letterRows()
     }
 
     private val longPressRunnable = Runnable {
@@ -200,7 +200,7 @@ class ErdinKeyboardView(
             longPressed = true
             onKey("⌫")
             handler.postDelayed(deleteRepeatRunnable, 180)
-        } else if (!symbols && !emojiMode && key.value.length == 1) {
+        } else if (!symbols && !emojiMode && activeLanguageLabel == "Türkçe" && key.value.length == 1) {
             val options = alternatives[key.value.lowercase()]
             if (!options.isNullOrEmpty()) {
                 longPressed = true
