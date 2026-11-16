@@ -113,7 +113,11 @@ class ErdinKeyboardView(
 
     private val longPressRunnable = Runnable {
         val key = downKey ?: return@Runnable
-        if (!symbols && !emojiMode && key.value.length == 1) {
+        if (key.label == "⌫") {
+            longPressed = true
+            onKey("⌫")
+            handler.postDelayed(deleteRepeatRunnable, 180)
+        } else if (!symbols && !emojiMode && key.value.length == 1) {
             val options = alternatives[key.value.lowercase()]
             if (!options.isNullOrEmpty()) {
                 longPressed = true
@@ -121,10 +125,6 @@ class ErdinKeyboardView(
                 selectedAlternate = -1
                 invalidate()
             }
-        } else if (key.label == "⌫") {
-            longPressed = true
-            onKey("⌫")
-            handler.postDelayed(deleteRepeatRunnable, 180)
         }
     }
 
