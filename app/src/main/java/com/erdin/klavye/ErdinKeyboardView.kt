@@ -581,6 +581,8 @@ class ErdinKeyboardView(
                 handler.removeCallbacks(deleteRepeatRunnable)
                 downKey = null
                 downRect = null
+                swipeTyping = false
+                swipePath.clear()
                 alternateOptions = emptyList()
                 popupRect = null
                 selectedAlternate = -1
