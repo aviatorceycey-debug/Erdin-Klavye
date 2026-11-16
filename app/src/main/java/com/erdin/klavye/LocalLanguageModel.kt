@@ -118,8 +118,10 @@ class LocalLanguageModel(context: Context) {
         val clean = normalize(word)
         if (clean.isBlank()) return
         wordCounts.remove(clean)
-        pairCounts.keys.removeAll { it.endsWith(">$clean") }
-        trigramCounts.keys.removeAll { it.endsWith(">$clean") }
+        // Remove the word wherever it appears in a learned context, not only
+        // when it is the predicted final token.
+        pairCounts.keys.removeAll { key -> key.split('>').any { it == clean } }
+        trigramCounts.keys.removeAll { key -> key.split('>').any { it == clean } }
         saveCounts("word_counts", wordCounts)
         saveCounts("pair_counts", pairCounts)
         saveCounts("trigram_counts", trigramCounts)
