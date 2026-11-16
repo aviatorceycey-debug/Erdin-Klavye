@@ -23,6 +23,20 @@ private data class KeyboardKey(
     enum class Kind { NORMAL, ACTION, ACCENT, SPACE }
 }
 
+
+private data class KeyboardPalette(
+    val background: IntArray,
+    val normal: Int,
+    val action: Int,
+    val accent: Int,
+    val space: Int,
+    val accentOutline: Int,
+    val spaceOutline: Int,
+    val popup: Int,
+    val selected: Int,
+    val suggestion: Int
+)
+
 class ErdinKeyboardView(
     context: Context,
     private val onKey: (String) -> Unit,
@@ -30,6 +44,29 @@ class ErdinKeyboardView(
 ) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private fun upper(value: String) = value.uppercase(Locale("tr", "TR"))
+    private fun palette(): KeyboardPalette {
+        return when (context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+            .getString("keyboard_theme", "midnight")) {
+            "ocean" -> KeyboardPalette(
+                intArrayOf(0xFF061B25.toInt(), 0xFF0B3444.toInt(), 0xFF092632.toInt()),
+                0xFF164657.toInt(), 0xFF1D5364.toInt(), 0xFF087F8C.toInt(), 0xFF1B5969.toInt(),
+                0x8876E4E8.toInt(), 0x5576E4E8.toInt(), 0xFF155A68.toInt(), 0xFF00A6B2.toInt(),
+                0x3345D5D8
+            )
+            "violet" -> KeyboardPalette(
+                intArrayOf(0xFF171020.toInt(), 0xFF302044.toInt(), 0xFF1E172D.toInt()),
+                0xFF39294F.toInt(), 0xFF49345F.toInt(), 0xFF7045A3.toInt(), 0xFF49345F.toInt(),
+                0x99C69BFF.toInt(), 0x55C69BFF.toInt(), 0xFF563878.toInt(), 0xFF8754C7.toInt(),
+                0x334F2F75
+            )
+            else -> KeyboardPalette(
+                intArrayOf(0xFF0C1220.toInt(), 0xFF17243B.toInt(), 0xFF101827.toInt()),
+                0xFF202D44.toInt(), 0xFF293750.toInt(), 0xFF24558A.toInt(), 0xFF263B5D.toInt(),
+                0x885ABEFF.toInt(), 0x553F9DFF.toInt(), 0xFF263C5D.toInt(), 0xFF287DCE.toInt(),
+                0x332D83D5
+            )
+        }
+    }
     private val density = resources.displayMetrics.density
     private val gap = 5f * density
     private val topInset = 42f * density
@@ -205,9 +242,9 @@ class ErdinKeyboardView(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        val colors = palette()
         paint.shader = LinearGradient(0f, 0f, width.toFloat(), height.toFloat(),
-            intArrayOf(0xFF0C1220.toInt(), 0xFF17243B.toInt(), 0xFF101827.toInt()),
-            null, Shader.TileMode.CLAMP)
+            colors.background, null, Shader.TileMode.CLAMP)
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
 
@@ -215,17 +252,17 @@ class ErdinKeyboardView(
         keyRects().forEach { (key, rect) ->
             paint.setShadowLayer(4f * density, 0f, 2f * density, 0x77000000)
             paint.color = when (key.kind) {
-                KeyboardKey.Kind.SPACE -> 0xFF263B5D.toInt()
-                KeyboardKey.Kind.ACCENT -> 0xFF24558A.toInt()
-                KeyboardKey.Kind.ACTION -> 0xFF293750.toInt()
-                KeyboardKey.Kind.NORMAL -> 0xFF202D44.toInt()
+                KeyboardKey.Kind.SPACE -> colors.space
+                KeyboardKey.Kind.ACCENT -> colors.accent
+                KeyboardKey.Kind.ACTION -> colors.action
+                KeyboardKey.Kind.NORMAL -> colors.normal
             }
             canvas.drawRoundRect(rect, 10f * density, 10f * density, paint)
             paint.clearShadowLayer()
             if (key.kind == KeyboardKey.Kind.ACCENT || key.kind == KeyboardKey.Kind.SPACE) {
                 paint.style = Paint.Style.STROKE
                 paint.strokeWidth = density
-                paint.color = if (key.kind == KeyboardKey.Kind.SPACE) 0x553F9DFF.toInt() else 0x885ABEFF.toInt()
+                paint.color = if (key.kind == KeyboardKey.Kind.SPACE) colors.spaceOutline else colors.accentOutline
                 canvas.drawRoundRect(rect, 10f * density, 10f * density, paint)
                 paint.style = Paint.Style.FILL
             }
@@ -250,7 +287,7 @@ class ErdinKeyboardView(
 
     private fun drawSuggestionStrip(canvas: Canvas) {
         suggestionRects.clear()
-        paint.color = 0xFF9FCBFF.toInt()
+        paint.color = palette().accentOutline
         paint.textSize = 17f * density
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("▣", 28f * density, 26f * density, paint)
@@ -278,7 +315,7 @@ class ErdinKeyboardView(
                 (index + 1) * cellWidth - 4f * density, 37f * density)
             suggestionRects += rect
             if (index == 1) {
-                paint.color = 0x332D83D5
+                paint.color = palette().suggestion
                 canvas.drawRoundRect(rect, 9f * density, 9f * density, paint)
             }
             paint.color = 0xFFEAF1FC.toInt()
@@ -304,13 +341,13 @@ class ErdinKeyboardView(
         val rect = RectF(left, top, left + popupWidth, top + popupHeight)
         popupRect = rect
         paint.setShadowLayer(9f * density, 0f, 3f * density, 0xAA000000.toInt())
-        paint.color = 0xFF263C5D.toInt()
+        paint.color = palette().popup
         canvas.drawRoundRect(rect, 13f * density, 13f * density, paint)
         paint.clearShadowLayer()
         alternateOptions.forEachIndexed { index, value ->
             val cell = RectF(left + index * cellWidth, top, left + (index + 1) * cellWidth, top + popupHeight)
             if (index == selectedAlternate) {
-                paint.color = 0xFF287DCE.toInt()
+                paint.color = palette().selected
                 canvas.drawRoundRect(cell, 9f * density, 9f * density, paint)
             }
             paint.color = 0xFFF7FAFF.toInt()
