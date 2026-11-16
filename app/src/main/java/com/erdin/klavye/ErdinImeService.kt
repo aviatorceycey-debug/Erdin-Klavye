@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.text.InputType
 import android.view.textservice.SentenceSuggestionsInfo
 import android.view.textservice.SpellCheckerSession
 import android.view.textservice.SuggestionsInfo
@@ -18,6 +19,8 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private var keyboardView: ErdinKeyboardView? = null
     private var lastQueriedWord = ""
     private lateinit var languageModel: LocalLanguageModel
+    private var learningEnabled = true
+    private var suggestionsEnabled = true
 
     override fun onCreate() {
         super.onCreate()
@@ -35,6 +38,22 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
         lastQueriedWord = ""
+        val inputType = attribute?.inputType ?: InputType.TYPE_NULL
+        val inputClass = inputType and InputType.TYPE_MASK_CLASS
+        val variation = inputType and InputType.TYPE_MASK_VARIATION
+        val plainTextField = inputClass == InputType.TYPE_CLASS_TEXT &&
+            variation == InputType.TYPE_TEXT_VARIATION_NORMAL
+        val passwordField = (inputClass == InputType.TYPE_CLASS_TEXT &&
+            variation in setOf(
+                InputType.TYPE_TEXT_VARIATION_PASSWORD,
+                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
+                InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
+            )) || (inputClass == InputType.TYPE_CLASS_NUMBER &&
+            variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
+        val explicitlyNoSuggestions = inputClass == InputType.TYPE_CLASS_TEXT &&
+            (inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0
+        learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
+        suggestionsEnabled = learningEnabled
         keyboardView?.setSuggestions(emptyList())
         if (spellCheckerSession == null) {
             val manager = getSystemService(TEXT_SERVICES_MANAGER_SERVICE) as? TextServicesManager
@@ -81,9 +100,13 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     val words = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
                     val current = words.lastOrNull().orEmpty()
                     val previous = words.getOrNull(words.lastIndex - 1)
-                    if (current.isNotBlank()) languageModel.learn(current, previous)
+                    if (learningEnabled && current.isNotBlank()) {
+                        languageModel.learn(current, previous)
+                    }
                     connection.commitText(value, 1)
-                    keyboardView?.setSuggestions(languageModel.nextWords(current))
+                    keyboardView?.setSuggestions(
+                        if (suggestionsEnabled) languageModel.nextWords(current) else emptyList()
+                    )
                 } else {
                     connection.commitText(value, 1)
                     if (value.all { it.isLetter() }) requestSuggestionsSoon()
@@ -95,6 +118,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
     private fun requestSuggestionsSoon() {
         mainHandler.removeCallbacksAndMessages(null)
+        if (!suggestionsEnabled) {
+            keyboardView?.setSuggestions(emptyList())
+            return
+        }
         mainHandler.postDelayed({
             val before = currentInputConnection?.getTextBeforeCursor(80, 0)?.toString().orEmpty()
             val word = before.takeLastWhile { it.isLetter() }
@@ -116,7 +143,9 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val currentWord = before.takeLastWhile { it.isLetter() }
         if (currentWord.isEmpty()) {
             connection.commitText("$replacement ", 1)
-            keyboardView?.setSuggestions(languageModel.nextWords(replacement))
+            keyboardView?.setSuggestions(
+                if (suggestionsEnabled) languageModel.nextWords(replacement) else emptyList()
+            )
             return
         }
         val count = currentWord.codePointCount(0, currentWord.length)
@@ -130,7 +159,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
     override fun onGetSuggestions(results: Array<SuggestionsInfo>) {
         val queriedWord = lastQueriedWord
-        if (queriedWord.isBlank()) return
+        if (queriedWord.isBlank() || !suggestionsEnabled) return
         val corrections = results
             .flatMap { info ->
                 (0 until info.suggestionsCount).mapNotNull { index ->
