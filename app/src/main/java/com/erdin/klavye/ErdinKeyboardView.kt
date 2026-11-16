@@ -45,7 +45,11 @@ class ErdinKeyboardView(
     private val onSuggestion: (String) -> Unit
 ) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val keyTone = ToneGenerator(AudioManager.STREAM_SYSTEM, 35)
+    private var keyTone: ToneGenerator? = null
+    private fun playKeySound() {
+        if (keyTone == null) keyTone = ToneGenerator(AudioManager.STREAM_SYSTEM, 35)
+        keyTone?.startTone(ToneGenerator.TONE_PROP_BEEP, 28)
+    }
     private fun upper(value: String) = value.uppercase(Locale("tr", "TR"))
     private fun palette(): KeyboardPalette {
         return when (context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
@@ -220,7 +224,8 @@ class ErdinKeyboardView(
 
     override fun onDetachedFromWindow() {
         handler.removeCallbacksAndMessages(null)
-        keyTone.release()
+        keyTone?.release()
+        keyTone = null
         super.onDetachedFromWindow()
     }
 
@@ -429,7 +434,7 @@ class ErdinKeyboardView(
                         performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                     }
                     if (prefs.getBoolean("key_sound_enabled", false)) {
-                        keyTone.startTone(ToneGenerator.TONE_PROP_BEEP, 28)
+                        playKeySound()
                     }
                 }
                 longPressed = false
