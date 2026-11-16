@@ -469,6 +469,7 @@ class ErdinKeyboardView(
                 popupRect = null
                 selectedAlternate = -1
                 if (downKey != null) handler.postDelayed(longPressRunnable, 380)
+                invalidate()
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
