@@ -94,6 +94,8 @@ class ErdinKeyboardView(
     private var selectedAlternate = -1
     private var lastCursorX = 0f
     private var cursorMoved = false
+    private var swipeTyping = false
+    private val swipePath = mutableListOf<Pair<Float, Float>>()
     private val deleteRepeatRunnable = object : Runnable {
         override fun run() {
             if (downKey?.label == "⌫" && longPressed) {
@@ -464,6 +466,8 @@ class ErdinKeyboardView(
                 }
                 longPressed = false
                 cursorMoved = false
+                swipeTyping = false
+                swipePath.clear()
                 lastCursorX = event.x
                 alternateOptions = emptyList()
                 popupRect = null
@@ -475,6 +479,18 @@ class ErdinKeyboardView(
             MotionEvent.ACTION_MOVE -> {
                 if (longPressed && alternateOptions.isNotEmpty()) {
                     updateAlternateSelection(event.x)
+                } else if (downKey?.value?.length == 1 && downKey?.value?.firstOrNull()?.isLetter() == true &&
+                    context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+                        .getBoolean("swipe_typing_enabled", false)) {
+                    val dx = event.x - (downRect?.centerX() ?: event.x)
+                    val dy = event.y - (downRect?.centerY() ?: event.y)
+                    if (!swipeTyping && kotlin.math.hypot(dx.toDouble(), dy.toDouble()) > 18f * density) {
+                        swipeTyping = true
+                        handler.removeCallbacks(longPressRunnable)
+                        swipePath.clear()
+                        downRect?.let { swipePath += it.centerX() to it.centerY() }
+                    }
+                    if (swipeTyping) swipePath += event.x to event.y
                 } else if (downKey?.kind == KeyboardKey.Kind.SPACE) {
                     val threshold = 22f * density
                     val delta = event.x - lastCursorX
@@ -491,7 +507,35 @@ class ErdinKeyboardView(
                 handler.removeCallbacks(longPressRunnable)
                 handler.removeCallbacks(deleteRepeatRunnable)
                 val key = downKey
-                if (longPressed && alternateOptions.isNotEmpty()) {
+                if (swipeTyping) {
+                    val letterKeys = keyRects().filter { it.first.value.length == 1 && it.first.value.first().isLetter() }
+                    val word = buildString {
+                        var previous = ""
+                        swipePath.forEach { (x, y) ->
+                            val nearest = letterKeys.minByOrNull { (_, rect) ->
+                                val dx = rect.centerX() - x
+                                val dy = rect.centerY() - y
+                                dx * dx + dy * dy
+                            } ?: return@forEach
+                            val rect = nearest.second
+                            val dx = rect.centerX() - x
+                            val dy = rect.centerY() - y
+                            if (dx * dx + dy * dy <= (48f * density) * (48f * density)) {
+                                val value = nearest.first.value.lowercase(Locale("tr", "TR"))
+                                if (value != previous) append(value)
+                                previous = value
+                            }
+                        }
+                    }
+                    if (word.length >= 3) {
+                        word.forEach { character ->
+                            onKey(if (shift || capsLock) upper(character.toString()) else character.toString())
+                        }
+                        if (shift && !capsLock) shift = false
+                    } else if (key != null) {
+                        onKey(if (shift || capsLock) upper(key.value) else key.value)
+                    }
+                } else if (longPressed && alternateOptions.isNotEmpty()) {
                     if (selectedAlternate >= 0) {
                         onKey(alternateOptions[selectedAlternate])
                     } else if (key != null) {
@@ -524,6 +568,8 @@ class ErdinKeyboardView(
                 }
                 downKey = null
                 downRect = null
+                swipeTyping = false
+                swipePath.clear()
                 alternateOptions = emptyList()
                 popupRect = null
                 selectedAlternate = -1
