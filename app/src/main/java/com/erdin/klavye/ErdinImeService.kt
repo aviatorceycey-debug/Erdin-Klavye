@@ -39,7 +39,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             this,
             onKey = { value -> handleKey(value) },
             onSuggestion = { value -> applySuggestion(value) }
-        ).also { keyboardView = it }
+        ).also {
+            keyboardView = it
+            updateAutoShift()
+        }
     }
 
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
