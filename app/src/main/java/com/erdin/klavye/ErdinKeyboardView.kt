@@ -86,6 +86,7 @@ class ErdinKeyboardView(
     private var emojiMode = false
     private var clipboardMode = false
     private var clipboardItems: List<String> = emptyList()
+    private var activeLanguageLabel = "Türkçe"
     private var downKey: KeyboardKey? = null
     private var downRect: RectF? = null
     private var longPressed = false
@@ -122,7 +123,7 @@ class ErdinKeyboardView(
             KeyboardKey("?123", kind = KeyboardKey.Kind.ACCENT, weight = 1.55f),
             KeyboardKey(",", weight = .8f),
             KeyboardKey("😊", kind = KeyboardKey.Kind.ACTION, weight = .9f),
-            KeyboardKey("Türkçe  •  English", " ", 4.2f, KeyboardKey.Kind.SPACE),
+            KeyboardKey(activeLanguageLabel, " ", 4.2f, KeyboardKey.Kind.SPACE),
             KeyboardKey(".", weight = .8f),
             KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.25f)
         )
@@ -228,6 +229,11 @@ class ErdinKeyboardView(
             shift = enabled
             invalidate()
         }
+    }
+
+    fun setInputLanguage(localeTag: String) {
+        activeLanguageLabel = if (localeTag.startsWith("en", ignoreCase = true)) "English" else "Türkçe"
+        invalidate()
     }
 
     fun setSuggestions(items: List<String>) {
@@ -585,7 +591,7 @@ class ErdinKeyboardView(
                         "ABC" -> { symbols = false; emojiMode = false; clipboardMode = false; invalidate() }
                         "😊" -> { emojiMode = true; symbols = false; clipboardMode = false; invalidate() }
                         "🌐" -> onKey("🌐")
-                        "Türkçe  •  English" -> onKey(" ")
+                        activeLanguageLabel -> onKey(" ")
                         else -> {
                             if (emojiMode && key.value.isNotEmpty()) rememberEmoji(key.value)
                             if (key.value.isNotEmpty()) onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) upper(key.value) else key.value)
