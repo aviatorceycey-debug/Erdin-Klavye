@@ -42,7 +42,7 @@ class LocalLanguageModel(context: Context) {
         "çok" to listOf("iyi", "güzel", "teşekkür", "önemli"),
         "ne" to listOf("zaman", "kadar", "oldu", "yapıyorsun"),
         "merhaba" to listOf("nasılsın", "arkadaşlar", "herkese"),
-        "günaydın" to listOf(" herkese", "nasılsın"),
+        "günaydın" to listOf("herkese", "nasılsın"),
         "teşekkür" to listOf("ederim", "ler", "ederiz"),
         "rica" to listOf("ederim", "ederiz"),
         "nasıl" to listOf("oldu", "yapılır", "gidiyor", "istersen"),
