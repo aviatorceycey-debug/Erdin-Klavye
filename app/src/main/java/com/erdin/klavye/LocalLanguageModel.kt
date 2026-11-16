@@ -35,6 +35,18 @@ class LocalLanguageModel(context: Context) {
         Türkiye Bursa İstanbul Ankara İzmir Eskişehir
     """.trimIndent().split(Regex("\\s+")).map { normalize(it) }.distinct()
 
+    // Three-word phrase hints help before personal data has been learned.
+    private val starterTrigrams = mapOf(
+        "iyi>bir" to listOf("gün", "fikir", "insan", "şekilde"),
+        "ben>de" to listOf("varım", "istiyorum", "düşünüyorum", "geliyorum"),
+        "ne>kadar" to listOf("güzel", "sürer", "oldu", "önemli"),
+        "çok>iyi" to listOf("oldu", "görünüyor", "geldi", "hissettiriyor"),
+        "bir>daha" to listOf("bakalım", "deneyelim", "sonra", "fazla"),
+        "bugün>çok" to listOf("güzel", "yoğun", "mutluyum", "işim"),
+        "yardım>eder" to listOf("misin", "mısın", "mi", "lütfen"),
+        "teşekkür>ederim" to listOf("sana", "çok", "yardımın", "ilgin")
+    )
+
     // General-purpose context hints. Personal usage counts gradually take priority.
     private val starterNextWords = mapOf(
         "iyi" to listOf("bir", "günler", "akşamlar", "olur"),
@@ -261,18 +273,21 @@ class LocalLanguageModel(context: Context) {
                 .associate { (key, count) -> key.substringAfterLast('>') to count }
         }
         val seeded = starterNextWords[previous].orEmpty()
-        val candidates = (seeded.asSequence() + learned.keys.asSequence() +
-            contextual.keys.asSequence()).distinct().toList()
+        val seededContext = starterTrigrams["$previousPrevious>$previous"].orEmpty()
+        val candidates = (seededContext.asSequence() + seeded.asSequence() +
+            learned.keys.asSequence() + contextual.keys.asSequence()).distinct().toList()
 
-        // Prefer repeated three-word context, then personal bigrams,
-        // then general seed hints as a sensible backoff.
+        // Personal three-word context wins, followed by built-in phrase hints,
+        // personal bigrams and general seed hints.
         fun score(word: String): Int {
             val trigramScore = (contextual[word] ?: 0).coerceAtMost(100) * 5
+            val contextIndex = seededContext.indexOf(word)
+            val seededTrigramScore = if (contextIndex < 0) 0 else (seededContext.size - contextIndex) * 8
             val bigramScore = (learned[word] ?: 0).coerceAtMost(100) * 2
             val personalWordScore = (wordCounts[word] ?: 0).coerceAtMost(100) / 4
             val seedIndex = seeded.indexOf(word)
             val seedScore = if (seedIndex < 0) 0 else (seeded.size - seedIndex) * 2
-            return trigramScore + bigramScore + personalWordScore + seedScore
+            return trigramScore + seededTrigramScore + bigramScore + personalWordScore + seedScore
         }
 
         return candidates.sortedWith(
