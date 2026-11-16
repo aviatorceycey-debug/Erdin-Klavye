@@ -191,6 +191,18 @@ class MainActivity : Activity() {
         keySoundSwitch.setPadding(0, 10, 0, 8)
         root.addView(keySoundSwitch)
 
+        val keyPreviewSwitch = Switch(this).apply {
+            text = "Tuşa basınca harf önizlemesi"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            isChecked = prefs.getBoolean("key_preview_enabled", true)
+            setOnCheckedChangeListener { _, checked ->
+                prefs.edit().putBoolean("key_preview_enabled", checked).apply()
+            }
+        }
+        keyPreviewSwitch.setPadding(0, 10, 0, 8)
+        root.addView(keyPreviewSwitch)
+
         val autoCapsSwitch = Switch(this).apply {
             text = "Otomatik büyük harf"
             textSize = 15f
