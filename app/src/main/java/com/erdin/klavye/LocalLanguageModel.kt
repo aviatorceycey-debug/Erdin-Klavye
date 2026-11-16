@@ -261,16 +261,26 @@ class LocalLanguageModel(context: Context) {
                 .associate { (key, count) -> key.substringAfterLast('>') to count }
         }
         val seeded = starterNextWords[previous].orEmpty()
-        return (seeded.asSequence() + learned.keys.asSequence() + contextual.keys.asSequence())
-            .distinct()
-            .sortedWith(
-                compareByDescending<String> { contextual[it] ?: 0 }
-                    .thenByDescending { learned[it] ?: 0 }
-                    .thenBy { seeded.indexOf(it).let { index -> if (index < 0) Int.MAX_VALUE else index } }
-                    .thenBy { it.length }
-            )
-            .take(3)
-            .toList()
+        val candidates = (seeded.asSequence() + learned.keys.asSequence() +
+            contextual.keys.asSequence()).distinct().toList()
+
+        // Prefer repeated three-word context, then personal bigrams,
+        // then general seed hints as a sensible backoff.
+        fun score(word: String): Int {
+            val trigramScore = (contextual[word] ?: 0).coerceAtMost(100) * 5
+            val bigramScore = (learned[word] ?: 0).coerceAtMost(100) * 2
+            val personalWordScore = (wordCounts[word] ?: 0).coerceAtMost(100) / 4
+            val seedIndex = seeded.indexOf(word)
+            val seedScore = if (seedIndex < 0) 0 else (seeded.size - seedIndex) * 2
+            return trigramScore + bigramScore + personalWordScore + seedScore
+        }
+
+        return candidates.sortedWith(
+            compareByDescending<String> { score(it) }
+                .thenByDescending { contextual[it] ?: 0 }
+                .thenByDescending { learned[it] ?: 0 }
+                .thenBy { it.length }
+        ).take(3)
     }
 
     private fun normalize(value: String): String = value.trim().lowercase(locale)
