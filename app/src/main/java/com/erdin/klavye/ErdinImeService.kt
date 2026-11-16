@@ -111,6 +111,14 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             else -> {
                 if (value == " ") {
                     val before = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
+                    if (suggestionsEnabled && before.endsWith(" ") &&
+                        before.dropLast(1).lastOrNull()?.isLetter() == true
+                    ) {
+                        connection.deleteSurroundingText(1, 0)
+                        connection.commitText(". ", 1)
+                        keyboardView?.setSuggestions(emptyList())
+                        return
+                    }
                     val words = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
                     val current = words.lastOrNull().orEmpty()
                     val previous = words.getOrNull(words.lastIndex - 1)
