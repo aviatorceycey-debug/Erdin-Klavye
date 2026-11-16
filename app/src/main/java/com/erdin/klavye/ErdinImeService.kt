@@ -198,7 +198,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 keyboardView?.setSuggestions(emptyList())
                 updateAutoShift()
             }
-            value == "🌐" -> switchToNextInputMethod(false)
+            value == "🌐" -> switchToNextInputMethod(true)
             else -> {
                 if (value == " ") {
                     invalidateSpellCheckRequests()
