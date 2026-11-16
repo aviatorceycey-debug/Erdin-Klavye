@@ -17,6 +17,12 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private var spellCheckerSession: SpellCheckerSession? = null
     private var keyboardView: ErdinKeyboardView? = null
     private var lastQueriedWord = ""
+    private lateinit var languageModel: LocalLanguageModel
+
+    override fun onCreate() {
+        super.onCreate()
+        languageModel = LocalLanguageModel(this)
+    }
 
     override fun onCreateInputView(): View {
         return ErdinKeyboardView(
@@ -70,9 +76,19 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             }
             "🌐" -> switchToNextInputMethod(false)
             else -> {
-                connection.commitText(value, 1)
-                if (value.all { it.isLetter() }) requestSuggestionsSoon()
-                else if (value == " ") keyboardView?.setSuggestions(emptyList())
+                if (value == " ") {
+                    val before = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
+                    val words = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
+                    val current = words.lastOrNull().orEmpty()
+                    val previous = words.getOrNull(words.lastIndex - 1)
+                    if (current.isNotBlank()) languageModel.learn(current, previous)
+                    connection.commitText(value, 1)
+                    keyboardView?.setSuggestions(languageModel.nextWords(current))
+                } else {
+                    connection.commitText(value, 1)
+                    if (value.all { it.isLetter() }) requestSuggestionsSoon()
+                    else keyboardView?.setSuggestions(emptyList())
+                }
             }
         }
     }
@@ -82,12 +98,14 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         mainHandler.postDelayed({
             val before = currentInputConnection?.getTextBeforeCursor(80, 0)?.toString().orEmpty()
             val word = before.takeLastWhile { it.isLetter() }
-            if (word.length < 2 || spellCheckerSession == null) {
+            if (word.length < 2) {
                 lastQueriedWord = ""
                 keyboardView?.setSuggestions(emptyList())
                 return@postDelayed
             }
             lastQueriedWord = word
+            val local = languageModel.completions(word)
+            keyboardView?.setSuggestions((listOf(word) + local).take(3))
             spellCheckerSession?.getSuggestions(arrayOf(TextInfo(word)), 3, false)
         }, 180)
     }
@@ -96,7 +114,11 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val connection = currentInputConnection ?: return
         val before = connection.getTextBeforeCursor(80, 0)?.toString().orEmpty()
         val currentWord = before.takeLastWhile { it.isLetter() }
-        if (currentWord.isEmpty()) return
+        if (currentWord.isEmpty()) {
+            connection.commitText("$replacement ", 1)
+            keyboardView?.setSuggestions(languageModel.nextWords(replacement))
+            return
+        }
         val count = currentWord.codePointCount(0, currentWord.length)
         if (!connection.deleteSurroundingTextInCodePoints(count, 0)) {
             connection.deleteSurroundingText(currentWord.length, 0)
@@ -118,7 +140,9 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             .filter { it.isNotBlank() && !it.equals(queriedWord, ignoreCase = true) }
             .distinct()
             .take(2)
-        val candidates = if (corrections.isEmpty()) emptyList() else listOf(queriedWord) + corrections
+        val candidates = (listOf(queriedWord) + corrections + languageModel.completions(queriedWord))
+            .distinct()
+            .take(3)
         mainHandler.post {
             if (lastQueriedWord == queriedWord) keyboardView?.setSuggestions(candidates)
         }
