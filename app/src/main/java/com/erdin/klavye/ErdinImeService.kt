@@ -69,7 +69,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             .getBoolean("personal_learning_enabled", true)
         learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
             personalLearningEnabled
-        suggestionsEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
+        val suggestionsPreference = getSharedPreferences("erdin_keyboard_settings", MODE_PRIVATE)
+            .getBoolean("suggestions_enabled", true)
+        suggestionsEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
+            suggestionsPreference
         clipboardEnabled = !passwordField && inputClass != InputType.TYPE_CLASS_NUMBER
         keyboardView?.hideClipboard()
         keyboardView?.setSuggestions(emptyList())
