@@ -4,6 +4,7 @@ import android.inputmethodservice.InputMethodService
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.text.InputType
 import android.view.textservice.SentenceSuggestionsInfo
@@ -79,6 +80,14 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private fun handleKey(value: String) {
         val connection = currentInputConnection ?: return
         when (value) {
+            "__CURSOR_LEFT__" -> {
+                connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT))
+                connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_LEFT))
+            }
+            "__CURSOR_RIGHT__" -> {
+                connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT))
+                connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_RIGHT))
+            }
             "⌫" -> {
                 if (!connection.deleteSurroundingTextInCodePoints(1, 0)) {
                     connection.deleteSurroundingText(1, 0)
