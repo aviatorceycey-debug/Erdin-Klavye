@@ -5,11 +5,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
+import android.view.View
 import android.content.Context
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.SeekBar
+import android.widget.RadioGroup
+import android.widget.RadioButton
 
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,7 +67,35 @@ class MainActivity : Activity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
         })
         root.addView(title); root.addView(info); root.addView(enable); root.addView(choose)
+        val handLabel = TextView(this).apply {
+            text = "Tek elle kullanım"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            setPadding(0, 24, 0, 8)
+        }
+        val handGroup = RadioGroup(this).apply {
+            orientation = RadioGroup.HORIZONTAL
+        }
+        val handOptions = listOf("Normal" to "normal", "Sol el" to "left", "Sağ el" to "right")
+        handOptions.forEach { (label, value) ->
+            handGroup.addView(RadioButton(this).apply {
+                text = label
+                tag = value
+                setTextColor(0xFFEAF1FC.toInt())
+                id = View.generateViewId()
+            })
+        }
+        val selectedMode = prefs.getString("one_handed_mode", "normal") ?: "normal"
+        for (i in 0 until handGroup.childCount) {
+            val child = handGroup.getChildAt(i) as RadioButton
+            if (child.tag == selectedMode) handGroup.check(child.id)
+        }
+        handGroup.setOnCheckedChangeListener { group, checkedId ->
+            val selected = group.findViewById<RadioButton>(checkedId)?.tag as? String ?: "normal"
+            prefs.edit().putString("one_handed_mode", selected).apply()
+        }
         root.addView(heightLabel); root.addView(heightSeek)
+        root.addView(handLabel); root.addView(handGroup)
         setContentView(root)
     }
 }
