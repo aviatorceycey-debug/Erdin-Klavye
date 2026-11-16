@@ -303,7 +303,32 @@ class ErdinKeyboardView(
             val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
             canvas.drawText(label, rect.centerX(), baseline, paint)
         }
+        drawKeyPreview(canvas)
         drawAlternatePopup(canvas)
+    }
+
+    private fun drawKeyPreview(canvas: Canvas) {
+        if (longPressed || symbols || emojiMode || clipboardMode) return
+        if (!context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+                .getBoolean("key_preview_enabled", true)) return
+        val key = downKey ?: return
+        val anchor = downRect ?: return
+        if (key.value.length != 1 || !key.value.first().isLetter()) return
+        val previewWidth = 54f * density
+        val previewHeight = 62f * density
+        val left = (anchor.centerX() - previewWidth / 2f).coerceIn(gap, width - previewWidth - gap)
+        val top = (anchor.top - previewHeight - 8f * density).coerceAtLeast(topInset + 2f * density)
+        val rect = RectF(left, top, left + previewWidth, top + previewHeight)
+        paint.setShadowLayer(8f * density, 0f, 3f * density, 0x99000000.toInt())
+        paint.color = palette().accent
+        canvas.drawRoundRect(rect, 13f * density, 13f * density, paint)
+        paint.clearShadowLayer()
+        paint.color = 0xFFFFFFFF.toInt()
+        paint.textAlign = Paint.Align.CENTER
+        paint.textSize = 30f * density
+        val label = if (shift || capsLock) upper(key.value) else key.value
+        val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
+        canvas.drawText(label, rect.centerX(), baseline, paint)
     }
 
     private fun drawSuggestionStrip(canvas: Canvas) {
