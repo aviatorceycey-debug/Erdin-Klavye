@@ -8,6 +8,7 @@ import android.os.Looper
 import android.view.View
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodSubtype
 import android.text.InputType
 import android.view.textservice.SentenceSuggestionsInfo
 import android.view.textservice.SpellCheckerSession
@@ -37,6 +38,11 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         languageModel = LocalLanguageModel(this)
     }
 
+    override fun onCurrentInputMethodSubtypeChanged(subtype: InputMethodSubtype) {
+        super.onCurrentInputMethodSubtypeChanged(subtype)
+        keyboardView?.setInputLanguage(subtype.locale)
+    }
+
     override fun onCreateInputView(): View {
         return ErdinKeyboardView(
             this,
@@ -44,6 +50,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             onSuggestion = { value -> applySuggestion(value) }
         ).also {
             keyboardView = it
+            it.setInputLanguage(currentInputMethodSubtype.locale)
             updateAutoShift()
         }
     }
