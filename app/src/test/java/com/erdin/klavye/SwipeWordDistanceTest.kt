@@ -21,7 +21,7 @@ class SwipeWordDistanceTest {
 
     @Test
     fun singleInsertionAndDeletionCountAsOneEdit() {
-        assertEquals(1, SwipeWordDistance.calculate("kitap", "kitap"))
+        assertEquals(0, SwipeWordDistance.calculate("kitap", "kitap"))
         assertEquals(1, SwipeWordDistance.calculate("kitap", "ktap"))
         assertEquals(1, SwipeWordDistance.calculate("ktap", "kitap"))
     }
