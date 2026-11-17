@@ -329,13 +329,23 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             value.startsWith("__SWIPE_WORD__") -> {
                 val traced = value.removePrefix("__SWIPE_WORD__")
                 // Decode against the active language's separate offline vocabulary.
-                val decoded = if (usesTurkishModel()) {
+                val turkish = usesTurkishModel()
+                val locale = if (turkish) Locale("tr", "TR") else Locale.US
+                val decoded = if (turkish) {
                     languageModel.decodeSwipePath(traced)
                 } else {
                     languageModel.decodeEnglishSwipePath(traced)
                 }
-                if (decoded.isNotBlank()) {
-                    connection.commitText(decoded, 1)
+                val letters = traced.filter { it.isLetter() }
+                val formatted = when {
+                    letters.isNotEmpty() && letters.all { it.isUpperCase() } ->
+                        decoded.uppercase(locale)
+                    letters.firstOrNull()?.isUpperCase() == true ->
+                        decoded.replaceFirstChar { it.uppercase(locale) }
+                    else -> decoded
+                }
+                if (formatted.isNotBlank()) {
+                    connection.commitText(formatted, 1)
                     updateAutoShift()
                     requestSuggestionsSoon()
                 }
