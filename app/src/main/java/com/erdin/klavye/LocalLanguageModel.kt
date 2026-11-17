@@ -294,9 +294,10 @@ class LocalLanguageModel(context: Context) {
             .toList()
 
         // Match the casing the user has already started, including Turkish İ/ı.
+        val typed = prefix.trim()
         return candidates.map { candidate ->
             when {
-                typed.all { !it.isLetter() || it.isUpperCase() } ->
+                typed.any { it.isLetter() } && typed.filter { it.isLetter() }.all { it.isUpperCase() } ->
                     candidate.uppercase(locale)
                 typed.firstOrNull()?.isUpperCase() == true ->
                     candidate.replaceFirstChar { it.uppercase(locale) }
