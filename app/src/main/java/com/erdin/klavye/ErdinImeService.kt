@@ -182,6 +182,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private fun usesTurkishModel(): Boolean =
         activeEditorLocale().language.equals("tr", ignoreCase = true)
 
+    private fun nextWordsForActiveLanguage(current: String, previous: String?): List<String> =
+        if (usesTurkishModel()) languageModel.nextWords(current, previous)
+        else languageModel.englishNextWords(current)
+
     private fun handleKey(value: String) {
         val connection = currentInputConnection ?: return
         when {
@@ -282,7 +286,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     connection.commitText(value, 1)
                     updateAutoShift()
                     keyboardView?.setSuggestions(
-                        if (suggestionsEnabled && usesTurkishModel()) languageModel.nextWords(current, previous) else emptyList()
+                        if (suggestionsEnabled) nextWordsForActiveLanguage(current, previous) else emptyList()
                     )
                 } else {
                     if (!value.all { it.isLetter() }) invalidateSpellCheckRequests()
@@ -317,7 +321,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 return@postDelayed
             }
             lastQueriedWord = word
-            val local = if (usesTurkishModel()) languageModel.completions(word) else emptyList()
+            val local = if (usesTurkishModel()) languageModel.completions(word) else languageModel.englishCompletions(word)
             keyboardView?.setSuggestions((listOf(word) + local).take(3))
             spellCheckerSession?.getSuggestions(
                 arrayOf(TextInfo(word, 0, requestSequence)), 3, false
@@ -339,7 +343,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             lastContextWord = replacement
             lastContextPreviousWord = previousContext
             keyboardView?.setSuggestions(
-                if (suggestionsEnabled && usesTurkishModel()) languageModel.nextWords(replacement, previousContext) else emptyList()
+                if (suggestionsEnabled) nextWordsForActiveLanguage(replacement, previousContext) else emptyList()
             )
             return
         }
@@ -373,7 +377,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             .filter { it.isNotBlank() && !it.equals(queriedWord, ignoreCase = true) }
             .distinct()
             .take(2)
-        val localCompletions = if (usesTurkishModel()) languageModel.completions(queriedWord) else emptyList()
+        val localCompletions = if (usesTurkishModel()) languageModel.completions(queriedWord) else languageModel.englishCompletions(queriedWord)
         val candidates = (listOf(queriedWord) + corrections + localCompletions)
             .distinct()
             .take(3)
