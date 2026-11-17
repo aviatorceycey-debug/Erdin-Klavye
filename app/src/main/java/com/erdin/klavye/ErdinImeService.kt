@@ -323,6 +323,21 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         }
     }
 
+    private fun learnWordBeforeBoundary(before: String): Pair<String, String?> {
+        val words = before.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
+        val current = words.lastOrNull().orEmpty()
+        val previous = words.getOrNull(words.lastIndex - 1)
+        val previousPrevious = words.getOrNull(words.lastIndex - 2)
+        if (current.isNotBlank()) {
+            lastContextWord = current
+            lastContextPreviousWord = previous.orEmpty()
+            if (learningEnabled && usesTurkishModel()) {
+                languageModel.learn(current, previous, previousPrevious)
+            }
+        }
+        return current to previous
+    }
+
     private fun handleKey(value: String) {
         val connection = currentInputConnection ?: return
         when {
@@ -410,15 +425,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 if (connection.getSelectedText(0).isNullOrEmpty()) {
                     val before = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
                     if (before.lastOrNull()?.isLetter() == true) {
-                        val words = before.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
-                        val current = words.lastOrNull().orEmpty()
-                        val previous = words.getOrNull(words.lastIndex - 1)
-                        val previousPrevious = words.getOrNull(words.lastIndex - 2)
-                        lastContextWord = current
-                        lastContextPreviousWord = previous.orEmpty()
-                        if (learningEnabled && usesTurkishModel() && current.isNotBlank()) {
-                            languageModel.learn(current, previous, previousPrevious)
-                        }
+                        learnWordBeforeBoundary(before)
                     }
                 }
                 val action = currentInputEditorInfo?.imeOptions
@@ -451,15 +458,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                         updateAutoShift()
                         return
                     }
-                    val words = before.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
-                    val current = words.lastOrNull().orEmpty()
-                    val previous = words.getOrNull(words.lastIndex - 1)
-                    val previousPrevious = words.getOrNull(words.lastIndex - 2)
-                    lastContextWord = current
-                    lastContextPreviousWord = previous.orEmpty()
-                    if (learningEnabled && usesTurkishModel() && current.isNotBlank()) {
-                        languageModel.learn(current, previous, previousPrevious)
-                    }
+                    val (current, previous) = learnWordBeforeBoundary(before)
                     connection.commitText(value, 1)
                     updateAutoShift()
                     keyboardView?.setSuggestions(
@@ -473,15 +472,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     if (wordBoundary && connection.getSelectedText(0).isNullOrEmpty()) {
                         val before = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
                         if (before.lastOrNull()?.isLetter() == true) {
-                            val words = before.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
-                            val current = words.lastOrNull().orEmpty()
-                            val previous = words.getOrNull(words.lastIndex - 1)
-                            val previousPrevious = words.getOrNull(words.lastIndex - 2)
-                            lastContextWord = current
-                            lastContextPreviousWord = previous.orEmpty()
-                            if (learningEnabled && usesTurkishModel() && current.isNotBlank()) {
-                                languageModel.learn(current, previous, previousPrevious)
-                            }
+                            learnWordBeforeBoundary(before)
                         }
                     }
                     connection.commitText(value, 1)
