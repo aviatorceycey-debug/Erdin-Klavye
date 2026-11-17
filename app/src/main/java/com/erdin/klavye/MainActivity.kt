@@ -320,6 +320,16 @@ class MainActivity : Activity() {
         learningSwitch.setPadding(0, 10, 0, 8)
         root.addView(learningSwitch)
 
+        val privacyNote = TextView(this).apply {
+            text = "GİZLİLİK  •  Yazdıkların sunucuya gönderilmez. Kişisel kelime öğrenme verileri yalnızca bu cihazda saklanır. Şifreli ve önerilerin kapalı olduğu alanlarda öğrenme devre dışıdır. İstediğinde aşağıdan silebilirsin."
+            textSize = 12f
+            setTextColor(0xFF9FB4D2.toInt())
+            setPadding(16, 12, 16, 12)
+            setBackgroundColor(0xFF182438.toInt())
+            contentDescription = text
+        }
+        root.addView(privacyNote)
+
         val clearLearningButton = Button(this).apply {
             text = "Öğrenilen kelimeleri temizle"
             setOnClickListener {
