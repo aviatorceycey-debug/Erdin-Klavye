@@ -39,6 +39,17 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         languageModel = LocalLanguageModel(this)
     }
 
+    override fun onDestroy() {
+        mainHandler.removeCallbacksAndMessages(null)
+        suggestionRequestSequence++
+        spellCheckerSession?.close()
+        spellCheckerSession = null
+        spellCheckerLocale = null
+        keyboardView = null
+        clipboardHistory.clear()
+        super.onDestroy()
+    }
+
     override fun onCurrentInputMethodSubtypeChanged(subtype: InputMethodSubtype) {
         super.onCurrentInputMethodSubtypeChanged(subtype)
         activeSubtypeLocale = subtype.locale.ifBlank { "tr_TR" }
