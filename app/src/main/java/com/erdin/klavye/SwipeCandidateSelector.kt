@@ -10,14 +10,37 @@ internal data class SwipeWordCandidate(
 
 /** Keeps uncertain swipe traces intact instead of silently replacing them. */
 internal object SwipeCandidateSelector {
+    private fun topTwo(
+        candidates: List<SwipeWordCandidate>,
+        comparator: Comparator<SwipeWordCandidate>
+    ): Pair<SwipeWordCandidate?, SwipeWordCandidate?> {
+        var best: SwipeWordCandidate? = null
+        var runnerUp: SwipeWordCandidate? = null
+        candidates.forEach { candidate ->
+            val currentBest = best
+            if (currentBest == null || comparator.compare(candidate, currentBest) < 0) {
+                runnerUp = currentBest
+                best = candidate
+            } else {
+                val currentRunnerUp = runnerUp
+                if (currentRunnerUp == null ||
+                    comparator.compare(candidate, currentRunnerUp) < 0
+                ) {
+                    runnerUp = candidate
+                }
+            }
+        }
+        return best to runnerUp
+    }
+
     fun selectTurkish(candidates: List<SwipeWordCandidate>, fallback: String): String {
-        val ranked = candidates.sortedWith(
+        val (best, runnerUp) = topTwo(
+            candidates,
             compareBy<SwipeWordCandidate> { it.distance }
                 .thenByDescending { it.personalCount }
                 .thenBy { it.word }
         )
-        val best = ranked.firstOrNull() ?: return fallback
-        val runnerUp = ranked.getOrNull(1)
+        best ?: return fallback
         val clearlyLearned = runnerUp != null &&
             best.personalCount >= 3 &&
             best.personalCount.toLong() >= runnerUp.personalCount.toLong() * 2L
@@ -26,13 +49,13 @@ internal object SwipeCandidateSelector {
     }
 
     fun selectEnglish(candidates: List<SwipeWordCandidate>, fallback: String): String {
-        val ranked = candidates.sortedWith(
+        val (best, runnerUp) = topTwo(
+            candidates,
             compareBy<SwipeWordCandidate> { it.distance }
                 .thenBy { it.frequencyRank }
                 .thenBy { it.word }
         )
-        val best = ranked.firstOrNull() ?: return fallback
-        val runnerUp = ranked.getOrNull(1)
+        best ?: return fallback
         return if (best.distance in 0..1 &&
             (runnerUp == null || runnerUp.distance > best.distance)
         ) best.word else fallback
