@@ -35,7 +35,7 @@ class MainActivity : Activity() {
         setupStatus?.apply {
             text = buildString {
                 append(if (enabled) "✓ Klavye etkin" else "1. Klavyeyi etkinleştir")
-                append("\\n")
+                append("\n")
                 append(if (selected) "✓ Varsayılan klavye seçili" else "2. Erdin Klavye'yi varsayılan seç")
             }
             setTextColor(if (enabled && selected) 0xFF72E0B0.toInt() else 0xFFFFD18A.toInt())
