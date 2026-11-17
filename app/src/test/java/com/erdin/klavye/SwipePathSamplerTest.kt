@@ -93,6 +93,15 @@ class SwipePathSamplerTest {
     }
 
     @Test
+    fun interpolatesBetweenExtremeFiniteFloatCoordinates() {
+        val samples = mutableListOf(-Float.MAX_VALUE to 0f)
+        SwipePathSampler.appendSegment(samples, Float.MAX_VALUE, 0f, 1f)
+        assertEquals(Float.MAX_VALUE to 0f, samples.last())
+        assertTrue(samples.size <= SwipePathSampler.MAX_SAMPLES)
+        assertTrue(samples.all { it.first.isFinite() && it.second.isFinite() })
+    }
+
+    @Test
     fun rejectsNonFiniteInterpolatedEndpoints() {
         val samples = mutableListOf(0f to 0f)
         SwipePathSampler.appendSegment(samples, Float.POSITIVE_INFINITY, 10f, 1f)
