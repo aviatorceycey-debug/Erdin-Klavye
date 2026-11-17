@@ -26,7 +26,14 @@ internal object SwipeTraceDecoder {
         density: Float,
         english: Boolean
     ): String {
-        if (path.isEmpty() || keys.isEmpty() || density <= 0f) return ""
+        if (path.isEmpty() || keys.isEmpty() || !density.isFinite() || density <= 0f) return ""
+        val validKeys = keys.filter { key ->
+            key.value.isNotBlank() &&
+                key.left.isFinite() && key.top.isFinite() &&
+                key.right.isFinite() && key.bottom.isFinite() &&
+                key.right > key.left && key.bottom > key.top
+        }
+        if (validKeys.isEmpty()) return ""
 
         val locale = if (english) Locale.US else Locale("tr", "TR")
         val switchMargin = 12f * density
@@ -36,7 +43,8 @@ internal object SwipeTraceDecoder {
         var activeKey: SwipeKeyBounds? = null
 
         path.forEach { (x, y) ->
-            val nearest = keys.minByOrNull { key ->
+            if (!x.isFinite() || !y.isFinite()) return@forEach
+            val nearest = validKeys.minByOrNull { key ->
                 val dx = key.centerX - x
                 val dy = key.centerY - y
                 dx * dx + dy * dy
