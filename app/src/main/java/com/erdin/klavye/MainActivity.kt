@@ -101,6 +101,15 @@ class MainActivity : Activity() {
             adapter.clear()
             adapter.addAll(visibleWords.map { (word, count) -> "$word     ·     $count kullanım" })
             adapter.notifyDataSetChanged()
+            val hasWords = allWords.isNotEmpty()
+            search.visibility = if (hasWords) View.VISIBLE else View.GONE
+            list.visibility = if (visibleWords.isNotEmpty()) View.VISIBLE else View.GONE
+            emptyLabel.visibility = if (visibleWords.isEmpty()) View.VISIBLE else View.GONE
+            emptyLabel.text = when {
+                !hasWords -> "Henüz öğrenilmiş kelime yok. Kişisel öğrenme açıkken klavye kullandığın kelimeleri cihazında öğrenir."
+                query.isNotBlank() -> "“${query.trim()}” için eşleşen kelime bulunamadı."
+                else -> "Kişisel sözlük boş."
+            }
             dialog.setTitle("Kişisel sözlük  ·  ${visibleWords.size}/${allWords.size}")
         }
 
@@ -127,15 +136,7 @@ class MainActivity : Activity() {
         }
 
         dialog.setOnShowListener {
-            if (allWords.isEmpty()) {
-                list.visibility = View.GONE
-                search.visibility = View.GONE
-                emptyLabel.visibility = View.VISIBLE
-                dialog.setTitle("Kişisel sözlük")
-            } else {
-                emptyLabel.visibility = View.GONE
-                refresh("")
-            }
+            refresh("")
         }
         dialog.show()
     }
