@@ -166,7 +166,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val editorDisablesPersonalLearning =
             (attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0
         learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
-            personalLearningEnabled && !editorDisablesPersonalLearning && usesTurkishModel()
+            personalLearningEnabled && !editorDisablesPersonalLearning
         val suggestionsPreference = getSharedPreferences("erdin_keyboard_settings", MODE_PRIVATE)
             .getBoolean("suggestions_enabled", true)
         suggestionsEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
@@ -331,8 +331,9 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         if (current.isNotBlank()) {
             lastContextWord = current
             lastContextPreviousWord = previous.orEmpty()
-            if (learningEnabled && usesTurkishModel()) {
-                languageModel.learn(current, previous, previousPrevious)
+            if (learningEnabled) {
+                if (usesTurkishModel()) languageModel.learn(current, previous, previousPrevious)
+                else languageModel.learnEnglish(current)
             }
         }
         return current to previous
