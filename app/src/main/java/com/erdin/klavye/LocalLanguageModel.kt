@@ -174,7 +174,18 @@ class LocalLanguageModel(context: Context) {
         "talk>to" to listOf("you", "them", "her"),
         "as>soon" to listOf("as"),
         "out>of" to listOf("the", "time", "town"),
-        "one>of" to listOf("the", "my", "those")
+        "one>of" to listOf("the", "my", "those"),
+        "good>to" to listOf("see", "know", "hear"),
+        "i>hope" to listOf("you", "that", "everything"),
+        "i>will" to listOf("be", "send", "let"),
+        "please>let" to listOf("me", "us"),
+        "let>us" to listOf("know", "go", "start"),
+        "looking>good" to listOf("today", "so far"),
+        "at>the" to listOf("moment", "same time", "end"),
+        "for>your" to listOf("help", "time", "support"),
+        "have>been" to listOf("working", "trying", "thinking"),
+        "as>well" to listOf("as", "today"),
+        "much>appreciated" to listOf("thank you", "indeed")
     )
 
     private val englishNextHints = mapOf(
