@@ -852,10 +852,10 @@ class ErdinKeyboardView(
         canvas.drawText(label, rect.centerX(), baseline, paint)
     }
 
-    private fun suggestionBounds(index: Int, count: Int): RectF {
+    private fun suggestionBounds(index: Int, count: Int, target: RectF = RectF()): RectF {
         val sideControlWidth = 58f * density
         val cellWidth = (width - sideControlWidth * 2f).coerceAtLeast(0f) / count.coerceAtLeast(1)
-        return RectF(
+        return target.set(
             sideControlWidth + index * cellWidth + 4f * density,
             5f * density,
             sideControlWidth + (index + 1) * cellWidth - 4f * density,
@@ -864,7 +864,6 @@ class ErdinKeyboardView(
     }
 
     private fun drawSuggestionStrip(canvas: Canvas) {
-        suggestionRects.clear()
         paint.color = palette().accentOutline
         paint.textSize = 17f * density
         paint.textAlign = Paint.Align.CENTER
@@ -876,6 +875,7 @@ class ErdinKeyboardView(
             canvas.drawText("◐", width - 28f * density, 26f * density, paint)
         }
         if (clipboardMode) {
+            suggestionRects.clear()
             paint.color = 0xFFB8C9E4.toInt()
             paint.textSize = 11f * density
             paint.textAlign = Paint.Align.CENTER
@@ -893,9 +893,13 @@ class ErdinKeyboardView(
             canvas.drawText(if (english) "CLEAR" else "TEMİZLE", width - 32f * density, 25f * density, paint)
             return
         }
-        if (emojiMode || symbols) return
+        if (emojiMode || symbols) {
+            suggestionRects.clear()
+            return
+        }
         val count = suggestions.size
         if (count == 0) {
+            suggestionRects.clear()
             paint.color = 0xFF9EABC2.toInt()
             paint.textSize = 11f * density
             paint.textAlign = Paint.Align.CENTER
@@ -903,8 +907,11 @@ class ErdinKeyboardView(
             return
         }
         suggestions.forEachIndexed { index, suggestion ->
-            val rect = suggestionBounds(index, count)
-            suggestionRects += rect
+            val rect = suggestionBounds(
+                index,
+                count,
+                suggestionRects.getOrNull(index) ?: RectF().also { suggestionRects.add(it) }
+            )
             if (index == 1) {
                 paint.color = palette().suggestion
                 canvas.drawRoundRect(rect, 9f * density, 9f * density, paint)
@@ -922,6 +929,9 @@ class ErdinKeyboardView(
                 ).toString()
             } else suggestion
             canvas.drawText(display, rect.centerX(), baseline, paint)
+        }
+        if (suggestionRects.size > count) {
+            suggestionRects.subList(count, suggestionRects.size).clear()
         }
     }
 
