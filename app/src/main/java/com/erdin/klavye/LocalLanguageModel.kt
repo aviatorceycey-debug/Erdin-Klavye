@@ -52,7 +52,6 @@ class LocalLanguageModel(context: Context) {
         "hoş>bulduk" to listOf("teşekkürler", "nasılsınız"),
         "kolay>gelsin" to listOf("teşekkürler", "sana", "size"),
         "eline>sağlık" to listOf("çok", "teşekkür", "harika"),
-        "iyi>ki" to listOf("varsın", "geldin", "yaptım"),
         "bir>şey" to listOf("daha", "söyleyeceğim", "soracağım"),
         "şu>anda" to listOf("müsaitim", "uygun", "çalışıyorum"),
         "haber>ver" to listOf("lütfen", "bana", "inceleyelim"),
