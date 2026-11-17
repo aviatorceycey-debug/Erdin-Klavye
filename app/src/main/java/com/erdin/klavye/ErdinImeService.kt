@@ -495,11 +495,11 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             }
             .filter { it.isNotBlank() && !it.equals(queriedWord, ignoreCase = true) }
             .map { matchSuggestionCase(it, queriedWord) }
-            .distinct()
+            .distinctBy { it.lowercase(activeEditorLocale()) }
             .take(2)
         val localCompletions = if (usesTurkishModel()) languageModel.completions(queriedWord) else languageModel.englishCompletions(queriedWord)
         val candidates = (listOf(queriedWord) + corrections + localCompletions)
-            .distinct()
+            .distinctBy { it.lowercase(activeEditorLocale()) }
             .take(3)
         mainHandler.post {
             // A newer request can start after this callback arrives but before
