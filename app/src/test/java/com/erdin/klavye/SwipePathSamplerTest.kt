@@ -30,6 +30,16 @@ class SwipePathSamplerTest {
     }
 
     @Test
+    fun repeatedCompactionNeverExceedsTheSampleLimit() {
+        val samples = mutableListOf(0f to 0f)
+        repeat(2_000) { index ->
+            SwipePathSampler.append(samples, (index + 10).toFloat(), 0f, 1f)
+            assertTrue(samples.size <= SwipePathSampler.MAX_SAMPLES)
+        }
+        assertEquals(2_009f to 0f, samples.last())
+    }
+
+    @Test
     fun rejectsInvalidDensity() {
         val samples = mutableListOf(10f to 10f)
         SwipePathSampler.append(samples, 30f, 30f, 0f)
