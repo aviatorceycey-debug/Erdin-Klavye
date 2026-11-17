@@ -95,6 +95,7 @@ class ErdinKeyboardView(
     private var numericInputMode = 0
     private var numericAllowsSign = false
     private var numericAllowsDecimal = false
+    private var numericDecimalSeparator = java.text.DecimalFormatSymbols.getInstance().decimalSeparator.toString()
     private var clipboardItems: List<String> = emptyList()
     private var activeLanguageLabel = "Türkçe"
     private var downKey: KeyboardKey? = null
@@ -236,7 +237,7 @@ class ErdinKeyboardView(
             buildList {
                 if (numericAllowsSign) add(KeyboardKey("−", "-", kind = KeyboardKey.Kind.ACTION))
                 add(KeyboardKey("0", weight = 1.4f))
-                if (numericAllowsDecimal) add(KeyboardKey(".", kind = KeyboardKey.Kind.ACTION))
+                if (numericAllowsDecimal) add(KeyboardKey(numericDecimalSeparator, kind = KeyboardKey.Kind.ACTION))
                 add(KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION))
             },
             listOf(
