@@ -25,10 +25,10 @@ class SuggestionCandidateSelectorTest {
 
     @Test
     fun topSelectorPreservesStableOrderForEqualCandidates() {
-        val candidates = sequenceOf("first", "second", "third")
+        val candidates = sequenceOf("first", "other", "third")
         val comparator = compareBy<String> { it.length }
         assertEquals(
-            listOf("first", "second"),
+            listOf("first", "other"),
             SuggestionCandidateSelector.top(candidates, 2, comparator)
         )
     }
