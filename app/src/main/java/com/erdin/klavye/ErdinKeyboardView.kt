@@ -196,9 +196,9 @@ class ErdinKeyboardView(
     private fun numericRows(): List<List<KeyboardKey>> {
         if (numericInputMode == 2) {
             return listOf(
-                listOf(KeyboardKey("1"), KeyboardKey("2 ABC"), KeyboardKey("3 DEF")),
-                listOf(KeyboardKey("4 GHI"), KeyboardKey("5 JKL"), KeyboardKey("6 MNO")),
-                listOf(KeyboardKey("7 PQRS"), KeyboardKey("8 TUV"), KeyboardKey("9 WXYZ")),
+                listOf(KeyboardKey("1"), KeyboardKey("2 ABC", "2"), KeyboardKey("3 DEF", "3")),
+                listOf(KeyboardKey("4 GHI", "4"), KeyboardKey("5 JKL", "5"), KeyboardKey("6 MNO", "6")),
+                listOf(KeyboardKey("7 PQRS", "7"), KeyboardKey("8 TUV", "8"), KeyboardKey("9 WXYZ", "9")),
                 listOf(KeyboardKey("*"), KeyboardKey("0", weight = 1.4f), KeyboardKey("#")),
                 listOf(
                     KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f),
