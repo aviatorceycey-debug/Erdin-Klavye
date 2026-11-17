@@ -270,9 +270,24 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private fun usesTurkishModel(): Boolean =
         activeEditorLocale().language.equals("tr", ignoreCase = true)
 
-    private fun nextWordsForActiveLanguage(current: String, previous: String?): List<String> =
-        if (usesTurkishModel()) languageModel.nextWords(current, previous)
-        else languageModel.englishNextWords(current)
+    private fun nextWordsForActiveLanguage(current: String, previous: String?): List<String> {
+        val suggestions = if (usesTurkishModel()) {
+            languageModel.nextWords(current, previous)
+        } else {
+            languageModel.englishNextWords(current)
+        }
+        val autoCapitalization = getSharedPreferences(
+            "erdin_keyboard_settings", MODE_PRIVATE
+        ).getBoolean("auto_capitalization", true)
+        val capsAtCursor = currentInputConnection?.getCursorCapsMode(
+            InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        ) ?: 0
+        if (!autoCapitalization || capsAtCursor == 0) return suggestions
+        val locale = activeEditorLocale()
+        return suggestions.map { word ->
+            word.replaceFirstChar { it.uppercase(locale) }
+        }
+    }
 
     private fun handleKey(value: String) {
         val connection = currentInputConnection ?: return
