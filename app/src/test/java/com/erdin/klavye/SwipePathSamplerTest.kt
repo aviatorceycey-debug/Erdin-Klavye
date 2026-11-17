@@ -85,6 +85,21 @@ class SwipePathSamplerTest {
     }
 
     @Test
+    fun capsInterpolationWorkAndPreservesTheSegmentEndpoint() {
+        val samples = mutableListOf(0f to 0f)
+        SwipePathSampler.appendSegment(samples, 10_000f, 0f, 1f)
+        assertEquals(10_000f to 0f, samples.last())
+        assertTrue(samples.size <= 13)
+    }
+
+    @Test
+    fun rejectsNonFiniteInterpolatedEndpoints() {
+        val samples = mutableListOf(0f to 0f)
+        SwipePathSampler.appendSegment(samples, Float.POSITIVE_INFINITY, 10f, 1f)
+        assertEquals(listOf(0f to 0f), samples)
+    }
+
+    @Test
     fun rejectsInvalidDensity() {
         val samples = mutableListOf(10f to 10f)
         SwipePathSampler.append(samples, 30f, 30f, 0f)
