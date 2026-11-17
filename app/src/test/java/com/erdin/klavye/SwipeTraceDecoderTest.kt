@@ -85,6 +85,45 @@ class SwipeTraceDecoderTest {
     }
 
     @Test
+    fun extremeFiniteKeyBoundsDoNotOverflowCenterCalculations() {
+        val extremeKeys = listOf(
+            SwipeKeyBounds(
+                "a",
+                Float.MAX_VALUE / 2f,
+                0f,
+                Float.MAX_VALUE,
+                40f
+            )
+        )
+        assertEquals(
+            "a",
+            SwipeTraceDecoder.decode(
+                listOf(Float.MAX_VALUE * 0.75f to 20f),
+                extremeKeys,
+                1f,
+                english = true
+            )
+        )
+    }
+
+    @Test
+    fun veryLargeFiniteDensityDoesNotCrashDistanceChecks() {
+        val twoKeys = listOf(
+            SwipeKeyBounds("a", 0f, 0f, 40f, 40f),
+            SwipeKeyBounds("b", 40f, 0f, 80f, 40f)
+        )
+        assertEquals(
+            "a",
+            SwipeTraceDecoder.decode(
+                listOf(10f to 20f, 70f to 20f),
+                twoKeys,
+                Float.MAX_VALUE,
+                english = true
+            )
+        )
+    }
+
+    @Test
     fun emptyPathOrKeysProducesNoTrace() {
         assertEquals("", SwipeTraceDecoder.decode(emptyList(), keys, 1f, english = true))
         assertEquals("", SwipeTraceDecoder.decode(listOf(10f to 10f), emptyList(), 1f, english = true))
