@@ -347,15 +347,22 @@ class LocalLanguageModel(context: Context) {
         loadedRevision = revision
     }
 
-    private fun markPersonalDataChanged() {
-        loadedRevision = maxOf(loadedRevision, prefs.getLong("personal_data_revision", 0L)) + 1L
-        prefs.edit().putLong("personal_data_revision", loadedRevision).apply()
-    }
-
-    private fun saveCounts(key: String, values: Map<String, Int>) {
-        val json = JSONObject()
-        values.forEach { (word, count) -> json.put(word, count) }
-        prefs.edit().putString(key, json.toString()).apply()
+    // Persist all model tables and their revision in one preferences transaction.
+    // This avoids several asynchronous disk writes for every learned word.
+    private fun persistPersonalData() {
+        val revision = maxOf(loadedRevision, prefs.getLong("personal_data_revision", 0L)) + 1L
+        fun encode(values: Map<String, Int>): String {
+            val json = JSONObject()
+            values.forEach { (word, count) -> json.put(word, count) }
+            return json.toString()
+        }
+        prefs.edit()
+            .putString("word_counts", encode(wordCounts))
+            .putString("pair_counts", encode(pairCounts))
+            .putString("trigram_counts", encode(trigramCounts))
+            .putLong("personal_data_revision", revision)
+            .apply()
+        loadedRevision = revision
     }
 
     @Synchronized
@@ -364,12 +371,14 @@ class LocalLanguageModel(context: Context) {
         wordCounts.clear()
         pairCounts.clear()
         trigramCounts.clear()
+        val revision = maxOf(loadedRevision, prefs.getLong("personal_data_revision", 0L)) + 1L
         prefs.edit()
             .remove("word_counts")
             .remove("pair_counts")
             .remove("trigram_counts")
+            .putLong("personal_data_revision", revision)
             .apply()
-        markPersonalDataChanged()
+        loadedRevision = revision
     }
 
     @Synchronized
@@ -391,10 +400,7 @@ class LocalLanguageModel(context: Context) {
         // when it is the predicted final token.
         pairCounts.keys.removeAll { key -> key.split('>').any { it == clean } }
         trigramCounts.keys.removeAll { key -> key.split('>').any { it == clean } }
-        saveCounts("word_counts", wordCounts)
-        saveCounts("pair_counts", pairCounts)
-        saveCounts("trigram_counts", trigramCounts)
-        markPersonalDataChanged()
+        persistPersonalData()
     }
 
     @Synchronized
@@ -409,8 +415,6 @@ class LocalLanguageModel(context: Context) {
             words.entries.sortedBy { it.value }.take(words.size - 2000)
                 .forEach { words.remove(it.key) }
         }
-        saveCounts("word_counts", words)
-
         val previous = previousWord?.let(::normalize).orEmpty()
         if (previous.isNotBlank()) {
             val pairs = pairCounts
@@ -420,7 +424,6 @@ class LocalLanguageModel(context: Context) {
                 pairs.entries.sortedBy { it.value }.take(pairs.size - 4000)
                     .forEach { pairs.remove(it.key) }
             }
-            saveCounts("pair_counts", pairs)
         }
 
         val previousPrevious = previousPreviousWord?.let(::normalize).orEmpty()
@@ -432,9 +435,8 @@ class LocalLanguageModel(context: Context) {
                 trigrams.entries.sortedBy { it.value }.take(trigrams.size - 4500)
                     .forEach { trigrams.remove(it.key) }
             }
-            saveCounts("trigram_counts", trigrams)
         }
-        markPersonalDataChanged()
+        persistPersonalData()
     }
 
     @Synchronized
