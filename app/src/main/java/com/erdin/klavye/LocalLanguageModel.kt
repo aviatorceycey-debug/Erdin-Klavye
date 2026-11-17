@@ -553,7 +553,7 @@ class LocalLanguageModel(context: Context) {
         val seeded = starterNextWords[previous].orEmpty()
         val seededContext = starterTrigrams["$previousPrevious>$previous"].orEmpty()
         val candidates = (seededContext.asSequence() + seeded.asSequence() +
-            learned.keys.asSequence() + contextual.keys.asSequence()).distinct().toList()
+            learned.keys.asSequence() + contextual.keys.asSequence()).distinct()
 
         // Personal usage should influence ranking quickly, while built-in hints
         // remain useful until the user's own patterns become established.
@@ -568,12 +568,14 @@ class LocalLanguageModel(context: Context) {
             return trigramScore + seededTrigramScore + bigramScore + personalWordScore + seedScore
         }
 
-        return candidates.sortedWith(
-            compareByDescending<String> { score(it) }
+        return SuggestionCandidateSelector.top(
+            candidates,
+            limit = 3,
+            comparator = compareByDescending<String> { score(it) }
                 .thenByDescending { contextual[it] ?: 0 }
                 .thenByDescending { learned[it] ?: 0 }
                 .thenBy { it.length }
-        ).take(3)
+        )
     }
 
     private fun normalize(value: String): String = value.trim().lowercase(locale)
