@@ -1053,6 +1053,13 @@ class ErdinKeyboardView(
                 handler.removeCallbacks(deleteRepeatRunnable)
                 val key = downKey
                 if (swipeTyping) {
+                    for (historyIndex in 0 until event.historySize) {
+                        appendSwipeSegment(
+                            event.getHistoricalX(historyIndex),
+                            event.getHistoricalY(historyIndex)
+                        )
+                    }
+                    appendSwipeSegment(event.x, event.y)
                     val letterKeys = keyRects().filter { it.first.value.length == 1 && it.first.value.first().isLetter() }
                     val swipeKeys = letterKeys.map { (key, rect) ->
                         SwipeKeyBounds(key.value, rect.left, rect.top, rect.right, rect.bottom)
