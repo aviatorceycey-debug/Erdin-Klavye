@@ -76,6 +76,15 @@ class SwipePathSamplerTest {
     }
 
     @Test
+    fun rejectsNonFiniteCoordinatesAndDensity() {
+        val samples = mutableListOf(10f to 10f)
+        SwipePathSampler.append(samples, Float.NaN, 20f, 1f)
+        SwipePathSampler.append(samples, 20f, Float.POSITIVE_INFINITY, 1f)
+        SwipePathSampler.append(samples, 30f, 30f, Float.NaN)
+        assertEquals(listOf(10f to 10f), samples)
+    }
+
+    @Test
     fun rejectsInvalidDensity() {
         val samples = mutableListOf(10f to 10f)
         SwipePathSampler.append(samples, 30f, 30f, 0f)
