@@ -463,7 +463,12 @@ class ErdinKeyboardView(
                 val key = pair.first
                 val rect = pair.second
                 val english = activeLanguageLabel == "English"
-                val description = when (key.kind) {
+                val clipboardIndex = key.value.removePrefix("__CLIP_ITEM__").toIntOrNull()
+                    .takeIf { key.value.startsWith("__CLIP_ITEM__") }
+                val clipboardText = clipboardIndex?.let { clipboardItems.getOrNull(it) }
+                val description = clipboardText?.let {
+                    if (english) "Clipboard item: $it" else "Pano öğesi: $it"
+                } ?: when (key.kind) {
                     KeyboardKey.Kind.SPACE -> if (english) "Space, $activeLanguageLabel" else "Boşluk, $activeLanguageLabel"
                     KeyboardKey.Kind.ACCENT -> when (key.label) {
                         "↵" -> editorActionDescription ?: if (english) "Enter" else "Gönder veya yeni satır"
