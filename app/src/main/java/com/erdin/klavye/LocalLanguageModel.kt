@@ -290,10 +290,15 @@ class LocalLanguageModel(context: Context) {
         val typed = prefix.trim()
         val key = typed.lowercase(Locale.US)
         if (key.length < 2) return emptyList()
+        refreshPersonalDataIfChanged()
         val candidates = SuggestionCandidateSelector.top(
-            englishStarterWords.asSequence().filter { it.startsWith(key) && it != key },
+            (englishStarterWords.asSequence() + englishWordCounts.keys.asSequence())
+                .filter { it.startsWith(key) && it != key }
+                .distinct(),
             limit = 2,
-            comparator = compareBy<String> { englishFrequencyRank[it] ?: Int.MAX_VALUE }.thenBy { it }
+            comparator = compareByDescending<String> { englishWordCounts[it] ?: 0 }
+                .thenBy { englishFrequencyRank[it] ?: Int.MAX_VALUE }
+                .thenBy { it }
         )
         return candidates.map { candidate ->
             when {
@@ -335,6 +340,7 @@ class LocalLanguageModel(context: Context) {
     // without reparsing the JSON on every key press.
     private var loadedRevision = prefs.getLong("personal_data_revision", 0L)
     private var wordCounts = readCounts("word_counts")
+    private var englishWordCounts = readCounts("english_word_counts")
     private var pairCounts = readCounts("pair_counts")
     private var trigramCounts = readCounts("trigram_counts")
     // Prefix indexes avoid scanning every learned pair and trigram for each suggestion.
@@ -360,6 +366,7 @@ class LocalLanguageModel(context: Context) {
         val revision = prefs.getLong("personal_data_revision", 0L)
         if (revision == loadedRevision) return
         wordCounts = readCounts("word_counts")
+        englishWordCounts = readCounts("english_word_counts")
         pairCounts = readCounts("pair_counts")
         trigramCounts = readCounts("trigram_counts")
         pairNextCounts = indexContextCounts(pairCounts, 1)
@@ -378,6 +385,7 @@ class LocalLanguageModel(context: Context) {
         }
         prefs.edit()
             .putString("word_counts", encode(wordCounts))
+            .putString("english_word_counts", encode(englishWordCounts))
             .putString("pair_counts", encode(pairCounts))
             .putString("trigram_counts", encode(trigramCounts))
             .putLong("personal_data_revision", revision)
@@ -389,6 +397,7 @@ class LocalLanguageModel(context: Context) {
     fun clearPersonalData() {
         refreshPersonalDataIfChanged()
         wordCounts.clear()
+        englishWordCounts.clear()
         pairCounts.clear()
         trigramCounts.clear()
         pairNextCounts.clear()
@@ -396,6 +405,7 @@ class LocalLanguageModel(context: Context) {
         val revision = maxOf(loadedRevision, prefs.getLong("personal_data_revision", 0L)) + 1L
         prefs.edit()
             .remove("word_counts")
+            .remove("english_word_counts")
             .remove("pair_counts")
             .remove("trigram_counts")
             .putLong("personal_data_revision", revision)
@@ -406,10 +416,11 @@ class LocalLanguageModel(context: Context) {
     @Synchronized
     fun learnedWords(): List<Pair<String, Int>> {
         refreshPersonalDataIfChanged()
-        return wordCounts.entries
+        return (wordCounts.entries + englishWordCounts.entries)
             .filter { it.value > 0 }
-            .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
-            .map { it.key to it.value }
+            .groupBy { it.key }
+            .map { (word, entries) -> word to entries.sumOf { it.value } }
+            .sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first })
     }
 
     @Synchronized
@@ -418,6 +429,7 @@ class LocalLanguageModel(context: Context) {
         val clean = normalize(word)
         if (clean.isBlank()) return
         wordCounts.remove(clean)
+        englishWordCounts.remove(clean.lowercase(Locale.US))
         // Remove the word wherever it appears in a learned context, not only
         // when it is the predicted final token.
         PersonalContextPruner.removeWord(pairCounts, trigramCounts, clean)
@@ -463,6 +475,21 @@ class LocalLanguageModel(context: Context) {
                     .forEach { trigrams.remove(it.key) }
                 trigramNextCounts = indexContextCounts(trigrams, 2)
             }
+        }
+        persistPersonalData()
+    }
+
+    /** Learn an English word locally without mixing it into the Turkish model. */
+    @Synchronized
+    fun learnEnglish(word: String) {
+        refreshPersonalDataIfChanged()
+        val clean = word.trim().lowercase(Locale.US)
+        if (!PersonalWordValidator.isValid(clean)) return
+        englishWordCounts[clean] = (englishWordCounts[clean] ?: 0) + 1
+        if (englishWordCounts.size > 2500) {
+            englishWordCounts.entries.sortedBy { it.value }
+                .take(englishWordCounts.size - 2000)
+                .forEach { englishWordCounts.remove(it.key) }
         }
         persistPersonalData()
     }
@@ -519,20 +546,22 @@ class LocalLanguageModel(context: Context) {
     }
 
     /**
-     * Conservative English swipe decoder using only the fixed offline vocabulary.
-     * English traces never enter the Turkish personal-learning store.
+     * Conservative English swipe decoder using fixed and privately learned vocabulary.
      */
     @Synchronized
     fun decodeEnglishSwipePath(path: String): String {
+        refreshPersonalDataIfChanged()
         val clean = path.lowercase(Locale.US).filter { it in 'a'..'z' }
         if (clean.length < 3) return clean
-        val rankedCandidates = englishStarterWords.asSequence()
+        val rankedCandidates = (englishStarterWords.asSequence() + englishWordCounts.keys.asSequence())
+            .distinct()
             .filter { kotlin.math.abs(it.length - clean.length) <= 1 }
             .mapNotNull { word ->
                 val distance = SwipeWordDistance.calculate(clean, word)
                 if (distance > 1) null else SwipeWordCandidate(
                     word = word,
                     distance = distance,
+                    personalCount = englishWordCounts[word] ?: 0,
                     frequencyRank = englishFrequencyRank[word] ?: Int.MAX_VALUE
                 )
             }
