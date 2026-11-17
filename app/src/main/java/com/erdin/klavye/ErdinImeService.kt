@@ -479,11 +479,24 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             )
             return
         }
-        if (learningEnabled && usesTurkishModel() && !replacement.equals(currentWord, ignoreCase = true)) {
-            val words = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
-            val previous = words.getOrNull(words.lastIndex - 1)
-            val previousPrevious = words.getOrNull(words.lastIndex - 2)
-            languageModel.learn(replacement, previous, previousPrevious)
+        val contextWords = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
+        var previousContext = contextWords.lastOrNull { !it.equals(currentWord, ignoreCase = true) }
+            ?: lastContextWord
+        var previousPreviousContext = contextWords.dropLast(1).lastOrNull()
+            ?: lastContextPreviousWord
+        val insertedWords = replacement.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
+        if (insertedWords.isNotEmpty()) {
+            insertedWords.forEach { word ->
+                if (learningEnabled && usesTurkishModel() &&
+                    !(insertedWords.size == 1 && word.equals(currentWord, ignoreCase = true))
+                ) {
+                    languageModel.learn(word, previousContext, previousPreviousContext)
+                }
+                previousPreviousContext = previousContext
+                previousContext = word
+            }
+            lastContextWord = previousContext
+            lastContextPreviousWord = previousPreviousContext
         }
         val count = currentWord.codePointCount(0, currentWord.length)
         if (!connection.deleteSurroundingTextInCodePoints(count, 0)) {
