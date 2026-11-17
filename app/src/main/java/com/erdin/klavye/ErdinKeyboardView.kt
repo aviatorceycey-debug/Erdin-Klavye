@@ -287,6 +287,14 @@ class ErdinKeyboardView(
                 longPressed = true
                 alternateOptions = options
                 selectedAlternate = -1
+                val anchor = downRect ?: return@Runnable
+                val cellWidth = 46f * density
+                val popupHeight = 52f * density
+                val popupWidth = cellWidth * options.size
+                val left = (anchor.centerX() - popupWidth / 2f).coerceIn(gap, width - popupWidth - gap)
+                val top = (anchor.top - popupHeight - 7f * density).coerceAtLeast(3f * density)
+                popupRect = RectF(left, top, left + popupWidth, top + popupHeight)
+                accessibilityHelper.invalidateRoot()
                 invalidate()
             }
         }
@@ -509,6 +517,7 @@ class ErdinKeyboardView(
                     popupRect = null
                     downKey = null
                     downRect = null
+                    invalidateRoot()
                     invalidate()
                     sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
                     return true
@@ -525,10 +534,12 @@ class ErdinKeyboardView(
                     alternateOptions = options
                     selectedAlternate = -1
                     val cellWidth = 46f * density
+                    val popupHeight = 52f * density
                     val popupWidth = cellWidth * options.size
                     val left = (pair.second.centerX() - popupWidth / 2f).coerceIn(gap, width - popupWidth - gap)
-                    val top = (pair.second.top - 52f * density - 7f * density).coerceAtLeast(3f * density)
-                    popupRect = RectF(left, top, left + popupWidth, top + 52f * density)
+                    val top = (pair.second.top - popupHeight - 7f * density).coerceAtLeast(3f * density)
+                    popupRect = RectF(left, top, left + popupWidth, top + popupHeight)
+                    invalidateRoot()
                     invalidate()
                     sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_LONG_CLICKED)
                     return true
