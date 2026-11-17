@@ -43,6 +43,20 @@ class SwipeWordDistanceTest {
     }
 
     @Test
+    fun distanceIsSymmetricAcrossShortWords() {
+        val words = listOf("", "a", "b", "ab", "ba", "aa", "bb", "aba", "bab", "aab", "bba")
+        words.forEach { first ->
+            words.forEach { second ->
+                assertEquals(
+                    "Distance should be symmetric for '$first' and '$second'",
+                    SwipeWordDistance.calculate(first, second),
+                    SwipeWordDistance.calculate(second, first)
+                )
+            }
+        }
+    }
+
+    @Test
     fun multipleEditsAreCappedAtTwo() {
         assertEquals(2, SwipeWordDistance.calculate("kitap", "kalem"))
         assertEquals(2, SwipeWordDistance.calculate("a", "abcd"))
