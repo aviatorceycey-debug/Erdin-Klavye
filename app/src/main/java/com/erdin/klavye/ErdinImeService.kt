@@ -81,7 +81,6 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 !explicitlyNoSuggestions && suggestionsPreference
             clipboardEnabled = inputClass == InputType.TYPE_CLASS_TEXT && !passwordField &&
                 ((attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING) == 0
-        keyboardView?.setClipboardAvailable(clipboardEnabled)
             keyboardView?.setClipboardAvailable(clipboardEnabled)
             if (!clipboardEnabled) {
                 // A subtype change can happen without a new editor session. If the
@@ -161,6 +160,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         doubleSpacePeriodEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
         clipboardEnabled = inputClass == InputType.TYPE_CLASS_TEXT && !passwordField &&
                 ((attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING) == 0
+        keyboardView?.setClipboardAvailable(clipboardEnabled)
         // Each editor session starts with an empty clipboard panel. This
         // prevents snippets copied in one app or field from appearing in another.
         clipboardHistory.clear()
