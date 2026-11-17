@@ -12,8 +12,9 @@ Türkçe QWERTY odaklı, çevrimdışı kullanım ve gizlilik öncelikleriyle ge
 - Kompakt QWERTY düzeni ve sürekli sayı satırı.
 - Türkçe karakter alternatifleri uzun basışla açılır: ç, ğ, ı, ö, ş, ü.
 - Shift, Caps Lock, otomatik büyük harf ve çift boşlukla nokta.
-- Türkçe ve İngilizce düzen/dil geçişi.
+- Türkçe ve İngilizce düzen/dil geçişi; dile göre ayrı çevrimdışı kelime önerileri.
 - Yerel kelime tamamlama, sonraki kelime tahminleri ve sistem yazım denetimi entegrasyonu.
+- Deneysel kaydırarak yazma: Türkçe ve İngilizce için ayrı yerel sözlük çözümleme; bilinmeyen izlerde ham harf dizisini koruyan temkinli seçim.
 - Cihazda tutulan kişisel kelime öğrenimi; kişisel sözlüğü görüntüleme ve kelime/veri silme.
 - Emoji paneli, son kullanılan emojiler ve oturumla sınırlı pano geçmişi.
 - Sembol sayfaları ve noktalama tuşlarında alternatif karakterler.
