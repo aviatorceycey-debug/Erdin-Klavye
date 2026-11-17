@@ -48,6 +48,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         keyboardView?.setSuggestions(emptyList())
         currentInputEditorInfo?.let { attribute ->
             val inputType = attribute.inputType
+            keyboardView?.setNumericInputMode(inputType)
             val inputClass = inputType and InputType.TYPE_MASK_CLASS
             val variation = inputType and InputType.TYPE_MASK_VARIATION
             val plainTextField = inputClass == InputType.TYPE_CLASS_TEXT &&
@@ -95,6 +96,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         lastContextWord = ""
         lastContextPreviousWord = ""
         val inputType = attribute?.inputType ?: InputType.TYPE_NULL
+        keyboardView?.setNumericInputMode(inputType)
         val inputClass = inputType and InputType.TYPE_MASK_CLASS
         val variation = inputType and InputType.TYPE_MASK_VARIATION
         val plainTextField = inputClass == InputType.TYPE_CLASS_TEXT &&
