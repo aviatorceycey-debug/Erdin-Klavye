@@ -1,20 +1,35 @@
 # Erdin Klavye
 
-Android için çevrimdışı çalışmayı önceliklendiren, Türkçe QWERTY odaklı bir klavye projesi.
+Türkçe QWERTY odaklı, çevrimdışı kullanım ve gizlilik öncelikleriyle geliştirilen Android klavye uygulaması.
 
-## Proje durumu
-
-Bu depo, Erdin Klavye'nin Android kaynak projesi için başlangıç noktasıdır. İlk aşamada temel Android Input Method Service (IME), kompakt QWERTY düzeni ve Türkçe karakter uzun-basışları kurulacaktır. Sonraki aşamalarda öneri motoru, emoji/clipboard, tema ve kişiselleştirme özellikleri eklenecektir.
-
-## Tasarım kararları
-
-- Uygulama adı: Erdin Klavye
+## Platform
 - Paket: `com.erdin.klavye`
 - Minimum Android: 10 (API 29)
-- Varsayılan düzen: kompakt QWERTY ve 1–0 sayı satırı
-- Türkçe karakterler uzun basışla: G→Ğ, U→Ü, C→Ç, S→Ş, O→Ö, I→İ/ı
-- Temel yazma işlemi cihaz üzerinde; yazılan metin otomatik olarak sunucuya gönderilmez.
+- Compile / Target SDK: 35
+- Java ve Kotlin: 17
 
-## Lisans ve temel
+## Klavye özellikleri
+- Kompakt QWERTY düzeni ve sürekli sayı satırı.
+- Türkçe karakter alternatifleri uzun basışla açılır: ç, ğ, ı, ö, ş, ü.
+- Shift, Caps Lock, otomatik büyük harf ve çift boşlukla nokta.
+- Türkçe ve İngilizce düzen/dil geçişi.
+- Yerel kelime tamamlama, sonraki kelime tahminleri ve sistem yazım denetimi entegrasyonu.
+- Cihazda tutulan kişisel kelime öğrenimi; kişisel sözlüğü görüntüleme ve kelime/veri silme.
+- Emoji paneli, son kullanılan emojiler ve oturumla sınırlı pano geçmişi.
+- Sembol sayfaları ve noktalama tuşlarında alternatif karakterler.
+- Sayısal, telefon, tarih ve saat alanlarına uygun tuş takımları.
+- Boşluk çubuğunda kaydırarak imleç hareketi; isteğe bağlı deneysel kaydırarak yazma.
+- Ayarlanabilir yükseklik, tek elle kullanım, üç tema, titreşim, tuş sesi ve harf önizlemesi.
+- TalkBack için tuş, öneri, araç çubuğu ve uzun basış alternatiflerine erişilebilir düğümler.
 
-Bu depo başlangıçta özgün Erdin Klavye uygulama iskeletini barındırır. FlorisBoard, ayrı bir Apache-2.0 lisanslı açık kaynak proje olarak değerlendirilmiştir; kaynak kodu bu depoya henüz aktarılmamıştır.
+## Gizlilik
+- Yazılan metin ve kişisel öğrenme kayıtları uygulama tarafından sunucuya gönderilmez.
+- Kişisel öğrenme ayarı kapatılabilir; öğrenilen kelimeler tek tek veya topluca silinebilir.
+- Pano geçmişi giriş oturumu boyunca geçicidir ve oturum bitince temizlenir.
+- Parola alanlarında öneriler ve kişisel öğrenme devre dışı bırakılır.
+
+## Derleme
+GitHub Actions, Android projesini Java 17 ve Gradle 8.9 ile derler. Her başarılı iş akışı APK çıktısını artefakt olarak yayınlar.
+
+## Test durumu
+CI derlemesi otomatik olarak doğrulanır. Gerçek cihazlarda klavye davranışı, farklı uygulama alanları ve TalkBack erişilebilirliği ayrıca test edilmelidir; CI başarısı bu cihaz testlerinin yapıldığı anlamına gelmez.
