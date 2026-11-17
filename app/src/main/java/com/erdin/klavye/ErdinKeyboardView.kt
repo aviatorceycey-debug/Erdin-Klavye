@@ -98,6 +98,7 @@ class ErdinKeyboardView(
     private var numericDecimalSeparator = java.text.DecimalFormatSymbols.getInstance().decimalSeparator.toString()
     private var clipboardItems: List<String> = emptyList()
     private var activeLanguageLabel = "Türkçe"
+    private var editorActionDescription: String? = null
     private var downKey: KeyboardKey? = null
     private var downRect: RectF? = null
     private var longPressed = false
@@ -338,6 +339,11 @@ class ErdinKeyboardView(
         invalidate()
     }
 
+    fun setEditorActionDescription(description: String?) {
+        editorActionDescription = description?.takeIf { it.isNotBlank() }
+        accessibilityHelper.invalidateRoot()
+    }
+
     fun setInputLanguage(localeTag: String) {
         activeLanguageLabel = if (localeTag.startsWith("en", ignoreCase = true)) "English" else "Türkçe"
         accessibilityHelper.invalidateRoot()
@@ -425,7 +431,7 @@ class ErdinKeyboardView(
                 val description = when (key.kind) {
                     KeyboardKey.Kind.SPACE -> if (english) "Space, $activeLanguageLabel" else "Boşluk, $activeLanguageLabel"
                     KeyboardKey.Kind.ACCENT -> when (key.label) {
-                        "↵" -> if (english) "Enter" else "Gönder veya yeni satır"
+                        "↵" -> editorActionDescription ?: if (english) "Enter" else "Gönder veya yeni satır"
                         "?123" -> if (english) "Numbers and symbols" else "Sayılar ve semboller"
                         "ABC" -> if (english) "Letters" else "Harfler"
                         else -> key.label
