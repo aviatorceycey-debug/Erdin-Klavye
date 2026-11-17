@@ -448,6 +448,7 @@ class LocalLanguageModel(context: Context) {
             if (pairs.size > 5000) {
                 pairs.entries.sortedBy { it.value }.take(pairs.size - 4000)
                     .forEach { pairs.remove(it.key) }
+                pairNextCounts = indexContextCounts(pairs, 1)
             }
         }
 
@@ -461,6 +462,7 @@ class LocalLanguageModel(context: Context) {
             if (trigrams.size > 6000) {
                 trigrams.entries.sortedBy { it.value }.take(trigrams.size - 4500)
                     .forEach { trigrams.remove(it.key) }
+                trigramNextCounts = indexContextCounts(trigrams, 2)
             }
         }
         persistPersonalData()
