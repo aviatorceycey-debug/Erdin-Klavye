@@ -282,6 +282,11 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 val clip = clipboard?.primaryClip
                 val markedSensitive = clipboard?.primaryClipDescription?.extras
                     ?.getBoolean(ClipDescription.EXTRA_IS_SENSITIVE, false) == true
+                if (markedSensitive) {
+                    // Do not leave older snippets visible when the system clipboard
+                    // explicitly marks its current contents as sensitive.
+                    clipboardHistory.clear()
+                }
                 if (!markedSensitive && clip != null && clip.itemCount > 0) {
                     val text = clip.getItemAt(0).coerceToText(this)?.toString()?.trim().orEmpty()
                     if (text.isNotBlank() && text.length <= 2000) {
