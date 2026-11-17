@@ -507,9 +507,6 @@ class LocalLanguageModel(context: Context) {
         val candidates = (starterWords.asSequence() + wordCounts.keys.asSequence())
             .filter { kotlin.math.abs(it.length - clean.length) <= 1 }
             .distinct()
-            .toList()
-        if (candidates.isEmpty()) return clean
-
         val rankedCandidates = candidates.map { word ->
             SwipeWordCandidate(
                 word = word,
@@ -528,16 +525,15 @@ class LocalLanguageModel(context: Context) {
     fun decodeEnglishSwipePath(path: String): String {
         val clean = path.lowercase(Locale.US).filter { it in 'a'..'z' }
         if (clean.length < 3) return clean
-        val candidates = englishStarterWords.filter {
-            kotlin.math.abs(it.length - clean.length) <= 1
-        }
-        val rankedCandidates = candidates.map { word ->
-            SwipeWordCandidate(
-                word = word,
-                distance = SwipeWordDistance.calculate(clean, word),
-                frequencyRank = englishFrequencyRank[word] ?: Int.MAX_VALUE
-            )
-        }
+        val rankedCandidates = englishStarterWords.asSequence()
+            .filter { kotlin.math.abs(it.length - clean.length) <= 1 }
+            .map { word ->
+                SwipeWordCandidate(
+                    word = word,
+                    distance = SwipeWordDistance.calculate(clean, word),
+                    frequencyRank = englishFrequencyRank[word] ?: Int.MAX_VALUE
+                )
+            }
         return SwipeCandidateSelector.selectEnglish(rankedCandidates, clean)
     }
 
