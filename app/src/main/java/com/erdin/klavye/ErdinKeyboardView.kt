@@ -308,8 +308,9 @@ class ErdinKeyboardView(
     }
 
     fun setAutoShift(enabled: Boolean) {
-        if (!capsLock) {
+        if (!capsLock && shift != enabled) {
             shift = enabled
+            accessibilityHelper.invalidateRoot()
             invalidate()
         }
     }
