@@ -441,6 +441,13 @@ class ErdinKeyboardView(
                 }
                 node.text = description
                 node.contentDescription = description
+                if (key.kind == KeyboardKey.Kind.ACTION && key.label == "⇧") {
+                    node.stateDescription = when {
+                        capsLock -> if (english) "Caps Lock on" else "Büyük harf kilidi açık"
+                        shift -> if (english) "Shift on" else "Büyük harf açık"
+                        else -> if (english) "Off" else "Kapalı"
+                    }
+                }
                 node.className = android.widget.Button::class.java.name
                 node.isFocusable = true
                 node.isClickable = true
