@@ -45,6 +45,36 @@ class SwipeTraceDecoderTest {
     }
 
     @Test
+    fun ignoresNonFinitePathPoints() {
+        val path = listOf(
+            10f to 10f,
+            Float.NaN to 10f,
+            110f to Float.POSITIVE_INFINITY,
+            210f to 10f
+        )
+        assertEquals("ct", SwipeTraceDecoder.decode(path, keys, 1f, english = true))
+    }
+
+    @Test
+    fun ignoresInvalidKeyGeometry() {
+        val invalidKeys = listOf(
+            SwipeKeyBounds("x", Float.NaN, 0f, 20f, 20f),
+            SwipeKeyBounds("y", 20f, 20f, 10f, 10f)
+        )
+        assertEquals(
+            "c",
+            SwipeTraceDecoder.decode(listOf(10f to 10f), keys + invalidKeys, 1f, english = true)
+        )
+    }
+
+    @Test
+    fun invalidDensityProducesNoTrace() {
+        assertEquals("",
+            SwipeTraceDecoder.decode(listOf(10f to 10f), keys, Float.NaN, english = true)
+        )
+    }
+
+    @Test
     fun emptyPathOrKeysProducesNoTrace() {
         assertEquals("", SwipeTraceDecoder.decode(emptyList(), keys, 1f, english = true))
         assertEquals("", SwipeTraceDecoder.decode(listOf(10f to 10f), emptyList(), 1f, english = true))
