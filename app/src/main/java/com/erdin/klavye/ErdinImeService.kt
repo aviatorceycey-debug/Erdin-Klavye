@@ -192,6 +192,12 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             invalidateSpellCheckRequests()
             keyboardView?.setSuggestions(emptyList())
         } else if (newSelStart != oldSelStart || newSelEnd != oldSelEnd) {
+            // Rebuild the local phrase context from the text immediately before
+            // the caret. This keeps next-word learning accurate after cursor moves.
+            val before = currentInputConnection?.getTextBeforeCursor(120, 0)?.toString().orEmpty()
+            val words = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
+            lastContextWord = words.lastOrNull().orEmpty()
+            lastContextPreviousWord = words.getOrNull(words.lastIndex - 1).orEmpty()
             requestSuggestionsSoon()
         }
     }
