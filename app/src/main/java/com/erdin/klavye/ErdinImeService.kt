@@ -84,6 +84,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         ).also {
             keyboardView = it
             it.setInputLanguage(activeSubtypeLocale)
+            it.setNumericInputMode(currentInputEditorInfo?.inputType ?: InputType.TYPE_NULL)
             updateAutoShift()
         }
     }
