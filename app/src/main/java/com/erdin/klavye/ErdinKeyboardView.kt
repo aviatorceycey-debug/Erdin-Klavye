@@ -8,6 +8,7 @@ import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Shader
+import android.text.TextPaint
 import android.os.Handler
 import android.os.Looper
 import android.view.MotionEvent
@@ -50,6 +51,7 @@ class ErdinKeyboardView(
     private val onSuggestion: (String) -> Unit
 ) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val suggestionMeasurePaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private var keyTone: ToneGenerator? = null
     private fun playKeySound() {
         if (keyTone == null) keyTone = ToneGenerator(AudioManager.STREAM_SYSTEM, 35)
@@ -912,8 +914,12 @@ class ErdinKeyboardView(
             paint.textAlign = Paint.Align.CENTER
             val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
             val display = if (paint.measureText(suggestion) > rect.width() - 8f * density) {
-                android.text.TextUtils.ellipsize(suggestion, android.text.TextPaint(paint),
-                    rect.width() - 8f * density, android.text.TextUtils.TruncateAt.END).toString()
+                android.text.TextUtils.ellipsize(
+                    suggestion,
+                    suggestionMeasurePaint.apply { set(paint) },
+                    rect.width() - 8f * density,
+                    android.text.TextUtils.TruncateAt.END
+                ).toString()
             } else suggestion
             canvas.drawText(display, rect.centerX(), baseline, paint)
         }
