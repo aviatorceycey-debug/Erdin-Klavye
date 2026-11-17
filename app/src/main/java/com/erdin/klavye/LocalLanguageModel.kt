@@ -226,7 +226,24 @@ class LocalLanguageModel(context: Context) {
         "see>what" to listOf("happens", "you think", "we can do"),
         "looking>great" to listOf("today", "as always"),
         "hope>everything" to listOf("is", "goes well"),
-        "get>back" to listOf("to", "to you", "soon")
+        "get>back" to listOf("to", "to you", "soon"),
+        "i>have" to listOf("a", "been", "to"),
+        "i>need" to listOf("to", "help", "more"),
+        "i>want" to listOf("to", "you", "a"),
+        "i>can" to listOf("help", "do", "send"),
+        "i>was" to listOf("wondering", "looking", "thinking"),
+        "we>are" to listOf("ready", "working", "going"),
+        "you>can" to listOf("use", "find", "try"),
+        "there>is" to listOf("a", "no", "one"),
+        "it>is" to listOf("a", "not", "very"),
+        "this>is" to listOf("a", "the", "my"),
+        "that>is" to listOf("great", "right", "fine"),
+        "do>you" to listOf("have", "want", "know"),
+        "are>you" to listOf("available", "ready", "okay"),
+        "can>i" to listOf("help", "ask", "call"),
+        "please>send" to listOf("me", "it", "the"),
+        "send>me" to listOf("the", "a", "your"),
+        "good>luck" to listOf("with", "today", "everyone")
     )
 
     private val englishNextHints = mapOf(
