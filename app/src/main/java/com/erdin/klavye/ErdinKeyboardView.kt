@@ -382,10 +382,10 @@ class ErdinKeyboardView(
             ) {
                 if (virtualViewId >= 2000) {
                     val label = when (virtualViewId) {
-                        2000 -> "Panoyu aç"
-                        2001 -> "Klavye temasını değiştir"
-                        2002 -> "Panoyu temizle"
-                        else -> "Klavye aracı"
+                        2000 -> if (activeLanguageLabel == "English") "Open clipboard" else "Panoyu aç"
+                        2001 -> if (activeLanguageLabel == "English") "Change keyboard theme" else "Klavye temasını değiştir"
+                        2002 -> if (activeLanguageLabel == "English") "Clear clipboard" else "Panoyu temizle"
+                        else -> if (activeLanguageLabel == "English") "Keyboard tool" else "Klavye aracı"
                     }
                     node.text = label
                     node.contentDescription = label
@@ -402,7 +402,7 @@ class ErdinKeyboardView(
                     val suggestion = suggestions.getOrNull(index)
                     if (suggestion != null) {
                         node.text = suggestion
-                        node.contentDescription = "Öneri: $suggestion"
+                        node.contentDescription = if (activeLanguageLabel == "English") "Suggestion: $suggestion" else "Öneri: $suggestion"
                         node.className = android.widget.Button::class.java.name
                         node.isFocusable = true
                         node.isClickable = true
@@ -415,22 +415,25 @@ class ErdinKeyboardView(
                 }
                 val pair = accessibleKeyRects().getOrNull(virtualViewId)
                 if (pair == null || pair.first.label.isBlank()) {
-                    node.contentDescription = "Boş tuş"
+                    node.contentDescription = if (activeLanguageLabel == "English") "Empty key" else "Boş tuş"
                     node.isEnabled = false
                     return
                 }
                 val key = pair.first
                 val rect = pair.second
+                val english = activeLanguageLabel == "English"
                 val description = when (key.kind) {
-                    KeyboardKey.Kind.SPACE -> "Boşluk, $activeLanguageLabel"
+                    KeyboardKey.Kind.SPACE -> if (english) "Space, $activeLanguageLabel" else "Boşluk, $activeLanguageLabel"
                     KeyboardKey.Kind.ACCENT -> when (key.label) {
-                        "↵" -> "Enter"
+                        "↵" -> if (english) "Enter" else "Gönder veya yeni satır"
+                        "?123" -> if (english) "Numbers and symbols" else "Sayılar ve semboller"
+                        "ABC" -> if (english) "Letters" else "Harfler"
                         else -> key.label
                     }
                     KeyboardKey.Kind.ACTION -> when (key.label) {
-                        "⌫" -> "Geri sil"
-                        "⇧" -> "Büyük harf"
-                        "🌐" -> "Dil değiştir"
+                        "⌫" -> if (english) "Backspace" else "Geri sil"
+                        "⇧" -> if (english) "Shift" else "Büyük harf"
+                        "🌐" -> if (english) "Switch language" else "Dil değiştir"
                         "😊" -> "Emoji"
                         else -> key.label
                     }
