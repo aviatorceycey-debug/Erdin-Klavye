@@ -124,6 +124,17 @@ class ErdinKeyboardView(
     private var cursorMoved = false
     private var swipeTyping = false
     private val swipePath = mutableListOf<Pair<Float, Float>>()
+
+    // Keep long gestures bounded without losing their final letters. When the
+    // sample buffer fills, retain alternating points before accepting new ones.
+    private fun appendSwipeSample(x: Float, y: Float) {
+        if (swipePath.size >= 180) {
+            val compacted = swipePath.filterIndexed { index, _ -> index % 2 == 0 }
+            swipePath.clear()
+            swipePath.addAll(compacted)
+        }
+        swipePath += x to y
+    }
     private val deleteRepeatRunnable = object : Runnable {
         override fun run() {
             if (downKey?.label == "⌫" && longPressed) {
@@ -1008,17 +1019,18 @@ class ErdinKeyboardView(
                         // Keep unusually long swipe gestures bounded in memory.
                         // A normal word needs far fewer than 180 sampled points.
                         if (last == null) {
-                            if (swipePath.size < 180) swipePath += event.x to event.y
+                            appendSwipeSample(event.x, event.y)
                         } else {
                             val dxPath = event.x - last.first
                             val dyPath = event.y - last.second
                             val distance = kotlin.math.hypot(dxPath.toDouble(), dyPath.toDouble())
                             val steps = (distance / (10f * density)).toInt().coerceIn(1, 12)
                             for (step in 1..steps) {
-                                if (swipePath.size >= 180) break
                                 val fraction = step.toFloat() / steps
-                                swipePath += (last.first + dxPath * fraction) to
-                                    (last.second + dyPath * fraction)
+                                appendSwipeSample(
+                                    last.first + dxPath * fraction,
+                                    last.second + dyPath * fraction
+                                )
                             }
                         }
                     }
