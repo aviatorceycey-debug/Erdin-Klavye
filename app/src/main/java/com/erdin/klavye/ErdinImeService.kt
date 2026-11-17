@@ -136,6 +136,29 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         if (suggestionsEnabled) refreshSpellCheckerSession()
     }
 
+    override fun onUpdateSelection(
+        oldSelStart: Int,
+        oldSelEnd: Int,
+        newSelStart: Int,
+        newSelEnd: Int,
+        candidatesStart: Int,
+        candidatesEnd: Int
+    ) {
+        super.onUpdateSelection(
+            oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd
+        )
+        updateAutoShift()
+
+        // Keep suggestions aligned with the word at the cursor, including when
+        // the user moves the caret with a hardware keyboard or editor controls.
+        if (newSelStart != newSelEnd) {
+            invalidateSpellCheckRequests()
+            keyboardView?.setSuggestions(emptyList())
+        } else if (newSelStart != oldSelStart || newSelEnd != oldSelEnd) {
+            requestSuggestionsSoon()
+        }
+    }
+
     override fun onFinishInput() {
         mainHandler.removeCallbacksAndMessages(null)
         suggestionRequestSequence++
