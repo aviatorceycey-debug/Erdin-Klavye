@@ -420,8 +420,7 @@ class LocalLanguageModel(context: Context) {
         wordCounts.remove(clean)
         // Remove the word wherever it appears in a learned context, not only
         // when it is the predicted final token.
-        pairCounts.keys.removeAll { key -> key.split('>').any { it == clean } }
-        trigramCounts.keys.removeAll { key -> key.split('>').any { it == clean } }
+        PersonalContextPruner.removeWord(pairCounts, trigramCounts, clean)
         pairNextCounts = indexContextCounts(pairCounts, 1)
         trigramNextCounts = indexContextCounts(trigramCounts, 2)
         persistPersonalData()
