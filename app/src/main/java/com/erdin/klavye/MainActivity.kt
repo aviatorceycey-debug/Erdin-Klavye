@@ -197,6 +197,33 @@ class MainActivity : Activity() {
         root.addView(title); root.addView(info); root.addView(setupStatus)
         root.addView(enable); root.addView(choose)
 
+        val keyboardTestLabel = TextView(this).apply {
+            text = "Klavye deneme alanı"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            setPadding(0, 24, 0, 8)
+        }
+        val keyboardTestField = android.widget.EditText(this).apply {
+            hint = "Buraya yazarak Erdin Klavye'yi dene…"
+            textSize = 16f
+            minLines = 2
+            maxLines = 3
+            gravity = android.view.Gravity.TOP or android.view.Gravity.START
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+                android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE
+            setTextColor(0xFFF4F7FF.toInt())
+            setHintTextColor(0xFF8492AA.toInt())
+            setPadding(18, 16, 18, 16)
+            contentDescription = "Erdin Klavye deneme yazı alanı"
+        }
+        root.addView(keyboardTestLabel)
+        root.addView(keyboardTestField, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ))
+
         val hapticSwitch = Switch(this).apply {
             text = "Tuş titreşimi"
             textSize = 15f
