@@ -81,7 +81,6 @@ class LocalLanguageModel(context: Context) {
         "tekrar>görüşmek" to listOf("üzere", "dileğiyle"),
         "çok>memnun" to listOf("oldum", "olduk", "olacağım"),
         "emeğine>sağlık" to listOf("çok", "teşekkürler", "harika"),
-        "iyi>ki" to listOf("varsın", "doğdun", "geldin")
     )
 
     // General-purpose context hints. Personal usage counts gradually take priority.
