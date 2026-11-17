@@ -337,6 +337,14 @@ class ErdinKeyboardView(
     }
 
     fun resetPanelsForInput() {
+        handler.removeCallbacks(longPressRunnable)
+        handler.removeCallbacks(deleteRepeatRunnable)
+        downKey = null
+        downRect = null
+        longPressed = false
+        cursorMoved = false
+        swipeTyping = false
+        swipePath.clear()
         clipboardMode = false
         emojiMode = false
         symbols = false
