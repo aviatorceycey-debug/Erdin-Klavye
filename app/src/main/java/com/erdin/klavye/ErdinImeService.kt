@@ -202,6 +202,16 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         if (newSelStart != newSelEnd) {
             invalidateSpellCheckRequests()
             keyboardView?.setSuggestions(emptyList())
+            // A selection changes the insertion point. Keep next-word context
+            // anchored to the text before the selection, not the word that was
+            // previously active at the caret.
+            val beforeSelection = currentInputConnection
+                ?.getTextBeforeCursor(120, 0)?.toString().orEmpty()
+            val contextWords = beforeSelection
+                .split(Regex("[^\\p{L}'’]+"))
+                .filter { it.isNotBlank() }
+            lastContextWord = contextWords.lastOrNull().orEmpty()
+            lastContextPreviousWord = contextWords.getOrNull(contextWords.lastIndex - 1).orEmpty()
         } else if (newSelStart != oldSelStart || newSelEnd != oldSelEnd) {
             // Rebuild the local phrase context from the text immediately before
             // the caret. This keeps next-word learning accurate after cursor moves.
