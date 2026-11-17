@@ -142,7 +142,7 @@ class ErdinKeyboardView(
         rows += listOf(
             KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.2f),
             KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
-            KeyboardKey(" ", " ", 4.8f, KeyboardKey.Kind.SPACE),
+            KeyboardKey(activeLanguageLabel, " ", 4.8f, KeyboardKey.Kind.SPACE),
             KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f)
         )
         return rows
@@ -186,7 +186,7 @@ class ErdinKeyboardView(
             listOf(padded.take(2), padded.slice(2..3), padded.drop(4)) +
                 listOf(listOf(KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.2f),
                     KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
-                    KeyboardKey(" ", " ", 4.8f, KeyboardKey.Kind.SPACE),
+                    KeyboardKey(activeLanguageLabel, " ", 4.8f, KeyboardKey.Kind.SPACE),
                     KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f)))
         }
         emojiMode -> emojiRows()
