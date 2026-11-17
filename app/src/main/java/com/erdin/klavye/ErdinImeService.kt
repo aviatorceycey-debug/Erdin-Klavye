@@ -286,8 +286,11 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     // Do not leave older snippets visible when the system clipboard
                     // explicitly marks its current contents as sensitive.
                     clipboardHistory.clear()
+                    keyboardView?.setClipboardItems(emptyList())
+                    keyboardView?.hideClipboard()
+                    return
                 }
-                if (!markedSensitive && clip != null && clip.itemCount > 0) {
+                if (clip != null && clip.itemCount > 0) {
                     val text = clip.getItemAt(0).coerceToText(this)?.toString()?.trim().orEmpty()
                     if (text.isNotBlank() && text.length <= 2000) {
                         clipboardHistory.remove(text)
