@@ -451,6 +451,23 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     )
                 } else {
                     if (!value.all { it.isLetter() }) invalidateSpellCheckRequests()
+                    // Learn a word when it is closed directly by punctuation
+                    // (for example "Merhaba!") rather than only after a space.
+                    val wordBoundary = value in setOf(".", ",", "!", "?", ";", ":", "…", "—", "-")
+                    if (wordBoundary && connection.getSelectedText(0).isNullOrEmpty()) {
+                        val before = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
+                        if (before.lastOrNull()?.isLetter() == true) {
+                            val words = before.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
+                            val current = words.lastOrNull().orEmpty()
+                            val previous = words.getOrNull(words.lastIndex - 1)
+                            val previousPrevious = words.getOrNull(words.lastIndex - 2)
+                            lastContextWord = current
+                            lastContextPreviousWord = previous.orEmpty()
+                            if (learningEnabled && usesTurkishModel() && current.isNotBlank()) {
+                                languageModel.learn(current, previous, previousPrevious)
+                            }
+                        }
+                    }
                     connection.commitText(value, 1)
                     updateAutoShift()
                     if (value.all { it.isLetter() || it == '\'' || it == '’' }) requestSuggestionsSoon()
