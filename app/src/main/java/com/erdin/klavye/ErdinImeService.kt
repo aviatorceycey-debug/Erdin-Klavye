@@ -81,6 +81,8 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 !explicitlyNoSuggestions && suggestionsPreference
             clipboardEnabled = inputClass == InputType.TYPE_CLASS_TEXT && !passwordField &&
                 ((attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING) == 0
+        keyboardView?.setClipboardAvailable(clipboardEnabled)
+            keyboardView?.setClipboardAvailable(clipboardEnabled)
             if (!clipboardEnabled) {
                 // A subtype change can happen without a new editor session. If the
                 // destination is sensitive, discard any previously visible snippets.
