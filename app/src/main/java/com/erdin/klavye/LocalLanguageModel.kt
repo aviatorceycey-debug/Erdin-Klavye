@@ -533,6 +533,53 @@ class LocalLanguageModel(context: Context) {
         }
     }
 
+    /**
+     * Conservative English swipe decoder using only the fixed offline vocabulary.
+     * English traces never enter the Turkish personal-learning store.
+     */
+    @Synchronized
+    fun decodeEnglishSwipePath(path: String): String {
+        val clean = path.lowercase(Locale.US).filter { it in 'a'..'z' }
+        if (clean.length < 3) return clean
+        val candidates = englishStarterWords.filter {
+            kotlin.math.abs(it.length - clean.length) <= 1
+        }
+        fun distance(a: String, b: String): Int {
+            if (kotlin.math.abs(a.length - b.length) > 1) return 2
+            var previous = IntArray(b.length + 1) { it }
+            var twoRowsBack = IntArray(b.length + 1) { 0 }
+            for (i in 1..a.length) {
+                val current = IntArray(b.length + 1) { 2 }
+                current[0] = i
+                var rowMinimum = current[0]
+                for (j in maxOf(1, i - 1)..minOf(b.length, i + 1)) {
+                    var score = minOf(
+                        previous[j] + 1,
+                        current[j - 1] + 1,
+                        previous[j - 1] + if (a[i - 1] == b[j - 1]) 0 else 1
+                    )
+                    if (i > 1 && j > 1 && a[i - 1] == b[j - 2] &&
+                        a[i - 2] == b[j - 1]
+                    ) score = minOf(score, twoRowsBack[j - 2] + 1)
+                    current[j] = score
+                    rowMinimum = minOf(rowMinimum, score)
+                }
+                if (rowMinimum > 1) return 2
+                twoRowsBack = previous
+                previous = current
+            }
+            return previous[b.length].coerceAtMost(2)
+        }
+        val ranked = candidates.map { it to distance(clean, it) }
+            .sortedWith(compareBy<Pair<String, Int>> { it.second }
+                .thenBy { englishFrequencyRank[it.first] ?: Int.MAX_VALUE })
+        val best = ranked.firstOrNull() ?: return clean
+        val runnerUp = ranked.getOrNull(1)
+        return if (best.second <= 1 && (runnerUp == null || runnerUp.second > best.second)) {
+            best.first
+        } else clean
+    }
+
     @Synchronized
     fun nextWords(previousWord: String, previousPreviousWord: String? = null): List<String> {
         refreshPersonalDataIfChanged()
