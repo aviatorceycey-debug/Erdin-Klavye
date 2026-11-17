@@ -320,14 +320,12 @@ class LocalLanguageModel(context: Context) {
         val learnedPair = englishPairNextCounts[previous].orEmpty()
         val prefix = if (context.isBlank()) "" else "$context>$previous"
         val learnedTrigram = if (prefix.isBlank()) emptyMap() else englishTrigramNextCounts[prefix].orEmpty()
-        val candidates = (contextual.asSequence() + englishNextHints[previous].orEmpty().asSequence() +
-            learnedPair.keys.asSequence() + learnedTrigram.keys.asSequence()).distinct()
-        return SuggestionCandidateSelector.top(
-            candidates,
-            limit = 3,
-            comparator = compareByDescending<String> {
-                (learnedTrigram[it] ?: 0) * 3 + (learnedPair[it] ?: 0)
-            }.thenBy { it }
+        return EnglishContextSuggestionSelector.select(
+            contextualHints = contextual,
+            seededHints = englishNextHints[previous].orEmpty(),
+            learnedPairCounts = learnedPair,
+            learnedTrigramCounts = learnedTrigram,
+            limit = 3
         )
     }
 
