@@ -233,12 +233,12 @@ class ErdinKeyboardView(
             listOf(KeyboardKey("1"), KeyboardKey("2"), KeyboardKey("3")),
             listOf(KeyboardKey("4"), KeyboardKey("5"), KeyboardKey("6")),
             listOf(KeyboardKey("7"), KeyboardKey("8"), KeyboardKey("9")),
-            listOf(
-                KeyboardKey(if (numericAllowsSign) "−" else "", if (numericAllowsSign) "-" else "", kind = KeyboardKey.Kind.ACTION),
-                KeyboardKey("0", weight = 1.4f),
-                KeyboardKey(if (numericAllowsDecimal) "." else "", if (numericAllowsDecimal) "." else "", kind = KeyboardKey.Kind.ACTION),
-                KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION)
-            ),
+            buildList {
+                if (numericAllowsSign) add(KeyboardKey("−", "-", kind = KeyboardKey.Kind.ACTION))
+                add(KeyboardKey("0", weight = 1.4f))
+                if (numericAllowsDecimal) add(KeyboardKey(".", kind = KeyboardKey.Kind.ACTION))
+                add(KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION))
+            },
             listOf(
                 KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
                 KeyboardKey(activeLanguageLabel, " ", 3.2f, KeyboardKey.Kind.SPACE),
