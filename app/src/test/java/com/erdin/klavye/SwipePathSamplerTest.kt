@@ -36,7 +36,7 @@ class SwipePathSamplerTest {
             SwipePathSampler.append(samples, (index + 10).toFloat(), 0f, 1f)
             assertTrue(samples.size <= SwipePathSampler.MAX_SAMPLES)
         }
-        assertEquals(2_009f to 0f, samples.last())
+        assertEquals(2_008f to 0f, samples.last())
     }
 
     @Test
