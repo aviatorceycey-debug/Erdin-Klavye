@@ -83,6 +83,7 @@ class ErdinKeyboardView(
     private var shift = false
     private var capsLock = false
     private var symbols = false
+    private var symbolsPageTwo = false
     private var emojiMode = false
     private var clipboardMode = false
     private var clipboardItems: List<String> = emptyList()
@@ -155,21 +156,31 @@ class ErdinKeyboardView(
         prefs.edit().putString("recent_emojis", (listOf(value) + recent).take(8).joinToString("|")).apply()
     }
 
-    private fun symbolRows() = listOf(
+    private fun symbolRows(): List<List<KeyboardKey>> = if (!symbolsPageTwo) listOf(
         listOf("1","2","3","4","5","6","7","8","9","0").map { KeyboardKey(it) },
         listOf("@","#","₺","%","&","-","+","(",")","/").map { KeyboardKey(it) },
-        listOf("*","\"","'",":",";","!","?","€","£","₺").map { KeyboardKey(it) },
+        listOf("*","\\\"","'",":",";","!","?","€","£","₺").map { KeyboardKey(it) },
         listOf(KeyboardKey("=\\<", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)) +
-            listOf("_","\\","|","~","<",">","[").map { KeyboardKey(it) } +
+            listOf("_","\\\\","|","~","<",">","[").map { KeyboardKey(it) } +
             listOf(KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)),
-        listOf(
-            KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.55f),
-            KeyboardKey(",", weight = .8f),
-            KeyboardKey("😊", kind = KeyboardKey.Kind.ACTION, weight = .9f),
-            KeyboardKey(activeLanguageLabel, " ", 4.2f, KeyboardKey.Kind.SPACE),
-            KeyboardKey(".", weight = .8f),
-            KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.25f)
-        )
+        symbolBottomRow("ABC")
+    ) else listOf(
+        listOf("1","2","3","4","5","6","7","8","9","0").map { KeyboardKey(it) },
+        listOf("~","`","|","•","√","π","÷","×","¶","∆").map { KeyboardKey(it) },
+        listOf("£","¢","€","¥","^","°","=","{","}","\\\\").map { KeyboardKey(it) },
+        listOf(KeyboardKey("123", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)) +
+            listOf("%","©","®","™","✓","[","]").map { KeyboardKey(it) } +
+            listOf(KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)),
+        symbolBottomRow("ABC")
+    )
+
+    private fun symbolBottomRow(label: String) = listOf(
+        KeyboardKey(label, kind = KeyboardKey.Kind.ACCENT, weight = 1.55f),
+        KeyboardKey(",", weight = .8f),
+        KeyboardKey("😊", kind = KeyboardKey.Kind.ACTION, weight = .9f),
+        KeyboardKey(activeLanguageLabel, " ", 4.2f, KeyboardKey.Kind.SPACE),
+        KeyboardKey(".", weight = .8f),
+        KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.25f)
     )
 
     private fun rows() = when {
@@ -587,9 +598,11 @@ class ErdinKeyboardView(
                             invalidate()
                         }
                         "⌫" -> onKey("⌫")
+                        "=\\<" -> { symbolsPageTwo = true; invalidate() }
+                        "123" -> { symbolsPageTwo = false; invalidate() }
                         "?123" -> { symbols = true; emojiMode = false; invalidate() }
-                        "ABC" -> { symbols = false; emojiMode = false; clipboardMode = false; invalidate() }
-                        "😊" -> { emojiMode = true; symbols = false; clipboardMode = false; invalidate() }
+                        "ABC" -> { symbols = false; symbolsPageTwo = false; emojiMode = false; clipboardMode = false; invalidate() }
+                        "😊" -> { emojiMode = true; symbols = false; symbolsPageTwo = false; clipboardMode = false; invalidate() }
                         "🌐" -> onKey("🌐")
                         activeLanguageLabel -> onKey(" ")
                         else -> {
