@@ -217,9 +217,11 @@ class ErdinKeyboardView(
             longPressed = true
             onKey("⌫")
             handler.postDelayed(deleteRepeatRunnable, 180)
-        } else if (!symbols && !emojiMode && key.value.length == 1) {
+        } else if (!emojiMode && key.value.length == 1) {
+            // Punctuation alternatives must also work on the symbols page
+            // (for example, long-pressing "-" to choose an em dash).
             val options = punctuationAlternatives[key.value]
-                ?: if (activeLanguageLabel == "Türkçe") alternatives[key.value.lowercase()] else null
+                ?: if (!symbols && activeLanguageLabel == "Türkçe") alternatives[key.value.lowercase()] else null
             if (!options.isNullOrEmpty()) {
                 longPressed = true
                 alternateOptions = options
