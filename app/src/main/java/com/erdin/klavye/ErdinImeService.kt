@@ -470,6 +470,17 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         requestSuggestionsSoon()
     }
 
+    private fun matchSuggestionCase(candidate: String, typed: String): String {
+        val letters = typed.filter { it.isLetter() }
+        if (letters.isEmpty()) return candidate
+        val locale = if (usesTurkishModel()) Locale("tr", "TR") else Locale.ENGLISH
+        return when {
+            letters.all { it.isUpperCase() } -> candidate.uppercase(locale)
+            letters.first().isUpperCase() -> candidate.replaceFirstChar { it.uppercase(locale) }
+            else -> candidate.lowercase(locale)
+        }
+    }
+
     override fun onGetSuggestions(results: Array<SuggestionsInfo>) {
         val queriedWord = lastQueriedWord
         if (queriedWord.isBlank() || !suggestionsEnabled) return
@@ -483,6 +494,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 }
             }
             .filter { it.isNotBlank() && !it.equals(queriedWord, ignoreCase = true) }
+            .map { matchSuggestionCase(it, queriedWord) }
             .distinct()
             .take(2)
         val localCompletions = if (usesTurkishModel()) languageModel.completions(queriedWord) else languageModel.englishCompletions(queriedWord)
