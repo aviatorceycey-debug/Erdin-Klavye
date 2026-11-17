@@ -317,10 +317,18 @@ class LocalLanguageModel(context: Context) {
         val context = wordBeforePrevious?.trim()?.lowercase(Locale.US).orEmpty()
         val contextual = if (context.isBlank()) emptyList()
             else englishContextHints["$context>$previous"].orEmpty()
-        return (contextual.asSequence() + englishNextHints[previous].orEmpty().asSequence())
-            .distinct()
-            .take(3)
-            .toList()
+        val learnedPair = englishPairNextCounts[previous].orEmpty()
+        val prefix = if (context.isBlank()) "" else "$context>$previous"
+        val learnedTrigram = if (prefix.isBlank()) emptyMap() else englishTrigramNextCounts[prefix].orEmpty()
+        val candidates = (contextual.asSequence() + englishNextHints[previous].orEmpty().asSequence() +
+            learnedPair.keys.asSequence() + learnedTrigram.keys.asSequence()).distinct()
+        return SuggestionCandidateSelector.top(
+            candidates,
+            limit = 3,
+            comparator = compareByDescending<String> {
+                (learnedTrigram[it] ?: 0) * 3 + (learnedPair[it] ?: 0)
+            }.thenBy { it }
+        )
     }
 
     private fun readCounts(key: String): MutableMap<String, Int> {
@@ -343,9 +351,13 @@ class LocalLanguageModel(context: Context) {
     private var englishWordCounts = readCounts("english_word_counts")
     private var pairCounts = readCounts("pair_counts")
     private var trigramCounts = readCounts("trigram_counts")
+    private var englishPairCounts = readCounts("english_pair_counts")
+    private var englishTrigramCounts = readCounts("english_trigram_counts")
     // Prefix indexes avoid scanning every learned pair and trigram for each suggestion.
     private var pairNextCounts = indexContextCounts(pairCounts, 1)
     private var trigramNextCounts = indexContextCounts(trigramCounts, 2)
+    private var englishPairNextCounts = indexContextCounts(englishPairCounts, 1)
+    private var englishTrigramNextCounts = indexContextCounts(englishTrigramCounts, 2)
 
     private fun indexContextCounts(
         source: Map<String, Int>,
@@ -369,8 +381,12 @@ class LocalLanguageModel(context: Context) {
         englishWordCounts = readCounts("english_word_counts")
         pairCounts = readCounts("pair_counts")
         trigramCounts = readCounts("trigram_counts")
+        englishPairCounts = readCounts("english_pair_counts")
+        englishTrigramCounts = readCounts("english_trigram_counts")
         pairNextCounts = indexContextCounts(pairCounts, 1)
         trigramNextCounts = indexContextCounts(trigramCounts, 2)
+        englishPairNextCounts = indexContextCounts(englishPairCounts, 1)
+        englishTrigramNextCounts = indexContextCounts(englishTrigramCounts, 2)
         loadedRevision = revision
     }
 
@@ -388,6 +404,8 @@ class LocalLanguageModel(context: Context) {
             .putString("english_word_counts", encode(englishWordCounts))
             .putString("pair_counts", encode(pairCounts))
             .putString("trigram_counts", encode(trigramCounts))
+            .putString("english_pair_counts", encode(englishPairCounts))
+            .putString("english_trigram_counts", encode(englishTrigramCounts))
             .putLong("personal_data_revision", revision)
             .apply()
         loadedRevision = revision
@@ -400,14 +418,20 @@ class LocalLanguageModel(context: Context) {
         englishWordCounts.clear()
         pairCounts.clear()
         trigramCounts.clear()
+        englishPairCounts.clear()
+        englishTrigramCounts.clear()
         pairNextCounts.clear()
         trigramNextCounts.clear()
+        englishPairNextCounts.clear()
+        englishTrigramNextCounts.clear()
         val revision = maxOf(loadedRevision, prefs.getLong("personal_data_revision", 0L)) + 1L
         prefs.edit()
             .remove("word_counts")
             .remove("english_word_counts")
             .remove("pair_counts")
             .remove("trigram_counts")
+            .remove("english_pair_counts")
+            .remove("english_trigram_counts")
             .putLong("personal_data_revision", revision)
             .apply()
         loadedRevision = revision
@@ -434,8 +458,11 @@ class LocalLanguageModel(context: Context) {
         // Remove the word wherever it appears in a learned context, not only
         // when it is the predicted final token.
         PersonalContextPruner.removeWord(pairCounts, trigramCounts, clean)
+        PersonalContextPruner.removeWord(englishPairCounts, englishTrigramCounts, englishClean)
         pairNextCounts = indexContextCounts(pairCounts, 1)
         trigramNextCounts = indexContextCounts(trigramCounts, 2)
+        englishPairNextCounts = indexContextCounts(englishPairCounts, 1)
+        englishTrigramNextCounts = indexContextCounts(englishTrigramCounts, 2)
         persistPersonalData()
     }
 
@@ -482,15 +509,42 @@ class LocalLanguageModel(context: Context) {
 
     /** Learn an English word locally without mixing it into the Turkish model. */
     @Synchronized
-    fun learnEnglish(word: String) {
+    fun learnEnglish(
+        word: String,
+        previousWord: String? = null,
+        previousPreviousWord: String? = null
+    ) {
         refreshPersonalDataIfChanged()
         val clean = word.trim().lowercase(Locale.US)
         if (!PersonalWordValidator.isValid(clean)) return
         englishWordCounts[clean] = (englishWordCounts[clean] ?: 0) + 1
+        val previous = previousWord?.trim()?.lowercase(Locale.US).orEmpty()
+        if (PersonalWordValidator.isValid(previous)) {
+            val key = "$previous>$clean"
+            englishPairCounts[key] = (englishPairCounts[key] ?: 0) + 1
+            englishPairNextCounts.getOrPut(previous) { mutableMapOf() }[clean] = englishPairCounts.getValue(key)
+        }
+        val previousPrevious = previousPreviousWord?.trim()?.lowercase(Locale.US).orEmpty()
+        if (PersonalWordValidator.isValid(previousPrevious) && PersonalWordValidator.isValid(previous)) {
+            val prefix = "$previousPrevious>$previous"
+            val key = "$prefix>$clean"
+            englishTrigramCounts[key] = (englishTrigramCounts[key] ?: 0) + 1
+            englishTrigramNextCounts.getOrPut(prefix) { mutableMapOf() }[clean] = englishTrigramCounts.getValue(key)
+        }
         if (englishWordCounts.size > 2500) {
             englishWordCounts.entries.sortedBy { it.value }
                 .take(englishWordCounts.size - 2000)
                 .forEach { englishWordCounts.remove(it.key) }
+        }
+        if (englishPairCounts.size > 5000) {
+            englishPairCounts.entries.sortedBy { it.value }
+                .take(englishPairCounts.size - 4000).forEach { englishPairCounts.remove(it.key) }
+            englishPairNextCounts = indexContextCounts(englishPairCounts, 1)
+        }
+        if (englishTrigramCounts.size > 6000) {
+            englishTrigramCounts.entries.sortedBy { it.value }
+                .take(englishTrigramCounts.size - 4500).forEach { englishTrigramCounts.remove(it.key) }
+            englishTrigramNextCounts = indexContextCounts(englishTrigramCounts, 2)
         }
         persistPersonalData()
     }
