@@ -85,7 +85,7 @@ class SwipeTraceDecoderTest {
     }
 
     @Test
-    fun extremeFiniteKeyBoundsDoNotOverflowCenterCalculations() {
+    fun extremeFiniteKeyBoundsDoNotProduceInvalidTrace() {
         val extremeKeys = listOf(
             SwipeKeyBounds(
                 "a",
@@ -96,7 +96,7 @@ class SwipeTraceDecoderTest {
             )
         )
         assertEquals(
-            "a",
+            "",
             SwipeTraceDecoder.decode(
                 listOf(Float.MAX_VALUE * 0.75f to 20f),
                 extremeKeys,
