@@ -292,10 +292,12 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 keyboardView?.setClipboardItems(clipboardHistory.toList())
             }
             value == "__CLIP_CLEAR__" -> {
+                if (!clipboardEnabled) return
                 clipboardHistory.clear()
                 keyboardView?.setClipboardItems(emptyList())
             }
             value.startsWith("__CLIP_ITEM__") -> {
+                if (!clipboardEnabled) return
                 val index = value.removePrefix("__CLIP_ITEM__").toIntOrNull()
                 val item = index?.let { clipboardHistory.getOrNull(it) }
                 if (item != null) {
