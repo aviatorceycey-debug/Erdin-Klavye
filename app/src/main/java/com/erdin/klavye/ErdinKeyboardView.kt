@@ -128,6 +128,10 @@ class ErdinKeyboardView(
     private fun appendSwipeSample(x: Float, y: Float) {
         SwipePathSampler.append(swipePath, x, y, density)
     }
+
+    private fun appendSwipeSegment(x: Float, y: Float) {
+        SwipePathSampler.appendSegment(swipePath, x, y, density)
+    }
     private val deleteRepeatRunnable = object : Runnable {
         override fun run() {
             if (downKey?.label == "⌫" && longPressed) {
@@ -1026,24 +1030,15 @@ class ErdinKeyboardView(
                         downRect?.let { swipePath += it.centerX() to it.centerY() }
                     }
                     if (swipeTyping) {
-                        val last = swipePath.lastOrNull()
-                        // Keep unusually long swipe gestures bounded in memory.
-                        // A normal word needs far fewer than 180 sampled points.
-                        if (last == null) {
-                            appendSwipeSample(event.x, event.y)
-                        } else {
-                            val dxPath = event.x - last.first
-                            val dyPath = event.y - last.second
-                            val distance = kotlin.math.hypot(dxPath.toDouble(), dyPath.toDouble())
-                            val steps = (distance / (10f * density)).toInt().coerceIn(1, 12)
-                            for (step in 1..steps) {
-                                val fraction = step.toFloat() / steps
-                                appendSwipeSample(
-                                    last.first + dxPath * fraction,
-                                    last.second + dyPath * fraction
-                                )
-                            }
+                        // MotionEvent may contain intermediate points between delivered frames.
+                        // Keep those bends instead of tracing a straight shortcut.
+                        for (historyIndex in 0 until event.historySize) {
+                            appendSwipeSegment(
+                                event.getHistoricalX(historyIndex),
+                                event.getHistoricalY(historyIndex)
+                            )
                         }
+                        appendSwipeSegment(event.x, event.y)
                     }
                 } else if (downKey?.kind == KeyboardKey.Kind.SPACE) {
                     val threshold = 22f * density
