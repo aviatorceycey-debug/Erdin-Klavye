@@ -209,6 +209,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         // Clipboard snippets are intentionally session-only; discard them when
         // the input session ends so they cannot linger across apps.
         clipboardHistory.clear()
+        // A finished editor session must not leave the clipboard entry point
+        // active on a keyboard view that may briefly remain attached.
+        clipboardEnabled = false
+        keyboardView?.setClipboardAvailable(false)
         keyboardView?.setClipboardItems(emptyList())
         keyboardView?.hideClipboard()
         spellCheckerSession?.close()
