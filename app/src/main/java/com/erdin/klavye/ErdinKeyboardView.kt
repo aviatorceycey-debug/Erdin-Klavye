@@ -128,6 +128,13 @@ class ErdinKeyboardView(
     // Keep long gestures bounded without losing their final letters. When the
     // sample buffer fills, retain alternating points before accepting new ones.
     private fun appendSwipeSample(x: Float, y: Float) {
+        val last = swipePath.lastOrNull()
+        if (last != null) {
+            val dx = x - last.first
+            val dy = y - last.second
+            // Ignore duplicate motion events and sub-pixel jitter.
+            if (kotlin.math.hypot(dx.toDouble(), dy.toDouble()) < 2f * density) return
+        }
         if (swipePath.size >= 180) {
             val compacted = swipePath.filterIndexed { index, _ -> index % 2 == 0 }
             swipePath.clear()
