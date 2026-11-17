@@ -50,6 +50,32 @@ class SwipePathSamplerTest {
     }
 
     @Test
+    fun interpolatesLongSegmentsIntoUsefulSamples() {
+        val samples = mutableListOf(0f to 0f)
+        SwipePathSampler.appendSegment(samples, 30f, 0f, 1f)
+        assertEquals(listOf(0f to 0f, 10f to 0f, 20f to 0f, 30f to 0f), samples)
+    }
+
+    @Test
+    fun preservesCornersWhenConsecutiveMotionSegmentsTurn() {
+        val samples = mutableListOf(0f to 0f)
+        SwipePathSampler.appendSegment(samples, 30f, 0f, 1f)
+        SwipePathSampler.appendSegment(samples, 30f, 30f, 1f)
+        assertTrue(samples.contains(30f to 0f))
+        assertTrue(samples.contains(30f to 30f))
+        assertTrue(samples.filter { it.second > 0f }.all { it.first == 30f })
+    }
+
+    @Test
+    fun segmentInterpolationRemainsBoundedForLongGestures() {
+        val samples = mutableListOf(0f to 0f)
+        repeat(100) { index ->
+            SwipePathSampler.appendSegment(samples, (index + 1) * 100f, 0f, 1f)
+            assertTrue(samples.size <= SwipePathSampler.MAX_SAMPLES)
+        }
+    }
+
+    @Test
     fun rejectsInvalidDensity() {
         val samples = mutableListOf(10f to 10f)
         SwipePathSampler.append(samples, 30f, 30f, 0f)
