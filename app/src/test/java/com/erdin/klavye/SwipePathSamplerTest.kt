@@ -9,7 +9,7 @@ class SwipePathSamplerTest {
     fun ignoresDuplicateAndSubThresholdMotionSamples() {
         val samples = mutableListOf(10f to 10f)
         SwipePathSampler.append(samples, 10f, 10f, 1f)
-        SwipePathSampler.append(samples, 11f to 10f.first, 10f, 1f)
+        SwipePathSampler.append(samples, 11f, 10f, 1f)
         assertEquals(listOf(10f to 10f), samples)
     }
 
