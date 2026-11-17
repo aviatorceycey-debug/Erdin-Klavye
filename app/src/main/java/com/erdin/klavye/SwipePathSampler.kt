@@ -17,9 +17,9 @@ internal object SwipePathSampler {
         if (!density.isFinite() || density <= 0f || !x.isFinite() || !y.isFinite()) return
         val last = samples.lastOrNull()
         if (last != null) {
-            val dx = x - last.first
-            val dy = y - last.second
-            if (hypot(dx.toDouble(), dy.toDouble()) < 2f * density) return
+            val dx = x.toDouble() - last.first.toDouble()
+            val dy = y.toDouble() - last.second.toDouble()
+            if (hypot(dx, dy) < 2.0 * density.toDouble()) return
         }
         if (samples.size >= MAX_SAMPLES) {
             val compacted = samples.filterIndexed { index, _ -> index % 2 == 0 }
@@ -44,18 +44,18 @@ internal object SwipePathSampler {
             append(samples, x, y, density)
             return
         }
-        val dx = x - last.first
-        val dy = y - last.second
-        val distance = hypot(dx.toDouble(), dy.toDouble())
-        val steps = (distance / (10f * density)).toInt().coerceIn(1, 12)
+        // Use Double for deltas: subtracting two finite Float coordinates can
+        // overflow Float even though the interpolated points are representable.
+        val dx = x.toDouble() - last.first.toDouble()
+        val dy = y.toDouble() - last.second.toDouble()
+        val distance = hypot(dx, dy)
+        val stepLength = 10.0 * density.toDouble()
+        val steps = (distance / stepLength).toInt().coerceIn(1, 12)
         for (step in 1..steps) {
-            val fraction = step.toFloat() / steps
-            append(
-                samples,
-                last.first + dx * fraction,
-                last.second + dy * fraction,
-                density
-            )
+            val fraction = step.toDouble() / steps
+            val sampleX = (last.first.toDouble() + dx * fraction).toFloat()
+            val sampleY = (last.second.toDouble() + dy * fraction).toFloat()
+            append(samples, sampleX, sampleY, density)
         }
     }
 }
