@@ -56,7 +56,10 @@ class ErdinKeyboardView(
         keyTone?.startTone(ToneGenerator.TONE_PROP_BEEP, 28)
     }
     private fun upper(value: String) = value.uppercase(if (activeLanguageLabel == "English") Locale.US else Locale("tr", "TR"))
-    private fun palette(): KeyboardPalette {
+    // Resolve the theme once per frame; every key and popup shares this palette.
+    private var activeDrawPalette: KeyboardPalette? = null
+
+    private fun loadPalette(): KeyboardPalette {
         return when (context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
             .getString("keyboard_theme", "midnight")) {
             "ocean" -> KeyboardPalette(
@@ -79,6 +82,8 @@ class ErdinKeyboardView(
             )
         }
     }
+    private fun palette(): KeyboardPalette = activeDrawPalette ?: loadPalette()
+
     private val density = resources.displayMetrics.density
     private val gap = 5f * density
     private val topInset = 42f * density
@@ -683,6 +688,7 @@ class ErdinKeyboardView(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        activeDrawPalette = loadPalette()
         val colors = palette()
         paint.shader = LinearGradient(0f, 0f, width.toFloat(), height.toFloat(),
             colors.background, null, Shader.TileMode.CLAMP)
