@@ -14,7 +14,7 @@ internal object SwipePathSampler {
         y: Float,
         density: Float
     ) {
-        if (density <= 0f) return
+        if (!density.isFinite() || density <= 0f || !x.isFinite() || !y.isFinite()) return
         val last = samples.lastOrNull()
         if (last != null) {
             val dx = x - last.first
@@ -38,7 +38,7 @@ internal object SwipePathSampler {
         y: Float,
         density: Float
     ) {
-        if (density <= 0f) return
+        if (!density.isFinite() || density <= 0f || !x.isFinite() || !y.isFinite()) return
         val last = samples.lastOrNull()
         if (last == null) {
             append(samples, x, y, density)
