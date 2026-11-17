@@ -44,7 +44,22 @@ class LocalLanguageModel(context: Context) {
         "bir>daha" to listOf("bakalım", "deneyelim", "sonra", "fazla"),
         "bugün>çok" to listOf("güzel", "yoğun", "mutluyum", "işim"),
         "yardım>eder" to listOf("misin", "mısın", "mi", "lütfen"),
-        "teşekkür>ederim" to listOf("sana", "çok", "yardımın", "ilgin")
+        "teşekkür>ederim" to listOf("sana", "çok", "yardımın", "ilgin"),
+        "iyi>akşamlar" to listOf("dilerim", "herkese", "nasılsınız"),
+        "iyi>günler" to listOf("dilerim", "herkese", "nasılsınız"),
+        "görüşmek>üzere" to listOf("kendine", "hoşça", "yakında"),
+        "hoş>geldin" to listOf("nasılsın", "tekrar", "arkadaşım"),
+        "hoş>bulduk" to listOf("teşekkürler", "nasılsınız"),
+        "kolay>gelsin" to listOf("teşekkürler", "sana", "size"),
+        "eline>sağlık" to listOf("çok", "teşekkür", "harika"),
+        "iyi>ki" to listOf("varsın", "geldin", "yaptım"),
+        "bir>şey" to listOf("daha", "söyleyeceğim", "soracağım"),
+        "şu>anda" to listOf("müsaitim", "uygun", "çalışıyorum"),
+        "haber>ver" to listOf("lütfen", "bana", "inceleyelim"),
+        "ne>zaman" to listOf("geleceksin", "başlayacak", "uygun"),
+        "seni>çok" to listOf("seviyorum", "özledim", "bekliyorum"),
+        "her>şey" to listOf("çok", "güzel", "yolunda"),
+        "iyi>çalışmalar" to listOf("dilerim", "kolay", "sana")
     )
 
     // General-purpose context hints. Personal usage counts gradually take priority.
