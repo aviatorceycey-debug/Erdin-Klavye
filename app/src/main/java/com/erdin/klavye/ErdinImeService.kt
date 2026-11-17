@@ -404,6 +404,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                         connection.deleteSurroundingText(1, 0)
                         connection.commitText(". ", 1)
                         keyboardView?.setSuggestions(emptyList())
+                        updateAutoShift()
                         return
                     }
                     val words = before.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
