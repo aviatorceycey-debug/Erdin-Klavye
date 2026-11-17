@@ -80,6 +80,15 @@ class LocalLanguageModel(context: Context) {
         "tekrar>görüşmek" to listOf("üzere", "dileğiyle"),
         "çok>memnun" to listOf("oldum", "olduk", "olacağım"),
         "emeğine>sağlık" to listOf("çok", "teşekkürler", "harika"),
+        "merak>etme" to listOf("hallederiz", "sorun değil", "lütfen"),
+        "senin>için" to listOf("hazırladım", "buradayım", "teşekkürler"),
+        "şimdiden>teşekkürler" to listOf("yardımın", "desteğin", "ilgin"),
+        "bir>sonraki" to listOf("adım", "gün", "sefer"),
+        "uygun>olduğunda" to listOf("haber", "yaz", "ara"),
+        "sorun>değil" to listOf("hiç", "merak", "tabii"),
+        "ne>güzel" to listOf("haber", "tesadüf", "oldu"),
+        "iyi>oldu" to listOf("böyle", "ki", "gerçekten"),
+        "ben>buradayım" to listOf("senin", "yardımcı", "her zaman")
     )
 
     // General-purpose context hints. Personal usage counts gradually take priority.
@@ -115,7 +124,13 @@ class LocalLanguageModel(context: Context) {
         "mutlu" to listOf("yıllar", "olsun"),
         "doğum" to listOf("günün", "günü"),
         "müsait" to listOf("misin", "misiniz", "olunca"),
-        "başarılar" to listOf("dilerim", "sana", "hepimize")
+        "başarılar" to listOf("dilerim", "sana", "hepimize"),
+        "merak" to listOf("etme", "ettim", "ediyorum"),
+        "senin" to listOf("için", "de", "le"),
+        "şimdiden" to listOf("teşekkürler", "sağ ol", "haber vereyim"),
+        "uygun" to listOf("olduğunda", "musun", "değil"),
+        "sorun" to listOf("değil", "olursa", "var mı"),
+        "harika" to listOf("oldu", "görünüyor", "bir fikir")
     )
 
     // A separate, fixed English vocabulary supports offline completions without
