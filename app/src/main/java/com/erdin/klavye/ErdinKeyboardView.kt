@@ -12,6 +12,11 @@ import android.os.Handler
 import android.os.Looper
 import android.view.MotionEvent
 import android.view.View
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
+import android.graphics.Rect
+import androidx.core.view.ViewCompat
+import androidx.customview.widget.ExploreByTouchHelper
 import android.view.HapticFeedbackConstants
 import kotlin.math.floor
 import java.util.Locale
@@ -272,6 +277,7 @@ class ErdinKeyboardView(
     fun setClipboardItems(items: List<String>) {
         clipboardItems = items.take(6)
         clipboardMode = true
+        accessibilityHelper.invalidateRoot()
         emojiMode = false
         symbols = false
         invalidate()
@@ -279,6 +285,7 @@ class ErdinKeyboardView(
 
     fun hideClipboard() {
         clipboardMode = false
+        accessibilityHelper.invalidateRoot()
         invalidate()
     }
 
@@ -298,6 +305,7 @@ class ErdinKeyboardView(
         }
         numericAllowsSign = inputType and android.text.InputType.TYPE_NUMBER_FLAG_SIGNED != 0
         numericAllowsDecimal = inputType and android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL != 0
+        accessibilityHelper.invalidateRoot()
         if (numericInputMode != 0) {
             symbols = false
             symbolsPageTwo = false
@@ -309,15 +317,111 @@ class ErdinKeyboardView(
 
     fun setInputLanguage(localeTag: String) {
         activeLanguageLabel = if (localeTag.startsWith("en", ignoreCase = true)) "English" else "Türkçe"
+        accessibilityHelper.invalidateRoot()
         invalidate()
     }
 
     fun setSuggestions(items: List<String>) {
         suggestions = items.distinct().take(3)
+        accessibilityHelper.invalidateRoot()
         invalidate()
     }
 
-    init { isFocusable = true }
+    private val accessibilityHelper by lazy {
+        object : ExploreByTouchHelper(this) {
+            override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
+                keyRects().forEachIndexed { index, pair ->
+                    if (pair.first.label.isNotBlank()) virtualViewIds.add(index)
+                }
+            }
+
+            override fun getVirtualViewAt(x: Float, y: Float): Int {
+                return keyRects().indexOfFirst { it.second.contains(x, y) }
+                    .takeIf { it >= 0 } ?: INVALID_ID
+            }
+
+            override fun onPopulateNodeForVirtualView(
+                virtualViewId: Int,
+                node: androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+            ) {
+                val pair = keyRects().getOrNull(virtualViewId)
+                if (pair == null || pair.first.label.isBlank()) {
+                    node.contentDescription = "Boş tuş"
+                    node.isEnabled = false
+                    return
+                }
+                val key = pair.first
+                val rect = pair.second
+                val description = when (key.kind) {
+                    KeyboardKey.Kind.SPACE -> "Boşluk, $activeLanguageLabel"
+                    KeyboardKey.Kind.ACCENT -> when (key.label) {
+                        "↵" -> "Enter"
+                        else -> key.label
+                    }
+                    KeyboardKey.Kind.ACTION -> when (key.label) {
+                        "⌫" -> "Geri sil"
+                        "⇧" -> "Büyük harf"
+                        "🌐" -> "Dil değiştir"
+                        "😊" -> "Emoji"
+                        else -> key.label
+                    }
+                    else -> key.label
+                }
+                node.text = description
+                node.contentDescription = description
+                node.className = android.widget.Button::class.java.name
+                node.isFocusable = true
+                node.isClickable = true
+                node.addAction(AccessibilityNodeInfoCompat.ACTION_CLICK)
+                node.setBoundsInParent(Rect(
+                    rect.left.toInt(), rect.top.toInt(), rect.right.toInt(), rect.bottom.toInt()
+                ))
+            }
+
+            override fun onPerformActionForVirtualView(
+                virtualViewId: Int,
+                action: Int,
+                arguments: android.os.Bundle?
+            ): Boolean {
+                if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
+                val key = keyRects().getOrNull(virtualViewId)?.first ?: return false
+                performAccessibleKey(key)
+                sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
+                return true
+            }
+        }
+    }
+
+    private fun performAccessibleKey(key: KeyboardKey) {
+        when (key.label) {
+            "⇧" -> {
+                if (shift && !capsLock) capsLock = true
+                else if (capsLock) { capsLock = false; shift = false }
+                else shift = true
+                invalidate()
+            }
+            "⌫" -> onKey("⌫")
+            "?123" -> { symbols = true; emojiMode = false; invalidate() }
+            "ABC" -> { symbols = false; symbolsPageTwo = false; emojiMode = false; clipboardMode = false; invalidate() }
+            "=\\<" -> { symbolsPageTwo = true; invalidate() }
+            "123" -> { symbolsPageTwo = false; invalidate() }
+            "😊" -> { emojiMode = true; symbols = false; symbolsPageTwo = false; invalidate() }
+            "🌐" -> onKey("🌐")
+            activeLanguageLabel -> onKey(" ")
+            else -> if (key.value.isNotEmpty()) {
+                if (emojiMode) rememberEmoji(key.value)
+                onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) upper(key.value) else key.value)
+                if (shift && !capsLock && !symbols && !emojiMode && key.value.length == 1) shift = false
+            }
+        }
+        accessibilityHelper.invalidateRoot()
+    }
+
+    override fun dispatchHoverEvent(event: MotionEvent): Boolean {
+        return accessibilityHelper.dispatchHoverEvent(event) || super.dispatchHoverEvent(event)
+    }
+
+    init { isFocusable = true; ViewCompat.setAccessibilityDelegate(this, accessibilityHelper) }
 
     override fun onDetachedFromWindow() {
         handler.removeCallbacksAndMessages(null)
