@@ -141,14 +141,38 @@ class LocalLanguageModel(context: Context) {
         "very" to listOf("good", "well", "happy", "much")
     )
 
+    private val englishFrequencyRank = listOf(
+        "the", "you", "that", "this", "there", "they", "their", "then", "them",
+        "what", "when", "where", "which", "who", "will", "with", "would", "your",
+        "have", "has", "had", "how", "here", "help", "hello", "good", "great",
+        "get", "got", "going", "go", "can", "could", "come", " see", "some",
+        "for", "from", "first", "find", "feel", "just", "know", "like", "look",
+        "make", "more", "most", "much", "need", "new", "now", "not", "one",
+        "our", "out", "please", "people", "really", "right", "said", "same",
+        "see", "send", "should", "some", "still", "take", "than", "thank",
+        "think", "time", "today", "tomorrow", "too", "use", "very", "want",
+        "way", "well", "were", "work", "world", "yes"
+    ).mapIndexed { index, word -> word.trim() to index }.toMap()
+
     @Synchronized
     fun englishCompletions(prefix: String): List<String> {
-        val key = prefix.trim().lowercase(Locale.US)
+        val typed = prefix.trim()
+        val key = typed.lowercase(Locale.US)
         if (key.length < 2) return emptyList()
-        return englishStarterWords.asSequence()
+        val candidates = englishStarterWords.asSequence()
             .filter { it.startsWith(key) && it != key }
+            .distinct()
+            .sortedWith(compareBy<String> { englishFrequencyRank[it] ?: Int.MAX_VALUE }.thenBy { it })
             .take(2)
             .toList()
+        return candidates.map { candidate ->
+            when {
+                typed.all { !it.isLetter() || it.isUpperCase() } -> candidate.uppercase(Locale.US)
+                typed.firstOrNull()?.isUpperCase() == true ->
+                    candidate.replaceFirstChar { it.uppercase(Locale.US) }
+                else -> candidate
+            }
+        }
     }
 
     @Synchronized
