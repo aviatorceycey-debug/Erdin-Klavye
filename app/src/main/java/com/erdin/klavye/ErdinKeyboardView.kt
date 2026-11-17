@@ -113,6 +113,12 @@ class ErdinKeyboardView(
         "o" to listOf("ö", "Ö"), "i" to listOf("ı", "İ")
     )
 
+    private val punctuationAlternatives = mapOf(
+        "." to listOf("…", "?", "!"),
+        "," to listOf(";", ":"),
+        "-" to listOf("—", "–", "_")
+    )
+
     private fun letterRows() = listOf(
         listOf("1","2","3","4","5","6","7","8","9","0").map { KeyboardKey(it) },
         "qwertyuiop".map { KeyboardKey(it.toString()) },
@@ -211,8 +217,9 @@ class ErdinKeyboardView(
             longPressed = true
             onKey("⌫")
             handler.postDelayed(deleteRepeatRunnable, 180)
-        } else if (!symbols && !emojiMode && activeLanguageLabel == "Türkçe" && key.value.length == 1) {
-            val options = alternatives[key.value.lowercase()]
+        } else if (!symbols && !emojiMode && key.value.length == 1) {
+            val options = punctuationAlternatives[key.value]
+                ?: if (activeLanguageLabel == "Türkçe") alternatives[key.value.lowercase()] else null
             if (!options.isNullOrEmpty()) {
                 longPressed = true
                 alternateOptions = options
