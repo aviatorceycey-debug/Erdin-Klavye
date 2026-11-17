@@ -117,6 +117,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             onSuggestion = { value -> applySuggestion(value) }
         ).also {
             keyboardView = it
+            it.setClipboardAvailable(clipboardEnabled)
             it.setInputLanguage(activeSubtypeLocale)
             it.setEditorActionDescription(editorActionDescription(currentInputEditorInfo))
             it.setNumericInputMode(currentInputEditorInfo?.inputType ?: InputType.TYPE_NULL)
