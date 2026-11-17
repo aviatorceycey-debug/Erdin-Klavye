@@ -9,8 +9,8 @@ class EnglishContextSuggestionSelectorTest {
         val result = EnglishContextSuggestionSelector.select(
             contextualHints = emptyList(),
             seededHints = listOf("seeded"),
-            learnedPairCounts = mapOf("pair" to 4, "trigram" to 1),
-            learnedTrigramCounts = mapOf("trigram" to 1)
+            learnedPairCounts = mapOf("pair" to 3, "trigram" to 2),
+            learnedTrigramCounts = mapOf("trigram" to 2)
         )
         assertEquals(listOf("trigram", "pair", "seeded"), result)
     }
