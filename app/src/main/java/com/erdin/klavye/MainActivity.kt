@@ -20,6 +20,8 @@ import java.util.Locale
 
 class MainActivity : Activity() {
     private var setupStatus: TextView? = null
+    private var enableKeyboardButton: Button? = null
+    private var chooseKeyboardButton: Button? = null
 
     override fun onResume() {
         super.onResume()
@@ -33,6 +35,8 @@ class MainActivity : Activity() {
             contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD
         ).orEmpty()
         val selected = defaultIme.startsWith("$packageName/")
+        enableKeyboardButton?.text = if (enabled) "✓ Klavye etkin (ayarları aç)" else "1. Klavyeyi etkinleştir"
+        chooseKeyboardButton?.text = if (selected) "✓ Varsayılan klavye seçili" else "2. Erdin Klavye'yi varsayılan seç"
         setupStatus?.apply {
             text = buildString {
                 append(if (enabled) "✓ Klavye etkin" else "1. Klavyeyi etkinleştir")
@@ -169,13 +173,13 @@ class MainActivity : Activity() {
         val enable = Button(this).apply {
             text = "Klavyeyi etkinleştir"
             setOnClickListener { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
-        }
+        }.also { enableKeyboardButton = it }
         val choose = Button(this).apply {
             text = "Varsayılan klavyeyi seç"
             setOnClickListener {
                 (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
             }
-        }
+        }.also { chooseKeyboardButton = it }
         val heightLabel = TextView(this).apply {
             textSize = 15f
             setTextColor(0xFFEAF1FC.toInt())
