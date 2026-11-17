@@ -410,7 +410,10 @@ class ErdinKeyboardView(
                 }
                 alternateOptions.forEachIndexed { index, _ -> virtualViewIds.add(3000 + index) }
                 if (clipboardAvailable) virtualViewIds.add(2000)
-                if (clipboardMode) virtualViewIds.add(2002) else virtualViewIds.add(2001)
+                if (clipboardMode) {
+                    virtualViewIds.add(2002)
+                    if (clipboardItems.isEmpty()) virtualViewIds.add(2003)
+                } else virtualViewIds.add(2001)
             }
 
             override fun getVirtualViewAt(x: Float, y: Float): Int {
@@ -424,6 +427,7 @@ class ErdinKeyboardView(
                 }
                 val keyIndex = accessibleKeyRects().indexOfFirst { it.second.contains(x, y) }
                 if (keyIndex >= 0) return keyIndex
+                if (clipboardMode && clipboardItems.isEmpty() && y >= topInset) return 2003
                 if (!clipboardMode && !emojiMode && !symbols) {
                     val suggestionIndex = suggestionRects.indexOfFirst { it.contains(x, y) }
                     if (suggestionIndex >= 0 && suggestionIndex < suggestions.size) return 1000 + suggestionIndex
@@ -453,6 +457,16 @@ class ErdinKeyboardView(
                     val cellWidth = popup.width() / alternateOptions.size
                     val left = popup.left + (virtualViewId - 3000) * cellWidth
                     node.setBoundsInParent(Rect(left.toInt(), popup.top.toInt(), (left + cellWidth).toInt(), popup.bottom.toInt()))
+                    return
+                }
+                if (virtualViewId == 2003) {
+                    val english = activeLanguageLabel == "English"
+                    node.text = if (english) "Clipboard is empty. Copied text will appear here." else "Pano henüz boş. Kopyaladığın metinler burada görünecek."
+                    node.contentDescription = node.text
+                    node.className = android.widget.TextView::class.java.name
+                    node.isFocusable = true
+                    val bottomRowTop = keyRects().lastOrNull()?.second?.top ?: height * 0.78f
+                    node.setBoundsInParent(Rect(0, topInset.toInt(), width, bottomRowTop.toInt()))
                     return
                 }
                 if (virtualViewId >= 2000) {
