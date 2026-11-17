@@ -460,7 +460,6 @@ class ErdinKeyboardView(
                         }
                         2002 -> onKey("__CLIP_CLEAR__")
                     }
-                    accessibilityHelper.invalidateRoot()
                     sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
                     return true
                 }
