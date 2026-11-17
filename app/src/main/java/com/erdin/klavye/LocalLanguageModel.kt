@@ -115,6 +115,20 @@ class LocalLanguageModel(context: Context) {
         write wrong yesterday young
     """.trimIndent().split(Regex("\\s+")).map { it.lowercase(Locale.US) }.distinct()
 
+    // Two-word English context improves phrase completion beyond single-word hints.
+    private val englishContextHints = mapOf(
+        "thank>you" to listOf("for", "so much"),
+        "looking>forward" to listOf("to"),
+        "see>you" to listOf("soon", "tomorrow", "there"),
+        "how>are" to listOf("you"),
+        "nice>to" to listOf("meet", "see", "hear"),
+        "i>am" to listOf("sorry", "happy", "ready", "sure"),
+        "i>think" to listOf("so", "that", "we"),
+        "have>a" to listOf("good", "great", "nice"),
+        "good>morning" to listOf("everyone", "to you"),
+        "in>the" to listOf("morning", "future", "end", "same")
+    )
+
     private val englishNextHints = mapOf(
         "good" to listOf("morning", "to", "idea", "work"),
         "thank" to listOf("you", "you for"),
@@ -176,8 +190,16 @@ class LocalLanguageModel(context: Context) {
     }
 
     @Synchronized
-    fun englishNextWords(previousWord: String): List<String> =
-        englishNextHints[previousWord.trim().lowercase(Locale.US)].orEmpty().take(3)
+    fun englishNextWords(previousWord: String, wordBeforePrevious: String? = null): List<String> {
+        val previous = previousWord.trim().lowercase(Locale.US)
+        if (previous.isBlank()) return emptyList()
+        val context = wordBeforePrevious?.trim()?.lowercase(Locale.US).orEmpty()
+        val contextual = if (context.isBlank()) emptyList()
+            else englishContextHints["$context>$previous"].orEmpty()
+        return (contextual + englishNextHints[previous].orEmpty())
+            .distinct()
+            .take(3)
+    }
 
     private fun readCounts(key: String): MutableMap<String, Int> {
         val json = runCatching { JSONObject(prefs.getString(key, "{}") ?: "{}") }.getOrNull()
