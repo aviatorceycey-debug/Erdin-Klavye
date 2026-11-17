@@ -198,6 +198,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         // the input session ends so they cannot linger across apps.
         clipboardHistory.clear()
         keyboardView?.setClipboardItems(emptyList())
+        keyboardView?.hideClipboard()
         spellCheckerSession?.close()
         spellCheckerSession = null
         spellCheckerLocale = null
