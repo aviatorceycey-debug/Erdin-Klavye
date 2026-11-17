@@ -11,7 +11,7 @@ internal data class SwipeWordCandidate(
 /** Keeps uncertain swipe traces intact instead of silently replacing them. */
 internal object SwipeCandidateSelector {
     private fun topTwo(
-        candidates: List<SwipeWordCandidate>,
+        candidates: Sequence<SwipeWordCandidate>,
         comparator: Comparator<SwipeWordCandidate>
     ): Pair<SwipeWordCandidate?, SwipeWordCandidate?> {
         var best: SwipeWordCandidate? = null
@@ -33,7 +33,7 @@ internal object SwipeCandidateSelector {
         return best to runnerUp
     }
 
-    fun selectTurkish(candidates: List<SwipeWordCandidate>, fallback: String): String {
+    fun selectTurkish(candidates: Sequence<SwipeWordCandidate>, fallback: String): String {
         val (best, runnerUp) = topTwo(
             candidates,
             compareBy<SwipeWordCandidate> { it.distance }
@@ -48,7 +48,7 @@ internal object SwipeCandidateSelector {
         return if (best.distance in 0..1 && (unambiguous || clearlyLearned)) best.word else fallback
     }
 
-    fun selectEnglish(candidates: List<SwipeWordCandidate>, fallback: String): String {
+    fun selectEnglish(candidates: Sequence<SwipeWordCandidate>, fallback: String): String {
         val (best, runnerUp) = topTwo(
             candidates,
             compareBy<SwipeWordCandidate> { it.distance }
