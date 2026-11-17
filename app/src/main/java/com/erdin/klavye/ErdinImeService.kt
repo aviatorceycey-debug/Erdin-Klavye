@@ -333,7 +333,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             lastContextPreviousWord = previous.orEmpty()
             if (learningEnabled) {
                 if (usesTurkishModel()) languageModel.learn(current, previous, previousPrevious)
-                else languageModel.learnEnglish(current)
+                else languageModel.learnEnglish(current, previous, previousPrevious)
             }
         }
         return current to previous
@@ -552,7 +552,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     if (usesTurkishModel()) {
                         languageModel.learn(word, previousContext, previousPreviousContext)
                     } else {
-                        languageModel.learnEnglish(word)
+                        languageModel.learnEnglish(word, previousContext, previousPreviousContext)
                     }
                     previousPreviousContext = previousContext
                     previousContext = word
@@ -585,7 +585,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     if (usesTurkishModel()) {
                         languageModel.learn(word, previousContext, previousPreviousContext)
                     } else {
-                        languageModel.learnEnglish(word)
+                        languageModel.learnEnglish(word, previousContext, previousPreviousContext)
                     }
                 }
                 previousPreviousContext = previousContext
