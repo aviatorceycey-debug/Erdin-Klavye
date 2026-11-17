@@ -176,14 +176,17 @@ class MainActivity : Activity() {
             textSize = 15f
             setTextColor(0xFFEAF1FC.toInt())
             setPadding(0, 28, 0, 8)
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
         }
         val prefs = getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
         val heightSeek = SeekBar(this).apply {
             max = 120
             progress = (prefs.getInt("keyboard_height_dp", 310) - 260).coerceIn(0, 120)
+            contentDescription = "Klavye yüksekliği ayarı, 260 ile 380 dp arasında"
         }
         fun updateHeightLabel(value: Int) {
             heightLabel.text = "Klavye yüksekliği  •  $value dp"
+            heightLabel.contentDescription = "Seçilen klavye yüksekliği: $value dp"
         }
         updateHeightLabel(heightSeek.progress + 260)
         heightSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
