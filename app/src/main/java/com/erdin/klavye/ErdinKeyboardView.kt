@@ -336,6 +336,8 @@ class ErdinKeyboardView(
                 if (!clipboardMode && !emojiMode && !symbols) {
                     suggestions.forEachIndexed { index, _ -> virtualViewIds.add(1000 + index) }
                 }
+                virtualViewIds.add(2000)
+                if (clipboardMode) virtualViewIds.add(2002) else virtualViewIds.add(2001)
             }
 
             override fun getVirtualViewAt(x: Float, y: Float): Int {
@@ -345,6 +347,8 @@ class ErdinKeyboardView(
                     val suggestionIndex = suggestionRects.indexOfFirst { it.contains(x, y) }
                     if (suggestionIndex >= 0 && suggestionIndex < suggestions.size) return 1000 + suggestionIndex
                 }
+                if (y < topInset && x < 58f * density) return 2000
+                if (y < topInset && x > width - 58f * density) return if (clipboardMode) 2002 else 2001
                 return INVALID_ID
             }
 
@@ -352,6 +356,23 @@ class ErdinKeyboardView(
                 virtualViewId: Int,
                 node: androidx.core.view.accessibility.AccessibilityNodeInfoCompat
             ) {
+                if (virtualViewId >= 2000) {
+                    val label = when (virtualViewId) {
+                        2000 -> "Panoyu aç"
+                        2001 -> "Klavye temasını değiştir"
+                        2002 -> "Panoyu temizle"
+                        else -> "Klavye aracı"
+                    }
+                    node.text = label
+                    node.contentDescription = label
+                    node.className = android.widget.Button::class.java.name
+                    node.isFocusable = true
+                    node.isClickable = true
+                    node.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK)
+                    val left = if (virtualViewId == 2000) 0f else width - 58f * density
+                    node.setBoundsInParent(Rect(left.toInt(), 0, (left + 58f * density).toInt(), topInset.toInt()))
+                    return
+                }
                 if (virtualViewId >= 1000) {
                     val index = virtualViewId - 1000
                     val suggestion = suggestions.getOrNull(index)
@@ -408,6 +429,25 @@ class ErdinKeyboardView(
                 arguments: android.os.Bundle?
             ): Boolean {
                 if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
+                if (virtualViewId >= 2000) {
+                    when (virtualViewId) {
+                        2000 -> onKey("__CLIPBOARD__")
+                        2001 -> {
+                            val prefs = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+                            val next = when (prefs.getString("keyboard_theme", "midnight")) {
+                                "midnight" -> "ocean"
+                                "ocean" -> "violet"
+                                else -> "midnight"
+                            }
+                            prefs.edit().putString("keyboard_theme", next).apply()
+                            invalidate()
+                        }
+                        2002 -> onKey("__CLIP_CLEAR__")
+                    }
+                    accessibilityHelper.invalidateRoot()
+                    sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
+                    return true
+                }
                 if (virtualViewId >= 1000) {
                     val suggestion = suggestions.getOrNull(virtualViewId - 1000) ?: return false
                     onSuggestion(suggestion)
