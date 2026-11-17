@@ -40,6 +40,16 @@ class SwipePathSamplerTest {
     }
 
     @Test
+    fun compactionKeepsSamplesInTravelOrder() {
+        val samples = mutableListOf(0f to 0f)
+        repeat(1_000) { index ->
+            SwipePathSampler.append(samples, (index + 10).toFloat(), 0f, 1f)
+        }
+        assertTrue(samples.zipWithNext().all { (a, b) -> b.first > a.first })
+        assertTrue(samples.size <= SwipePathSampler.MAX_SAMPLES)
+    }
+
+    @Test
     fun rejectsInvalidDensity() {
         val samples = mutableListOf(10f to 10f)
         SwipePathSampler.append(samples, 30f, 30f, 0f)
