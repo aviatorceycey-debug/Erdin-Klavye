@@ -80,6 +80,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             suggestionsEnabled = plainTextField && !passwordField &&
                 !explicitlyNoSuggestions && suggestionsPreference
             clipboardEnabled = !passwordField && inputClass != InputType.TYPE_CLASS_NUMBER
+            doubleSpacePeriodEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
             val personalLearningEnabled = getSharedPreferences(
                 "erdin_keyboard_settings", MODE_PRIVATE
             ).getBoolean("personal_learning_enabled", true)
