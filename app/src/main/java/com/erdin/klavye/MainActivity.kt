@@ -48,6 +48,7 @@ class MainActivity : Activity() {
         val model = LocalLanguageModel(this)
         val search = android.widget.EditText(this).apply {
             hint = "Kelime ara"
+            contentDescription = "Kişisel sözlükte kelime ara"
             setSingleLine(true)
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
             setTextColor(0xFFF4F7FF.toInt())
@@ -60,8 +61,10 @@ class MainActivity : Activity() {
             setTextColor(0xFFB8C3D9.toInt())
             setPadding(16, 28, 16, 28)
             visibility = View.GONE
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
         }
         val list = android.widget.ListView(this).apply {
+            contentDescription = "Öğrenilmiş kişisel kelimeler"
             divider = android.graphics.drawable.ColorDrawable(0x263D5275)
             dividerHeight = 1
             isFastScrollEnabled = true
