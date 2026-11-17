@@ -333,17 +333,41 @@ class ErdinKeyboardView(
         object : ExploreByTouchHelper(this) {
             override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
                 accessibleKeyRects().forEachIndexed { index, _ -> virtualViewIds.add(index) }
+                if (!clipboardMode && !emojiMode && !symbols) {
+                    suggestions.forEachIndexed { index, _ -> virtualViewIds.add(1000 + index) }
+                }
             }
 
             override fun getVirtualViewAt(x: Float, y: Float): Int {
-                return accessibleKeyRects().indexOfFirst { it.second.contains(x, y) }
-                    .takeIf { it >= 0 } ?: INVALID_ID
+                val keyIndex = accessibleKeyRects().indexOfFirst { it.second.contains(x, y) }
+                if (keyIndex >= 0) return keyIndex
+                if (!clipboardMode && !emojiMode && !symbols) {
+                    val suggestionIndex = suggestionRects.indexOfFirst { it.contains(x, y) }
+                    if (suggestionIndex >= 0 && suggestionIndex < suggestions.size) return 1000 + suggestionIndex
+                }
+                return INVALID_ID
             }
 
             override fun onPopulateNodeForVirtualView(
                 virtualViewId: Int,
                 node: androidx.core.view.accessibility.AccessibilityNodeInfoCompat
             ) {
+                if (virtualViewId >= 1000) {
+                    val index = virtualViewId - 1000
+                    val suggestion = suggestions.getOrNull(index)
+                    if (suggestion != null) {
+                        node.text = suggestion
+                        node.contentDescription = "Öneri: $suggestion"
+                        node.className = android.widget.Button::class.java.name
+                        node.isFocusable = true
+                        node.isClickable = true
+                        node.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK)
+                        val cellWidth = width.toFloat() / suggestions.size.coerceAtLeast(1)
+                        val rect = suggestionRects.getOrNull(index) ?: RectF(index * cellWidth, 5f * density, (index + 1) * cellWidth, 37f * density)
+                        node.setBoundsInParent(Rect(rect.left.toInt(), rect.top.toInt(), rect.right.toInt(), rect.bottom.toInt()))
+                        return
+                    }
+                }
                 val pair = accessibleKeyRects().getOrNull(virtualViewId)
                 if (pair == null || pair.first.label.isBlank()) {
                     node.contentDescription = "Boş tuş"
@@ -384,6 +408,12 @@ class ErdinKeyboardView(
                 arguments: android.os.Bundle?
             ): Boolean {
                 if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
+                if (virtualViewId >= 1000) {
+                    val suggestion = suggestions.getOrNull(virtualViewId - 1000) ?: return false
+                    onSuggestion(suggestion)
+                    sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
+                    return true
+                }
                 val key = accessibleKeyRects().getOrNull(virtualViewId)?.first ?: return false
                 performAccessibleKey(key)
                 sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
