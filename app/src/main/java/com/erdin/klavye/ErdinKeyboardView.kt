@@ -336,6 +336,18 @@ class ErdinKeyboardView(
         invalidate()
     }
 
+    fun resetPanelsForInput() {
+        clipboardMode = false
+        emojiMode = false
+        symbols = false
+        symbolsPageTwo = false
+        alternateOptions = emptyList()
+        popupRect = null
+        selectedAlternate = -1
+        accessibilityHelper.invalidateRoot()
+        invalidate()
+    }
+
     fun setAutoShift(enabled: Boolean) {
         if (!capsLock && shift != enabled) {
             shift = enabled
