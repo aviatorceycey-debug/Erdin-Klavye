@@ -291,7 +291,7 @@ class LocalLanguageModel(context: Context) {
         val key = typed.lowercase(Locale.US)
         if (key.length < 2) return emptyList()
         val candidates = SuggestionCandidateSelector.top(
-            englishStarterWords.asSequence().filter { it.startsWith(key) && it != key }.distinct(),
+            englishStarterWords.asSequence().filter { it.startsWith(key) && it != key },
             limit = 2,
             comparator = compareBy<String> { englishFrequencyRank[it] ?: Int.MAX_VALUE }.thenBy { it }
         )
