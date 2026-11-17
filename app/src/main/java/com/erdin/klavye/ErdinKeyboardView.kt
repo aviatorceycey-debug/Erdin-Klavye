@@ -106,6 +106,7 @@ class ErdinKeyboardView(
     private var symbols = false
     private var symbolsPageTwo = false
     private var emojiMode = false
+    private var emojiCategory = 0
     private var clipboardMode = false
     private var clipboardAvailable = true
     // 0 = regular, 1 = numeric, 2 = phone, 3 = date, 4 = time.
@@ -172,12 +173,42 @@ class ErdinKeyboardView(
         val prefs = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
         val recent = prefs.getString("recent_emojis", "").orEmpty()
             .split("|").filter { it.isNotBlank() }.distinct().take(8)
-        val rows = mutableListOf<List<KeyboardKey>>()
-        if (recent.isNotEmpty()) rows += recent.map { KeyboardKey(it) }
-        rows += listOf("😀","😃","😄","😁","😆","😅","😂","🤣").map { KeyboardKey(it) }
-        rows += listOf("😊","😍","🥰","😘","😎","🤩","🥳","😭").map { KeyboardKey(it) }
-        rows += listOf("👍","👎","👏","🙏","❤️","🔥","✨","💯").map { KeyboardKey(it) }
-        rows += listOf("🎉","🌹","☀️","🌙","🐱","🐶","🍀","☕").map { KeyboardKey(it) }
+        val groups = when (emojiCategory) {
+            1 -> listOf(
+                listOf("😀","😃","😄","😁","😆","😅","😂","🤣"),
+                listOf("😊","😍","🥰","😘","😎","🤩","🥳","😭"),
+                listOf("😢","😡","🤔","🤗","😴","🙄","😇","🤯"),
+                listOf("🥺","😋","😜","🤪","😬","🫡","🤫","🤭")
+            )
+            2 -> listOf(
+                listOf("👍","👎","👏","🙏","🤝","👌","✌️","🤞"),
+                listOf("👋","🖐️","✋","🤟","🤘","💪","🫶","🖕"),
+                listOf("☝️","👇","👆","👉","👈","🤙","✍️","🫰"),
+                listOf("🙌","👐","🤲","🫳","🫴","💅","🤌","🦾")
+            )
+            3 -> listOf(
+                listOf("🐱","🐶","🐼","🦊","🐻","🐸","🐵","🦁"),
+                listOf("🌹","🌷","🌻","🌼","🍀","🌿","🌵","🌳"),
+                listOf("☀️","🌙","⭐","🌈","☁️","⚡","🔥","❄️"),
+                listOf("🦋","🐝","🐞","🕊️","🐬","🐢","🦄","🌊")
+            )
+            4 -> listOf(
+                listOf("🍎","🍊","🍋","🍉","🍇","🍓","🍒","🍍"),
+                listOf("🍕","🍔","🍟","🌭","🍿","🍩","🍪","🎂"),
+                listOf("☕","🧋","🥤","🍵","🥛","🍺","🍷","🍹"),
+                listOf("🎉","🎁","🎈","❤️","💯","✨","💡","🚀")
+            )
+            else -> buildList {
+                if (recent.isNotEmpty()) add(recent.map { KeyboardKey(it) })
+                addAll(listOf(
+                    listOf("😀","😃","😄","😁","😆","😅","😂","🤣"),
+                    listOf("😊","😍","🥰","😘","😎","🤩","🥳","😭"),
+                    listOf("👍","👎","👏","🙏","❤️","🔥","✨","💯"),
+                    listOf("🎉","🌹","☀️","🌙","🐱","🐶","🍀","☕")
+                ).map { row -> row.map { KeyboardKey(it) } })
+            }
+        }
+        val rows = groups.map { row -> row.map { if (it is KeyboardKey) it else KeyboardKey(it.toString()) } }.toMutableList()
         rows += listOf(
             KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.2f),
             KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
@@ -424,6 +455,7 @@ class ErdinKeyboardView(
                 }
                 alternateOptions.forEachIndexed { index, _ -> virtualViewIds.add(3000 + index) }
                 if (clipboardAvailable) virtualViewIds.add(2000)
+                if (emojiMode) (0..4).forEach { virtualViewIds.add(2100 + it) }
                 if (clipboardMode) {
                     virtualViewIds.add(2002)
                     if (clipboardItems.isEmpty()) virtualViewIds.add(2003)
@@ -447,6 +479,10 @@ class ErdinKeyboardView(
                     if (suggestionIndex >= 0 && suggestionIndex < suggestions.size) return 1000 + suggestionIndex
                 }
                 if (clipboardAvailable && y < topInset && x < 58f * density) return 2000
+                if (emojiMode && y < topInset && x >= 58f * density && x <= width - 58f * density) {
+                    val categoryWidth = (width - 116f * density) / 5f
+                    return 2100 + (((x - 58f * density) / categoryWidth).toInt().coerceIn(0, 4))
+                }
                 if (y < topInset && x > width - 58f * density) return if (clipboardMode) 2002 else 2001
                 return INVALID_ID
             }
@@ -481,6 +517,22 @@ class ErdinKeyboardView(
                     node.isFocusable = true
                     val bottomRowTop = keyRects().lastOrNull()?.second?.top ?: height * 0.78f
                     node.setBoundsInParent(Rect(0, topInset.toInt(), width, bottomRowTop.toInt()))
+                    return
+                }
+                if (virtualViewId in 2100..2104) {
+                    val labels = listOf("Son", "Yüzler", "İşaretler", "Doğa", "Yiyecek ve diğer")
+                    val englishLabels = listOf("Recent", "Faces", "Gestures", "Nature", "Food and more")
+                    val index = virtualViewId - 2100
+                    node.text = if (activeLanguageLabel == "English") englishLabels[index] else labels[index]
+                    node.contentDescription = node.text
+                    node.className = android.widget.Button::class.java.name
+                    node.isFocusable = true
+                    node.isClickable = true
+                    node.isSelected = emojiCategory == index
+                    node.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK)
+                    val cellWidth = (width - 116f * density) / 5f
+                    val left = 58f * density + index * cellWidth
+                    node.setBoundsInParent(Rect(left.toInt(), 0, (left + cellWidth).toInt(), topInset.toInt()))
                     return
                 }
                 if (virtualViewId >= 2000) {
@@ -611,6 +663,14 @@ class ErdinKeyboardView(
                     return true
                 }
                 if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
+                if (virtualViewId in 2100..2104) {
+                    emojiCategory = virtualViewId - 2100
+                    cachedLayoutRows = null
+                    invalidateRoot()
+                    invalidate()
+                    sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
+                    return true
+                }
                 if (virtualViewId >= 2000) {
                     when (virtualViewId) {
                         2000 -> { if (!clipboardAvailable) return false else onKey("__CLIPBOARD__") }
@@ -876,6 +936,26 @@ class ErdinKeyboardView(
             paint.textAlign = Paint.Align.CENTER
             canvas.drawText("◐", width - 28f * density, 26f * density, paint)
         }
+        if (emojiMode) {
+            suggestionRects.clear()
+            val labels = listOf("🕘", "😀", "👍", "🌿", "🍕")
+            val categoryWidth = (width - 116f * density) / 5f
+            labels.forEachIndexed { index, label ->
+                val left = 58f * density + index * categoryWidth
+                if (emojiCategory == index) {
+                    paint.color = palette().suggestion
+                    canvas.drawRoundRect(
+                        RectF(left + 2f * density, 3f * density, left + categoryWidth - 2f * density, 38f * density),
+                        8f * density, 8f * density, paint
+                    )
+                }
+                paint.color = 0xFFEAF1FC.toInt()
+                paint.textSize = 19f * density
+                paint.textAlign = Paint.Align.CENTER
+                canvas.drawText(label, left + categoryWidth / 2f, 26f * density, paint)
+            }
+            return
+        }
         if (clipboardMode) {
             suggestionRects.clear()
             paint.color = 0xFFB8C9E4.toInt()
@@ -995,6 +1075,14 @@ class ErdinKeyboardView(
                         else -> "midnight"
                     }
                     prefs.edit().putString("keyboard_theme", next).apply()
+                    invalidate()
+                    return true
+                }
+                if (emojiMode && event.y < topInset && event.x >= 58f * density && event.x <= width - 58f * density) {
+                    val categoryWidth = (width - 116f * density) / 5f
+                    emojiCategory = ((event.x - 58f * density) / categoryWidth).toInt().coerceIn(0, 4)
+                    cachedLayoutRows = null
+                    accessibilityHelper.invalidateRoot()
                     invalidate()
                     return true
                 }
