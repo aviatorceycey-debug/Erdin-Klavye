@@ -33,6 +33,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private var doubleSpacePeriodEnabled = true
     private var clipboardEnabled = true
     private val clipboardHistory = mutableListOf<String>()
+    private var pendingSuggestionRunnable: Runnable? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -40,7 +41,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     }
 
     override fun onDestroy() {
-        mainHandler.removeCallbacksAndMessages(null)
+        cancelPendingSuggestion()
         suggestionRequestSequence++
         spellCheckerSession?.close()
         spellCheckerSession = null
@@ -395,21 +396,28 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         lastQueriedWord = ""
     }
 
+    private fun cancelPendingSuggestion() {
+        pendingSuggestionRunnable?.let(mainHandler::removeCallbacks)
+        pendingSuggestionRunnable = null
+    }
+
     private fun requestSuggestionsSoon() {
-        mainHandler.removeCallbacksAndMessages(null)
+        cancelPendingSuggestion()
         val requestSequence = ++suggestionRequestSequence
         lastQueriedWord = ""
         if (!suggestionsEnabled) {
             keyboardView?.setSuggestions(emptyList())
             return
         }
-        mainHandler.postDelayed({
+        val request = Runnable {
+            if (requestSequence != suggestionRequestSequence) return@Runnable
+            pendingSuggestionRunnable = null
             val before = currentInputConnection?.getTextBeforeCursor(80, 0)?.toString().orEmpty()
             val word = before.takeLastWhile { it.isLetter() }
             if (word.length < 2) {
                 lastQueriedWord = ""
                 keyboardView?.setSuggestions(emptyList())
-                return@postDelayed
+                return@Runnable
             }
             lastQueriedWord = word
             val local = if (usesTurkishModel()) languageModel.completions(word) else languageModel.englishCompletions(word)
@@ -417,7 +425,9 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             spellCheckerSession?.getSuggestions(
                 arrayOf(TextInfo(word, 0, requestSequence)), 3, false
             )
-        }, 180)
+        }
+        pendingSuggestionRunnable = request
+        mainHandler.postDelayed(request, 180)
     }
 
     private fun applySuggestion(replacement: String) {
