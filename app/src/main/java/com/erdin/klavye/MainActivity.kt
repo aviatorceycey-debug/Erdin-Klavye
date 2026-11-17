@@ -38,6 +38,9 @@ class MainActivity : Activity() {
                 append("\n")
                 append(if (selected) "✓ Varsayılan klavye seçili" else "2. Erdin Klavye'yi varsayılan seç")
             }
+            contentDescription = text
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
             setTextColor(if (enabled && selected) 0xFF72E0B0.toInt() else 0xFFFFD18A.toInt())
         }
     }
