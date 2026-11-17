@@ -93,18 +93,18 @@ class LocalLanguageModel(context: Context) {
         under up us use very want was way we well were what when where which while who
         why will with without word work world would write year yes you your thanks hello
         today tomorrow please okay sure maybe great morning evening friend message
-    """.trimIndent().split(Regex("\\\\s+")).map { it.lowercase(Locale.US) }.distinct()
+    """.trimIndent().split(Regex("\\s+")).map { it.lowercase(Locale.US) }.distinct()
 
     private val englishNextHints = mapOf(
         "good" to listOf("morning", "to", "idea", "work"),
-        "thank" to listOf("you", "you very much"),
+        "thank" to listOf("you", "very"),
         "how" to listOf("are", "is", "can", "about"),
-        "I" to listOf("am", "think", "want", "can", "will"),
+        "i" to listOf("am", "think", "want", "can", "will"),
         "see" to listOf("you", "that", "what", "how"),
         "have" to listOf("a", "good", "been", "to"),
         "let" to listOf("me", "us", "it"),
         "looking" to listOf("forward", "for"),
-        "nice" to listOf("to", "work", "to meet"),
+        "nice" to listOf("to", "work"),
         "goodbye" to listOf("and", "for now")
     )
 
