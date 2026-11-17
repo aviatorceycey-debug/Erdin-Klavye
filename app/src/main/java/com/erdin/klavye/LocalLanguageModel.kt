@@ -117,34 +117,28 @@ class LocalLanguageModel(context: Context) {
 
     private val englishNextHints = mapOf(
         "good" to listOf("morning", "to", "idea", "work"),
-        "thank" to listOf("you", "very"),
+        "thank" to listOf("you", "you for"),
         "how" to listOf("are", "is", "can", "about"),
         "i" to listOf("am", "think", "want", "can", "will"),
-        "see" to listOf("you", "that", "what", "how"),
-        "have" to listOf("a", "good", "been", "to"),
+        "see" to listOf("you", "you soon", "that", "what"),
+        "have" to listOf("a", "been", "to", "time"),
         "let" to listOf("me", "us", "it"),
         "looking" to listOf("forward", "for"),
         "nice" to listOf("to", "work"),
         "goodbye" to listOf("and", "for now"),
         "hello" to listOf("there", "everyone", "again"),
-        "see" to listOf("you", "you soon", "what", "how"),
-        "looking" to listOf("forward", "for"),
         "please" to listOf("let", "help", "send"),
-        "can" to listOf("you", "I", "we", "do"),
+        "can" to listOf("you", "i", "we", "do"),
         "will" to listOf("be", "do", "have", "see"),
         "are" to listOf("you", "we", "they", "there"),
         "this" to listOf("is", "will", "looks", "one"),
         "that" to listOf("is", "sounds", "was", "works"),
-        "I" to listOf("am", "can", "will", "think"),
         "we" to listOf("can", "are", "will", "should"),
-        "have" to listOf("a", "been", "to", "time"),
-        "thank" to listOf("you", "you for"),
         "much" to listOf("better", "more", "appreciated"),
         "not" to listOf("sure", "now", "yet", "working"),
         "what" to listOf("do", "is", "about", "happened"),
         "when" to listOf("you", "we", "will", "is"),
-        "very" to listOf("good", "well", "happy", "much"),
-        "see" to listOf("you", "that", "what", "how")
+        "very" to listOf("good", "well", "happy", "much")
     )
 
     @Synchronized
