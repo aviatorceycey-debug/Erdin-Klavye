@@ -425,7 +425,7 @@ class ErdinKeyboardView(
                     val label = when (virtualViewId) {
                         2000 -> if (activeLanguageLabel == "English") "Open clipboard" else "Panoyu aç"
                         2001 -> if (activeLanguageLabel == "English") "Change keyboard theme" else "Klavye temasını değiştir"
-                        2002 -> if (activeLanguageLabel == "English") "Clear clipboard" else "Panoyu temizle"
+                        2002 -> if (activeLanguageLabel == "English") "Clear clipboard history" else "Pano geçmişini temizle"
                         else -> if (activeLanguageLabel == "English") "Keyboard tool" else "Klavye aracı"
                     }
                     node.text = label
