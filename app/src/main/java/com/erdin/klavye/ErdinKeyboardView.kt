@@ -373,17 +373,19 @@ class ErdinKeyboardView(
             }
 
             override fun getVirtualViewAt(x: Float, y: Float): Int {
-                val keyIndex = accessibleKeyRects().indexOfFirst { it.second.contains(x, y) }
-                if (keyIndex >= 0) return keyIndex
-                if (!clipboardMode && !emojiMode && !symbols) {
-                    val suggestionIndex = suggestionRects.indexOfFirst { it.contains(x, y) }
-                    if (suggestionIndex >= 0 && suggestionIndex < suggestions.size) return 1000 + suggestionIndex
-                }
+                // The floating alternatives popup overlays the original key.
+                // Hit-test it first so TalkBack can reach each visible option.
                 val popup = popupRect
                 if (popup != null && popup.contains(x, y) && alternateOptions.isNotEmpty()) {
                     val optionIndex = floor((x - popup.left) / (popup.width() / alternateOptions.size))
                         .toInt().coerceIn(0, alternateOptions.lastIndex)
                     return 3000 + optionIndex
+                }
+                val keyIndex = accessibleKeyRects().indexOfFirst { it.second.contains(x, y) }
+                if (keyIndex >= 0) return keyIndex
+                if (!clipboardMode && !emojiMode && !symbols) {
+                    val suggestionIndex = suggestionRects.indexOfFirst { it.contains(x, y) }
+                    if (suggestionIndex >= 0 && suggestionIndex < suggestions.size) return 1000 + suggestionIndex
                 }
                 if (y < topInset && x < 58f * density) return 2000
                 if (y < topInset && x > width - 58f * density) return if (clipboardMode) 2002 else 2001
