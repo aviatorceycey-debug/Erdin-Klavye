@@ -29,11 +29,11 @@ internal object SwipeTraceDecoder {
         if (path.isEmpty() || keys.isEmpty() || density <= 0f) return ""
 
         val locale = if (english) Locale.US else Locale("tr", "TR")
-        val switchMarginSquared = (12f * density) * (12f * density)
-        val maxKeyDistanceSquared = (48f * density) * (48f * density)
+        val switchMargin = 12f * density
+        val maxKeyDistance = 48f * density
         val word = StringBuilder()
         var previous = ""
-        var previousDistance = Float.MAX_VALUE
+        var activeKey: SwipeKeyBounds? = null
 
         path.forEach { (x, y) ->
             val nearest = keys.minByOrNull { key ->
@@ -41,20 +41,19 @@ internal object SwipeTraceDecoder {
                 val dy = key.centerY - y
                 dx * dx + dy * dy
             } ?: return@forEach
-            val dx = nearest.centerX - x
-            val dy = nearest.centerY - y
-            val distanceSquared = dx * dx + dy * dy
-            if (distanceSquared > maxKeyDistanceSquared) return@forEach
+            val nearestDistance = hypot(nearest.centerX - x, nearest.centerY - y)
+            if (nearestDistance > maxKeyDistance) return@forEach
 
             val value = nearest.value.lowercase(locale)
-            // Keep the current key through tiny boundary fluctuations.
-            val switchingKey = value != previous && previous.isNotEmpty()
-            if (switchingKey && distanceSquared + switchMarginSquared >= previousDistance) {
-                return@forEach
+            val currentKey = activeKey
+            if (value != previous && currentKey != null) {
+                val currentDistance = hypot(currentKey.centerX - x, currentKey.centerY - y)
+                // Switch only when the new key is meaningfully closer than the active key.
+                if (nearestDistance + switchMargin >= currentDistance) return@forEach
             }
             if (value != previous) word.append(value)
             previous = value
-            previousDistance = distanceSquared
+            activeKey = nearest
         }
         return word.toString()
     }
