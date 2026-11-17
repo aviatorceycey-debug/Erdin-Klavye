@@ -327,16 +327,16 @@ class ErdinKeyboardView(
         invalidate()
     }
 
+    private fun accessibleKeyRects() = keyRects().filter { it.first.label.isNotBlank() }
+
     private val accessibilityHelper by lazy {
         object : ExploreByTouchHelper(this) {
             override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
-                keyRects().forEachIndexed { index, pair ->
-                    if (pair.first.label.isNotBlank()) virtualViewIds.add(index)
-                }
+                accessibleKeyRects().forEachIndexed { index, _ -> virtualViewIds.add(index) }
             }
 
             override fun getVirtualViewAt(x: Float, y: Float): Int {
-                return keyRects().indexOfFirst { it.second.contains(x, y) }
+                return accessibleKeyRects().indexOfFirst { it.second.contains(x, y) }
                     .takeIf { it >= 0 } ?: INVALID_ID
             }
 
@@ -344,7 +344,7 @@ class ErdinKeyboardView(
                 virtualViewId: Int,
                 node: androidx.core.view.accessibility.AccessibilityNodeInfoCompat
             ) {
-                val pair = keyRects().getOrNull(virtualViewId)
+                val pair = accessibleKeyRects().getOrNull(virtualViewId)
                 if (pair == null || pair.first.label.isBlank()) {
                     node.contentDescription = "Boş tuş"
                     node.isEnabled = false
@@ -372,7 +372,7 @@ class ErdinKeyboardView(
                 node.className = android.widget.Button::class.java.name
                 node.isFocusable = true
                 node.isClickable = true
-                node.addAction(AccessibilityNodeInfoCompat.ACTION_CLICK)
+                node.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK)
                 node.setBoundsInParent(Rect(
                     rect.left.toInt(), rect.top.toInt(), rect.right.toInt(), rect.bottom.toInt()
                 ))
@@ -384,7 +384,7 @@ class ErdinKeyboardView(
                 arguments: android.os.Bundle?
             ): Boolean {
                 if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
-                val key = keyRects().getOrNull(virtualViewId)?.first ?: return false
+                val key = accessibleKeyRects().getOrNull(virtualViewId)?.first ?: return false
                 performAccessibleKey(key)
                 sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
                 return true
