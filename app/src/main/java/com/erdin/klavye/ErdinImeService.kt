@@ -108,7 +108,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             val editorDisablesPersonalLearning =
                 attribute.imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0
             learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
-                personalLearningEnabled && !editorDisablesPersonalLearning && usesTurkishModel()
+                personalLearningEnabled && !editorDisablesPersonalLearning
             if (suggestionsEnabled) {
                 refreshSpellCheckerSession()
                 requestSuggestionsSoon()
