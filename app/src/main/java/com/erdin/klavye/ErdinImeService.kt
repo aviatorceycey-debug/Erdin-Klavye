@@ -458,15 +458,24 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val currentWord = before.takeLastWhile { it.isLetter() }
         if (currentWord.isEmpty()) {
             invalidateSpellCheckRequests()
+            val insertedWords = replacement.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
+            var previousContext = lastContextWord
+            var previousPreviousContext = lastContextPreviousWord
             if (learningEnabled && usesTurkishModel()) {
-                languageModel.learn(replacement, lastContextWord, lastContextPreviousWord)
+                insertedWords.forEach { word ->
+                    languageModel.learn(word, previousContext, previousPreviousContext)
+                    previousPreviousContext = previousContext
+                    previousContext = word
+                }
+            } else if (insertedWords.isNotEmpty()) {
+                previousPreviousContext = previousContext
+                previousContext = insertedWords.last()
             }
             connection.commitText("$replacement ", 1)
-            val previousContext = lastContextWord
-            lastContextWord = replacement
-            lastContextPreviousWord = previousContext
+            lastContextWord = previousContext
+            lastContextPreviousWord = previousPreviousContext
             keyboardView?.setSuggestions(
-                if (suggestionsEnabled) nextWordsForActiveLanguage(replacement, previousContext) else emptyList()
+                if (suggestionsEnabled) nextWordsForActiveLanguage(lastContextWord, lastContextPreviousWord) else emptyList()
             )
             return
         }
