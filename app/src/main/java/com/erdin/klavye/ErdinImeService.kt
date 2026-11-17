@@ -206,6 +206,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         cancelPendingSuggestion()
         suggestionRequestSequence++
         lastQueriedWord = ""
+        // Drop cached phrase context at the same boundary as clipboard data.
+        // It is derived from typed text and must not carry into another editor.
+        lastContextWord = ""
+        lastContextPreviousWord = ""
         // Clipboard snippets are intentionally session-only; discard them when
         // the input session ends so they cannot linger across apps.
         clipboardHistory.clear()
