@@ -145,6 +145,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         lastContextWord = ""
         lastContextPreviousWord = ""
         val inputType = attribute?.inputType ?: InputType.TYPE_NULL
+        keyboardView?.resetPanelsForInput()
         keyboardView?.setNumericInputMode(inputType)
         keyboardView?.setEditorActionDescription(editorActionDescription(attribute))
         val inputClass = inputType and InputType.TYPE_MASK_CLASS
