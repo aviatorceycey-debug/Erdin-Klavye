@@ -241,6 +241,10 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         keyboardView?.setClipboardAvailable(false)
         keyboardView?.setClipboardItems(emptyList())
         keyboardView?.hideClipboard()
+        // Do not leave emoji, symbols, or alternate-character panels visible
+        // while the editor is finishing its input session.
+        keyboardView?.resetPanelsForInput()
+        keyboardView?.setSuggestions(emptyList())
         spellCheckerSession?.close()
         spellCheckerSession = null
         spellCheckerLocale = null
