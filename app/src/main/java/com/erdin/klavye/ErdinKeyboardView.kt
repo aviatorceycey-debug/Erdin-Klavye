@@ -50,7 +50,7 @@ class ErdinKeyboardView(
         if (keyTone == null) keyTone = ToneGenerator(AudioManager.STREAM_SYSTEM, 35)
         keyTone?.startTone(ToneGenerator.TONE_PROP_BEEP, 28)
     }
-    private fun upper(value: String) = value.uppercase(Locale("tr", "TR"))
+    private fun upper(value: String) = value.uppercase(if (activeLanguageLabel == "English") Locale.US else Locale("tr", "TR"))
     private fun palette(): KeyboardPalette {
         return when (context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
             .getString("keyboard_theme", "midnight")) {
@@ -555,7 +555,7 @@ class ErdinKeyboardView(
                             val dx = rect.centerX() - x
                             val dy = rect.centerY() - y
                             if (dx * dx + dy * dy <= (48f * density) * (48f * density)) {
-                                val value = nearest.first.value.lowercase(Locale("tr", "TR"))
+                                val value = nearest.first.value.lowercase(if (activeLanguageLabel == "English") Locale.US else Locale("tr", "TR"))
                                 if (value != previous) append(value)
                                 previous = value
                             }
