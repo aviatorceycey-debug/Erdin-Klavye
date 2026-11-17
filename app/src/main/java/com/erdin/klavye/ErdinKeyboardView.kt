@@ -880,9 +880,18 @@ class ErdinKeyboardView(
             paint.color = 0xFFB8C9E4.toInt()
             paint.textSize = 11f * density
             paint.textAlign = Paint.Align.CENTER
-            canvas.drawText(if (clipboardItems.isEmpty()) "PANO BOŞ" else "PANO  •  SON KOPYALANANLAR", width / 2f, 25f * density, paint)
+            val english = activeLanguageLabel == "English"
+            canvas.drawText(
+                when {
+                    clipboardItems.isEmpty() && english -> "CLIPBOARD EMPTY"
+                    clipboardItems.isEmpty() -> "PANO BOŞ"
+                    english -> "CLIPBOARD  •  RECENT COPIES"
+                    else -> "PANO  •  SON KOPYALANANLAR"
+                },
+                width / 2f, 25f * density, paint
+            )
             paint.textSize = 10f * density
-            canvas.drawText("TEMİZLE", width - 32f * density, 25f * density, paint)
+            canvas.drawText(if (english) "CLEAR" else "TEMİZLE", width - 32f * density, 25f * density, paint)
             return
         }
         if (emojiMode || symbols) return
