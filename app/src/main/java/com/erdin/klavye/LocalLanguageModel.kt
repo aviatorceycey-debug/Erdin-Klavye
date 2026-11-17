@@ -507,10 +507,11 @@ class LocalLanguageModel(context: Context) {
         val candidates = (starterWords.asSequence() + wordCounts.keys.asSequence())
             .filter { kotlin.math.abs(it.length - clean.length) <= 1 }
             .distinct()
-        val rankedCandidates = candidates.map { word ->
-            SwipeWordCandidate(
+        val rankedCandidates = candidates.mapNotNull { word ->
+            val distance = SwipeWordDistance.calculate(clean, word)
+            if (distance > 1) null else SwipeWordCandidate(
                 word = word,
-                distance = SwipeWordDistance.calculate(clean, word),
+                distance = distance,
                 personalCount = wordCounts[word] ?: 0
             )
         }
@@ -527,10 +528,11 @@ class LocalLanguageModel(context: Context) {
         if (clean.length < 3) return clean
         val rankedCandidates = englishStarterWords.asSequence()
             .filter { kotlin.math.abs(it.length - clean.length) <= 1 }
-            .map { word ->
-                SwipeWordCandidate(
+            .mapNotNull { word ->
+                val distance = SwipeWordDistance.calculate(clean, word)
+                if (distance > 1) null else SwipeWordCandidate(
                     word = word,
-                    distance = SwipeWordDistance.calculate(clean, word),
+                    distance = distance,
                     frequencyRank = englishFrequencyRank[word] ?: Int.MAX_VALUE
                 )
             }
