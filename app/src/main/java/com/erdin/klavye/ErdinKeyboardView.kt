@@ -91,7 +91,7 @@ class ErdinKeyboardView(
     private var symbolsPageTwo = false
     private var emojiMode = false
     private var clipboardMode = false
-    // 0 = regular keyboard, 1 = numeric keypad, 2 = phone keypad.
+    // 0 = regular, 1 = numeric, 2 = phone, 3 = date/time keypad.
     private var numericInputMode = 0
     private var numericAllowsSign = false
     private var numericAllowsDecimal = false
@@ -199,6 +199,20 @@ class ErdinKeyboardView(
     )
 
     private fun numericRows(): List<List<KeyboardKey>> {
+        if (numericInputMode == 3) {
+            return listOf(
+                listOf(KeyboardKey("1"), KeyboardKey("2"), KeyboardKey("3")),
+                listOf(KeyboardKey("4"), KeyboardKey("5"), KeyboardKey("6")),
+                listOf(KeyboardKey("7"), KeyboardKey("8"), KeyboardKey("9")),
+                listOf(KeyboardKey("-"), KeyboardKey("0"), KeyboardKey("/")),
+                listOf(KeyboardKey(":"), KeyboardKey("."), KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION)),
+                listOf(
+                    KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
+                    KeyboardKey(activeLanguageLabel, " ", 3.2f, KeyboardKey.Kind.SPACE),
+                    KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.1f)
+                )
+            )
+        }
         if (numericInputMode == 2) {
             return listOf(
                 listOf(KeyboardKey("1"), KeyboardKey("2 ABC", "2"), KeyboardKey("3 DEF", "3")),
@@ -301,6 +315,7 @@ class ErdinKeyboardView(
         numericInputMode = when (inputClass) {
             android.text.InputType.TYPE_CLASS_PHONE -> 2
             android.text.InputType.TYPE_CLASS_NUMBER -> 1
+            android.text.InputType.TYPE_CLASS_DATETIME -> 3
             else -> 0
         }
         numericAllowsSign = inputType and android.text.InputType.TYPE_NUMBER_FLAG_SIGNED != 0
