@@ -75,6 +75,16 @@ class SwipeTraceDecoderTest {
     }
 
     @Test
+    fun interpolatedFastGestureCanCrossIntermediateKeys() {
+        val samples = mutableListOf(10f to 10f)
+        SwipePathSampler.appendSegment(samples, 210f, 10f, 1f)
+        assertEquals(
+            "cat",
+            SwipeTraceDecoder.decode(samples, keys, 1f, english = true)
+        )
+    }
+
+    @Test
     fun emptyPathOrKeysProducesNoTrace() {
         assertEquals("", SwipeTraceDecoder.decode(emptyList(), keys, 1f, english = true))
         assertEquals("", SwipeTraceDecoder.decode(listOf(10f to 10f), emptyList(), 1f, english = true))
