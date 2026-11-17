@@ -547,9 +547,13 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             val insertedWords = replacement.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
             var previousContext = lastContextWord
             var previousPreviousContext = lastContextPreviousWord
-            if (learningEnabled && usesTurkishModel()) {
+            if (learningEnabled) {
                 insertedWords.forEach { word ->
-                    languageModel.learn(word, previousContext, previousPreviousContext)
+                    if (usesTurkishModel()) {
+                        languageModel.learn(word, previousContext, previousPreviousContext)
+                    } else {
+                        languageModel.learnEnglish(word)
+                    }
                     previousPreviousContext = previousContext
                     previousContext = word
                 }
@@ -575,10 +579,14 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val insertedWords = replacement.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
         if (insertedWords.isNotEmpty()) {
             insertedWords.forEach { word ->
-                if (learningEnabled && usesTurkishModel() &&
+                if (learningEnabled &&
                     !(insertedWords.size == 1 && word.equals(currentWord, ignoreCase = true))
                 ) {
-                    languageModel.learn(word, previousContext, previousPreviousContext)
+                    if (usesTurkishModel()) {
+                        languageModel.learn(word, previousContext, previousPreviousContext)
+                    } else {
+                        languageModel.learnEnglish(word)
+                    }
                 }
                 previousPreviousContext = previousContext
                 previousContext = word
