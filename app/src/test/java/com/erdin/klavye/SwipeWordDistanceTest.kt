@@ -12,6 +12,7 @@ class SwipeWordDistanceTest {
     @Test
     fun adjacentTranspositionCountsAsOneEdit() {
         assertEquals(1, SwipeWordDistance.calculate("teh", "the"))
+        assertEquals(1, SwipeWordDistance.calculate("aab", "aba"))
     }
 
     @Test
@@ -24,6 +25,21 @@ class SwipeWordDistanceTest {
         assertEquals(0, SwipeWordDistance.calculate("kitap", "kitap"))
         assertEquals(1, SwipeWordDistance.calculate("kitap", "ktap"))
         assertEquals(1, SwipeWordDistance.calculate("ktap", "kitap"))
+    }
+
+    @Test
+    fun emptyWordsAreHandledSafely() {
+        assertEquals(0, SwipeWordDistance.calculate("", ""))
+        assertEquals(1, SwipeWordDistance.calculate("", "a"))
+        assertEquals(1, SwipeWordDistance.calculate("a", ""))
+        assertEquals(2, SwipeWordDistance.calculate("", "ab"))
+    }
+
+    @Test
+    fun TurkishCharactersAreComparedExactly() {
+        assertEquals(1, SwipeWordDistance.calculate("s", "ş"))
+        assertEquals(1, SwipeWordDistance.calculate("i", "ı"))
+        assertEquals(1, SwipeWordDistance.calculate("c", "ç"))
     }
 
     @Test
