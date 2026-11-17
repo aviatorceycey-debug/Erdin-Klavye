@@ -93,6 +93,26 @@ class LocalLanguageModel(context: Context) {
         under up us use very want was way we well were what when where which while who
         why will with without word work world would write year yes you your thanks hello
         today tomorrow please okay sure maybe great morning evening friend message
+        able accept account across act action actually add address almost alone already
+        amazing answer anything app apple area ask asked available away awesome baby
+        bad beautiful believe body book busy buy camera care case catch cause celebrate
+        center certain check city class clean close coffee cold color company complete
+        computer continue cool create customer data date decision detail dinner drive
+        during earth education email enjoy enough especially event everything excited
+        face family far fast favorite feel feeling file finally fine finish follow food
+        free fresh full fun future game general girl glad glass goal going gone happy
+        hard hear heart history hope hour house idea important information inside interest
+        job join key keyboard language late learn letter level library listen local lost
+        main market matter meeting mind minute mobile money month move music must name
+        natural necessary night note nothing office often okay old online option order
+        page paper parent password phone photo picture plan play power practice pretty
+        problem product project question quick quiet reason remember result review room
+        run safe save school screen search second security send service share short simple
+        slow smart software solution sound speak special spend spring standard store story
+        strong study success summer support system table talk team text theme together
+        touch travel true understand update useful user value video visit voice wait walk
+        watch water website week welcome whole win winter wish woman wonderful words
+        write wrong yesterday young
     """.trimIndent().split(Regex("\\s+")).map { it.lowercase(Locale.US) }.distinct()
 
     private val englishNextHints = mapOf(
@@ -105,7 +125,26 @@ class LocalLanguageModel(context: Context) {
         "let" to listOf("me", "us", "it"),
         "looking" to listOf("forward", "for"),
         "nice" to listOf("to", "work"),
-        "goodbye" to listOf("and", "for now")
+        "goodbye" to listOf("and", "for now"),
+        "hello" to listOf("there", "everyone", "again"),
+        "see" to listOf("you", "you soon", "what", "how"),
+        "looking" to listOf("forward", "for"),
+        "please" to listOf("let", "help", "send"),
+        "can" to listOf("you", "I", "we", "do"),
+        "will" to listOf("be", "do", "have", "see"),
+        "are" to listOf("you", "we", "they", "there"),
+        "this" to listOf("is", "will", "looks", "one"),
+        "that" to listOf("is", "sounds", "was", "works"),
+        "I" to listOf("am", "can", "will", "think"),
+        "we" to listOf("can", "are", "will", "should"),
+        "have" to listOf("a", "been", "to", "time"),
+        "thank" to listOf("you", "you for"),
+        "much" to listOf("better", "more", "appreciated"),
+        "not" to listOf("sure", "now", "yet", "working"),
+        "what" to listOf("do", "is", "about", "happened"),
+        "when" to listOf("you", "we", "will", "is"),
+        "very" to listOf("good", "well", "happy", "much"),
+        "see" to listOf("you", "that", "what", "how")
     )
 
     @Synchronized
