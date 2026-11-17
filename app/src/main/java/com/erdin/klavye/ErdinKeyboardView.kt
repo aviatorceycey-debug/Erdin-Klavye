@@ -91,6 +91,11 @@ class ErdinKeyboardView(
     private val density = resources.displayMetrics.density
     private val gap = 5f * density
     private val topInset = 42f * density
+    private var cachedLayoutRows: List<List<KeyboardKey>>? = null
+    private var cachedLayoutMode: String? = null
+    private var cachedLayoutWidth = -1
+    private var cachedLayoutHeight = -1
+    private var cachedKeyRectangles: List<Pair<KeyboardKey, RectF>> = emptyList()
     private var suggestions: List<String> = emptyList()
     private val suggestionRects = mutableListOf<RectF>()
     private val handler = Handler(Looper.getMainLooper())
@@ -666,10 +671,18 @@ class ErdinKeyboardView(
 
     private fun keyRects(): List<Pair<KeyboardKey, RectF>> {
         val current = rows()
-        val rowHeight = (height - topInset - gap * (current.size + 1)) / current.size
-        val result = mutableListOf<Pair<KeyboardKey, RectF>>()
         val mode = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
             .getString("one_handed_mode", "normal") ?: "normal"
+        if (current == cachedLayoutRows &&
+            mode == cachedLayoutMode &&
+            width == cachedLayoutWidth &&
+            height == cachedLayoutHeight
+        ) {
+            return cachedKeyRectangles
+        }
+
+        val rowHeight = (height - topInset - gap * (current.size + 1)) / current.size
+        val result = mutableListOf<Pair<KeyboardKey, RectF>>()
         val contentWidth = if (mode == "normal") width.toFloat() else width * 0.82f
         val offset = when (mode) {
             "left" -> 0f
@@ -687,7 +700,12 @@ class ErdinKeyboardView(
                 x += keyWidth + gap
             }
         }
-        return result
+        cachedLayoutRows = current
+        cachedLayoutMode = mode
+        cachedLayoutWidth = width
+        cachedLayoutHeight = height
+        cachedKeyRectangles = result
+        return cachedKeyRectangles
     }
 
     override fun onDraw(canvas: Canvas) {
