@@ -290,12 +290,11 @@ class LocalLanguageModel(context: Context) {
         val typed = prefix.trim()
         val key = typed.lowercase(Locale.US)
         if (key.length < 2) return emptyList()
-        val candidates = englishStarterWords.asSequence()
-            .filter { it.startsWith(key) && it != key }
-            .distinct()
-            .sortedWith(compareBy<String> { englishFrequencyRank[it] ?: Int.MAX_VALUE }.thenBy { it })
-            .take(2)
-            .toList()
+        val candidates = SuggestionCandidateSelector.top(
+            englishStarterWords.asSequence().filter { it.startsWith(key) && it != key }.distinct(),
+            limit = 2,
+            comparator = compareBy<String> { englishFrequencyRank[it] ?: Int.MAX_VALUE }.thenBy { it }
+        )
         return candidates.map { candidate ->
             when {
                 typed.all { !it.isLetter() || it.isUpperCase() } -> candidate.uppercase(Locale.US)
@@ -474,13 +473,14 @@ class LocalLanguageModel(context: Context) {
         val key = normalize(prefix)
         if (key.length < 2) return emptyList()
         val learned = wordCounts
-        val candidates = (starterWords.asSequence().filter { it.startsWith(key) } +
-            learned.keys.asSequence().filter { it.startsWith(key) })
-            .distinct()
-            .filterNot { it.equals(key, ignoreCase = true) }
-            .sortedWith(compareByDescending<String> { learned[it] ?: 0 }.thenBy { it.length })
-            .take(2)
-            .toList()
+        val candidates = SuggestionCandidateSelector.top(
+            (starterWords.asSequence().filter { it.startsWith(key) } +
+                learned.keys.asSequence().filter { it.startsWith(key) })
+                .distinct()
+                .filterNot { it.equals(key, ignoreCase = true) },
+            limit = 2,
+            comparator = compareByDescending<String> { learned[it] ?: 0 }.thenBy { it.length }
+        )
 
         // Match the casing the user has already started, including Turkish İ/ı.
         val typed = prefix.trim()
