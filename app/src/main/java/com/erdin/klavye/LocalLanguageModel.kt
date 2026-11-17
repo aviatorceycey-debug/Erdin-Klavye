@@ -59,7 +59,19 @@ class LocalLanguageModel(context: Context) {
         "ne>zaman" to listOf("geleceksin", "başlayacak", "uygun"),
         "seni>çok" to listOf("seviyorum", "özledim", "bekliyorum"),
         "her>şey" to listOf("çok", "güzel", "yolunda"),
-        "iyi>çalışmalar" to listOf("dilerim", "kolay", "sana")
+        "iyi>çalışmalar" to listOf("dilerim", "kolay", "sana"),
+        "iyi>geceler" to listOf("dilerim", "herkese", "sana"),
+        "afiyet>olsun" to listOf("teşekkürler", "hepimize", "size"),
+        "geçmiş>olsun" to listOf("çok", "teşekkürler", "dilerim"),
+        "tebrik>ederim" to listOf("seni", "başarını", "çok"),
+        "mutlu>yıllar" to listOf("dilerim", "sana", "hepimize"),
+        "doğum>günün" to listOf("kutlu", "kutlu olsun", "ne zaman"),
+        "nasıl>gidiyor" to listOf("iyi", "her şey", "işler"),
+        "ne>yapıyorsun" to listOf("şimdi", "bugün", "orada"),
+        "çok>teşekkür" to listOf("ederim", "ederiz", "sana"),
+        "yardımcı>olur" to listOf("musun", "muyum", "muyuz"),
+        "müsait>misin" to listOf("şimdi", "bugün", "yarın"),
+        "başarılar>dilerim" to listOf("sana", "hepimize", "yolunda")
     )
 
     // General-purpose context hints. Personal usage counts gradually take priority.
@@ -88,7 +100,14 @@ class LocalLanguageModel(context: Context) {
         "lütfen" to listOf("yardım", "bana", "bunu", "devam"),
         "yardım" to listOf("eder", "edin", "istiyorum"),
         "devam" to listOf("edelim", "et", "edebiliriz"),
-        "güzel" to listOf("oldu", "bir", "gün", "görünüyor")
+        "güzel" to listOf("oldu", "bir", "gün", "görünüyor"),
+        "afiyet" to listOf("olsun"),
+        "geçmiş" to listOf("olsun"),
+        "tebrik" to listOf("ederim", "ederiz"),
+        "mutlu" to listOf("yıllar", "olsun"),
+        "doğum" to listOf("günün", "günü"),
+        "müsait" to listOf("misin", "misiniz", "olunca"),
+        "başarılar" to listOf("dilerim", "sana", "hepimize")
     )
 
     // A separate, fixed English vocabulary supports offline completions without
