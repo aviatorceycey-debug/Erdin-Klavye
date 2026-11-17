@@ -485,7 +485,7 @@ class LocalLanguageModel(context: Context) {
             // Only distance 0 or 1 can be accepted, so stop as soon as
             // a candidate is provably outside that range.
             if (kotlin.math.abs(a.length - b.length) > 1) return 2
-            var twoRowsBack = IntArray(b.length + 1) { Int.MAX_VALUE / 4 }
+            var twoRowsBack = IntArray(b.length + 1) { it }
             var previous = IntArray(b.length + 1) { it }
             for (i in 1..a.length) {
                 val current = IntArray(b.length + 1) { 2 }
@@ -547,7 +547,7 @@ class LocalLanguageModel(context: Context) {
         fun distance(a: String, b: String): Int {
             if (kotlin.math.abs(a.length - b.length) > 1) return 2
             var previous = IntArray(b.length + 1) { it }
-            var twoRowsBack = IntArray(b.length + 1) { 0 }
+            var twoRowsBack = IntArray(b.length + 1) { it }
             for (i in 1..a.length) {
                 val current = IntArray(b.length + 1) { 2 }
                 current[0] = i
