@@ -744,6 +744,7 @@ class ErdinKeyboardView(
 
         drawSuggestionStrip(canvas)
         keyRects().forEach { (key, rect) ->
+            if (key.label.isBlank()) return@forEach
             paint.setShadowLayer(4f * density, 0f, 2f * density, 0x77000000)
             paint.color = when (key.kind) {
                 KeyboardKey.Kind.SPACE -> colors.space
@@ -776,8 +777,27 @@ class ErdinKeyboardView(
             val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
             canvas.drawText(label, rect.centerX(), baseline, paint)
         }
+        if (clipboardMode && clipboardItems.isEmpty()) drawClipboardEmptyState(canvas)
         drawKeyPreview(canvas)
         drawAlternatePopup(canvas)
+    }
+
+    private fun drawClipboardEmptyState(canvas: Canvas) {
+        val bottomRowTop = keyRects().lastOrNull()?.second?.top ?: height * 0.78f
+        val centerY = (topInset + bottomRowTop) / 2f
+        paint.textAlign = Paint.Align.CENTER
+        paint.color = 0xFFEAF1FC.toInt()
+        paint.textSize = 17f * density
+        canvas.drawText(
+            if (activeLanguageLabel == "English") "Clipboard is empty" else "Pano henüz boş",
+            width / 2f, centerY - 5f * density, paint
+        )
+        paint.color = 0xFF9EABC2.toInt()
+        paint.textSize = 12f * density
+        canvas.drawText(
+            if (activeLanguageLabel == "English") "Copied text will appear here" else "Kopyaladığın metinler burada görünecek",
+            width / 2f, centerY + 20f * density, paint
+        )
     }
 
     private fun drawKeyPreview(canvas: Canvas) {
