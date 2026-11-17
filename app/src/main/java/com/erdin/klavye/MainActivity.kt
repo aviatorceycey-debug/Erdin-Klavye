@@ -1,4 +1,5 @@
 package com.erdin.klavye
+import java.util.Locale
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -100,7 +101,10 @@ class MainActivity : Activity() {
 
         fun refresh(query: String = search.text.toString()) {
             allWords = model.learnedWords()
-            visibleWords = allWords.filter { it.first.contains(query.trim(), ignoreCase = true) }
+            val normalizedQuery = query.trim().lowercase(Locale("tr", "TR"))
+            visibleWords = allWords.filter {
+                it.first.lowercase(Locale("tr", "TR")).contains(normalizedQuery)
+            }
             adapter.clear()
             adapter.addAll(visibleWords.map { (word, count) -> "$word     ·     $count kullanım" })
             adapter.notifyDataSetChanged()
