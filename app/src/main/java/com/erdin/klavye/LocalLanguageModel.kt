@@ -88,7 +88,14 @@ class LocalLanguageModel(context: Context) {
         "sorun>değil" to listOf("hiç", "merak", "tabii"),
         "ne>güzel" to listOf("haber", "tesadüf", "oldu"),
         "iyi>oldu" to listOf("böyle", "ki", "gerçekten"),
-        "ben>buradayım" to listOf("senin", "yardımcı", "her zaman")
+        "ben>buradayım" to listOf("senin", "yardımcı", "her zaman"),
+        "ne>haber" to listOf("nasılsın", "var", "senden"),
+        "ben>iyiyim" to listOf("teşekkürler", "sen", "çok şükür"),
+        "sizi>arayacağım" to listOf("bugün", "yarın", "daha sonra"),
+        "gün>içinde" to listOf("haber", "tekrar", "müsait"),
+        "bilgi>verir" to listOf("misin", "misiniz", "lütfen"),
+        "tekrar>teşekkürler" to listOf("yardımın", "desteğin", "ilgin"),
+        "umarım>görüşürüz" to listOf("yakında", "tekrar", "en kısa zamanda")
     )
 
     // General-purpose context hints. Personal usage counts gradually take priority.
