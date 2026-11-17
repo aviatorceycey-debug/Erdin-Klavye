@@ -18,6 +18,29 @@ import android.widget.Switch
 import android.widget.Toast
 
 class MainActivity : Activity() {
+    private var setupStatus: TextView? = null
+
+    override fun onResume() {
+        super.onResume()
+        refreshSetupStatus()
+    }
+
+    private fun refreshSetupStatus() {
+        val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val enabled = manager.enabledInputMethodList.any { it.packageName == packageName }
+        val defaultIme = Settings.Secure.getString(
+            contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD
+        ).orEmpty()
+        val selected = defaultIme.startsWith("$packageName/")
+        setupStatus?.apply {
+            text = buildString {
+                append(if (enabled) "✓ Klavye etkin" else "1. Klavyeyi etkinleştir")
+                append("\\n")
+                append(if (selected) "✓ Varsayılan klavye seçili" else "2. Erdin Klavye'yi varsayılan seç")
+            }
+            setTextColor(if (enabled && selected) 0xFF72E0B0.toInt() else 0xFFFFD18A.toInt())
+        }
+    }
     private fun showPersonalDictionary() {
         val model = LocalLanguageModel(this)
         val search = android.widget.EditText(this).apply {
@@ -165,7 +188,14 @@ class MainActivity : Activity() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
             override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
         })
-        root.addView(title); root.addView(info); root.addView(enable); root.addView(choose)
+        setupStatus = TextView(this).apply {
+            textSize = 14f
+            setTextColor(0xFFFFD18A.toInt())
+            setPadding(18, 16, 18, 16)
+            setBackgroundColor(0xFF1B2638.toInt())
+        }
+        root.addView(title); root.addView(info); root.addView(setupStatus)
+        root.addView(enable); root.addView(choose)
 
         val hapticSwitch = Switch(this).apply {
             text = "Tuş titreşimi"
