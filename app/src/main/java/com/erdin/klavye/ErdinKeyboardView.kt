@@ -379,7 +379,7 @@ class ErdinKeyboardView(
             paint.color = 0xFF9EABC2.toInt()
             paint.textSize = 11f * density
             paint.textAlign = Paint.Align.CENTER
-            canvas.drawText("ERDİN  •  Türkçe klavye", width / 2f, 25f * density, paint)
+            canvas.drawText("ERDİN  •  ${if (activeLanguageLabel == "English") "English" else "Türkçe"} klavye", width / 2f, 25f * density, paint)
             return
         }
         val cellWidth = width.toFloat() / count
