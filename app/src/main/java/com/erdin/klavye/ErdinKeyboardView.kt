@@ -91,6 +91,7 @@ class ErdinKeyboardView(
     private var symbolsPageTwo = false
     private var emojiMode = false
     private var clipboardMode = false
+    private var clipboardAvailable = true
     // 0 = regular, 1 = numeric, 2 = phone, 3 = date, 4 = time.
     private var numericInputMode = 0
     private var numericAllowsSign = false
@@ -299,6 +300,13 @@ class ErdinKeyboardView(
         }
     }
 
+    fun setClipboardAvailable(enabled: Boolean) {
+        clipboardAvailable = enabled
+        if (!enabled) hideClipboard()
+        accessibilityHelper.invalidateRoot()
+        invalidate()
+    }
+
     fun setClipboardItems(items: List<String>) {
         clipboardItems = items.take(6)
         clipboardMode = true
@@ -375,7 +383,7 @@ class ErdinKeyboardView(
                     suggestions.forEachIndexed { index, _ -> virtualViewIds.add(1000 + index) }
                 }
                 alternateOptions.forEachIndexed { index, _ -> virtualViewIds.add(3000 + index) }
-                virtualViewIds.add(2000)
+                if (clipboardAvailable) virtualViewIds.add(2000)
                 if (clipboardMode) virtualViewIds.add(2002) else virtualViewIds.add(2001)
             }
 
@@ -394,7 +402,7 @@ class ErdinKeyboardView(
                     val suggestionIndex = suggestionRects.indexOfFirst { it.contains(x, y) }
                     if (suggestionIndex >= 0 && suggestionIndex < suggestions.size) return 1000 + suggestionIndex
                 }
-                if (y < topInset && x < 58f * density) return 2000
+                if (clipboardAvailable && y < topInset && x < 58f * density) return 2000
                 if (y < topInset && x > width - 58f * density) return if (clipboardMode) 2002 else 2001
                 return INVALID_ID
             }
@@ -551,7 +559,7 @@ class ErdinKeyboardView(
                 if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
                 if (virtualViewId >= 2000) {
                     when (virtualViewId) {
-                        2000 -> onKey("__CLIPBOARD__")
+                        2000 -> { if (!clipboardAvailable) return false else onKey("__CLIPBOARD__") }
                         2001 -> {
                             val prefs = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
                             val next = when (prefs.getString("keyboard_theme", "midnight")) {
@@ -745,7 +753,7 @@ class ErdinKeyboardView(
         paint.color = palette().accentOutline
         paint.textSize = 17f * density
         paint.textAlign = Paint.Align.CENTER
-        canvas.drawText("▣", 28f * density, 26f * density, paint)
+        if (clipboardAvailable) canvas.drawText("▣", 28f * density, 26f * density, paint)
         if (!clipboardMode) {
             paint.color = palette().accentOutline
             paint.textSize = 17f * density
