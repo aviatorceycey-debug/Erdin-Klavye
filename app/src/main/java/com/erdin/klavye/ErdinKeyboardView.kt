@@ -843,8 +843,8 @@ class ErdinKeyboardView(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                if (event.y < topInset && event.x < 58f * density) {
-                    onKey(if (clipboardMode) "__CLIPBOARD__" else "__CLIPBOARD__")
+                if (clipboardAvailable && event.y < topInset && event.x < 58f * density) {
+                    onKey("__CLIPBOARD__")
                     return true
                 }
                 if (event.y < topInset && event.x > width - 58f * density && clipboardMode) {
