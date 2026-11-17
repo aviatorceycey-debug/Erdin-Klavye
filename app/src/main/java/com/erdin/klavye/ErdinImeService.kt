@@ -480,9 +480,11 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             return
         }
         val contextWords = before.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
-        var previousContext = contextWords.lastOrNull { !it.equals(currentWord, ignoreCase = true) }
+        // The final token is the word being replaced, even when it repeats
+        // an earlier word (for example: "çok çok").
+        var previousContext = contextWords.dropLast(1).lastOrNull()
             ?: lastContextWord
-        var previousPreviousContext = contextWords.dropLast(1).lastOrNull()
+        var previousPreviousContext = contextWords.dropLast(2).lastOrNull()
             ?: lastContextPreviousWord
         val insertedWords = replacement.split(Regex("[^\\p{L}]+")).filter { it.isNotBlank() }
         if (insertedWords.isNotEmpty()) {
