@@ -56,7 +56,7 @@ internal object SwipeTraceDecoder {
         val maxKeyDistance = 48.0 * density.toDouble()
         val word = StringBuilder()
         var previous = ""
-        var activeKey: SwipeKeyBounds? = null
+        var activeKey: CenteredKey? = null
 
         path.forEach { (x, y) ->
             if (!x.isFinite() || !y.isFinite()) return@forEach
