@@ -60,6 +60,17 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         invalidateSpellCheckRequests()
         keyboardView?.setSuggestions(emptyList())
         currentInputEditorInfo?.let { attribute ->
+            // A language switch can happen in the middle of an editor session.
+            // Rebuild phrase context from the actual cursor position so the
+            // newly selected language never inherits stale context from before.
+            val textBeforeCursor = currentInputConnection
+                ?.getTextBeforeCursor(120, 0)?.toString().orEmpty()
+            val contextWords = textBeforeCursor
+                .split(Regex("[^\\p{L}'’]+"))
+                .filter { it.isNotBlank() }
+            lastContextWord = contextWords.lastOrNull().orEmpty()
+            lastContextPreviousWord = contextWords.getOrNull(contextWords.lastIndex - 1).orEmpty()
+
             val inputType = attribute.inputType
             keyboardView?.setNumericInputMode(inputType)
             val inputClass = inputType and InputType.TYPE_MASK_CLASS
