@@ -307,15 +307,25 @@ class LocalLanguageModel(context: Context) {
     }
 
     // Keep the small personal model in memory while the keyboard is open.
-    // This avoids parsing JSON on every key press.
-    private val wordCounts by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        readCounts("word_counts")
+    // A revision marker lets separate Settings/IME instances see each other's edits
+    // without reparsing the JSON on every key press.
+    private var loadedRevision = prefs.getLong("personal_data_revision", 0L)
+    private var wordCounts = readCounts("word_counts")
+    private var pairCounts = readCounts("pair_counts")
+    private var trigramCounts = readCounts("trigram_counts")
+
+    private fun refreshPersonalDataIfChanged() {
+        val revision = prefs.getLong("personal_data_revision", 0L)
+        if (revision == loadedRevision) return
+        wordCounts = readCounts("word_counts")
+        pairCounts = readCounts("pair_counts")
+        trigramCounts = readCounts("trigram_counts")
+        loadedRevision = revision
     }
-    private val pairCounts by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        readCounts("pair_counts")
-    }
-    private val trigramCounts by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        readCounts("trigram_counts")
+
+    private fun markPersonalDataChanged() {
+        loadedRevision = maxOf(loadedRevision, prefs.getLong("personal_data_revision", 0L)) + 1L
+        prefs.edit().putLong("personal_data_revision", loadedRevision).apply()
     }
 
     private fun saveCounts(key: String, values: Map<String, Int>) {
@@ -326,6 +336,7 @@ class LocalLanguageModel(context: Context) {
 
     @Synchronized
     fun clearPersonalData() {
+        refreshPersonalDataIfChanged()
         wordCounts.clear()
         pairCounts.clear()
         trigramCounts.clear()
@@ -334,17 +345,21 @@ class LocalLanguageModel(context: Context) {
             .remove("pair_counts")
             .remove("trigram_counts")
             .apply()
+        markPersonalDataChanged()
     }
 
     @Synchronized
-    fun learnedWords(): List<Pair<String, Int>> =
-        wordCounts.entries
+    fun learnedWords(): List<Pair<String, Int>> {
+        refreshPersonalDataIfChanged()
+        return wordCounts.entries
             .filter { it.value > 0 }
             .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
             .map { it.key to it.value }
+    }
 
     @Synchronized
     fun deletePersonalWord(word: String) {
+        refreshPersonalDataIfChanged()
         val clean = normalize(word)
         if (clean.isBlank()) return
         wordCounts.remove(clean)
@@ -355,10 +370,12 @@ class LocalLanguageModel(context: Context) {
         saveCounts("word_counts", wordCounts)
         saveCounts("pair_counts", pairCounts)
         saveCounts("trigram_counts", trigramCounts)
+        markPersonalDataChanged()
     }
 
     @Synchronized
     fun learn(word: String, previousWord: String?, previousPreviousWord: String? = null) {
+        refreshPersonalDataIfChanged()
         val clean = normalize(word)
         if (clean.length < 2 || clean.any { !it.isLetter() }) return
 
@@ -393,10 +410,12 @@ class LocalLanguageModel(context: Context) {
             }
             saveCounts("trigram_counts", trigrams)
         }
+        markPersonalDataChanged()
     }
 
     @Synchronized
     fun completions(prefix: String): List<String> {
+        refreshPersonalDataIfChanged()
         val key = normalize(prefix)
         if (key.length < 2) return emptyList()
         val learned = wordCounts
@@ -427,6 +446,7 @@ class LocalLanguageModel(context: Context) {
      */
     @Synchronized
     fun decodeSwipePath(path: String): String {
+        refreshPersonalDataIfChanged()
         val clean = normalize(path).filter { it.isLetter() }
         if (clean.length < 3) return clean
         val candidates = (starterWords.asSequence() + wordCounts.keys.asSequence())
@@ -489,6 +509,7 @@ class LocalLanguageModel(context: Context) {
 
     @Synchronized
     fun nextWords(previousWord: String, previousPreviousWord: String? = null): List<String> {
+        refreshPersonalDataIfChanged()
         val previous = normalize(previousWord)
         if (previous.isBlank()) return emptyList()
 
