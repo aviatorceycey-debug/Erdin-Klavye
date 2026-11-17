@@ -20,6 +20,11 @@ internal data class SwipeKeyBounds(
 
 /** Converts a sampled finger path into a stable sequence of keyboard letters. */
 internal object SwipeTraceDecoder {
+    private data class CenteredKey(
+        val bounds: SwipeKeyBounds,
+        val centerX: Double,
+        val centerY: Double
+    )
     fun decode(
         path: List<Pair<Float, Float>>,
         keys: List<SwipeKeyBounds>,
@@ -35,6 +40,15 @@ internal object SwipeTraceDecoder {
         }
         if (validKeys.isEmpty()) return ""
 
+        // Precompute key centers once per gesture instead of recalculating them
+        // for every historical MotionEvent sample.
+        val centeredKeys = validKeys.map { key ->
+            CenteredKey(
+                key,
+                (key.left.toDouble() + key.right.toDouble()) / 2.0,
+                (key.top.toDouble() + key.bottom.toDouble()) / 2.0
+            )
+        }
         val locale = if (english) Locale.US else Locale("tr", "TR")
         // Keep geometry arithmetic in Double: finite Float bounds can still
         // overflow when their centers or deltas are calculated in Float.
@@ -48,25 +62,31 @@ internal object SwipeTraceDecoder {
             if (!x.isFinite() || !y.isFinite()) return@forEach
             val pointX = x.toDouble()
             val pointY = y.toDouble()
-            fun distanceTo(key: SwipeKeyBounds): Double {
-                val centerX = (key.left.toDouble() + key.right.toDouble()) / 2.0
-                val centerY = (key.top.toDouble() + key.bottom.toDouble()) / 2.0
-                return hypot(centerX - pointX, centerY - pointY)
+            var nearest: CenteredKey? = null
+            var nearestDistance = Double.POSITIVE_INFINITY
+            centeredKeys.forEach { candidate ->
+                val distance = hypot(candidate.centerX - pointX, candidate.centerY - pointY)
+                if (distance < nearestDistance) {
+                    nearest = candidate
+                    nearestDistance = distance
+                }
             }
-            val nearest = validKeys.minByOrNull(::distanceTo) ?: return@forEach
-            val nearestDistance = distanceTo(nearest)
+            val nearestKey = nearest ?: return@forEach
             if (nearestDistance > maxKeyDistance) return@forEach
 
-            val value = nearest.value.lowercase(locale)
+            val value = nearestKey.bounds.value.lowercase(locale)
             val currentKey = activeKey
             if (value != previous && currentKey != null) {
-                val currentDistance = distanceTo(currentKey)
+                val currentDistance = hypot(
+                    currentKey.centerX - pointX,
+                    currentKey.centerY - pointY
+                )
                 // Switch only when the new key is meaningfully closer than the active key.
                 if (nearestDistance + switchMargin >= currentDistance) return@forEach
             }
             if (value != previous) word.append(value)
             previous = value
-            activeKey = nearest
+            activeKey = nearestKey
         }
         return word.toString()
     }
