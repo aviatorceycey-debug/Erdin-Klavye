@@ -522,8 +522,8 @@ class ErdinKeyboardView(
                         node.isFocusable = true
                         node.isClickable = true
                         node.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK)
-                        val cellWidth = width.toFloat() / suggestions.size.coerceAtLeast(1)
-                        val rect = suggestionRects.getOrNull(index) ?: RectF(index * cellWidth, 5f * density, (index + 1) * cellWidth, 37f * density)
+                        val rect = suggestionRects.getOrNull(index)
+                            ?: suggestionBounds(index, suggestions.size)
                         node.setBoundsInParent(Rect(rect.left.toInt(), rect.top.toInt(), rect.right.toInt(), rect.bottom.toInt()))
                         return
                     }
@@ -864,6 +864,17 @@ class ErdinKeyboardView(
         canvas.drawText(label, rect.centerX(), baseline, paint)
     }
 
+    private fun suggestionBounds(index: Int, count: Int): RectF {
+        val sideControlWidth = 58f * density
+        val cellWidth = (width - sideControlWidth * 2f).coerceAtLeast(0f) / count.coerceAtLeast(1)
+        return RectF(
+            sideControlWidth + index * cellWidth + 4f * density,
+            5f * density,
+            sideControlWidth + (index + 1) * cellWidth - 4f * density,
+            37f * density
+        )
+    }
+
     private fun drawSuggestionStrip(canvas: Canvas) {
         suggestionRects.clear()
         paint.color = palette().accentOutline
@@ -903,13 +914,8 @@ class ErdinKeyboardView(
             canvas.drawText("ERDİN  •  ${if (activeLanguageLabel == "English") "English" else "Türkçe"} klavye", width / 2f, 25f * density, paint)
             return
         }
-        // Keep suggestion hit targets clear of the fixed clipboard and theme controls.
-        val sideControlWidth = 58f * density
-        val suggestionsWidth = (width - sideControlWidth * 2f).coerceAtLeast(0f)
-        val cellWidth = suggestionsWidth / count
         suggestions.forEachIndexed { index, suggestion ->
-            val rect = RectF(sideControlWidth + index * cellWidth + 4f * density, 5f * density,
-                sideControlWidth + (index + 1) * cellWidth - 4f * density, 37f * density)
+            val rect = suggestionBounds(index, count)
             suggestionRects += rect
             if (index == 1) {
                 paint.color = palette().suggestion
