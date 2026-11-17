@@ -21,7 +21,7 @@ internal data class SwipeKeyBounds(
 /** Converts a sampled finger path into a stable sequence of keyboard letters. */
 internal object SwipeTraceDecoder {
     private data class CenteredKey(
-        val bounds: SwipeKeyBounds,
+        val value: String,
         val centerX: Double,
         val centerY: Double
     )
@@ -40,16 +40,16 @@ internal object SwipeTraceDecoder {
         }
         if (validKeys.isEmpty()) return ""
 
-        // Precompute key centers once per gesture instead of recalculating them
-        // for every historical MotionEvent sample.
+        val locale = if (english) Locale.US else Locale("tr", "TR")
+        // Precompute centers and normalized labels once per gesture instead
+        // of repeating geometry and locale work for every MotionEvent sample.
         val centeredKeys = validKeys.map { key ->
             CenteredKey(
-                key,
+                key.value.lowercase(locale),
                 (key.left.toDouble() + key.right.toDouble()) / 2.0,
                 (key.top.toDouble() + key.bottom.toDouble()) / 2.0
             )
         }
-        val locale = if (english) Locale.US else Locale("tr", "TR")
         // Keep geometry arithmetic in Double: finite Float bounds can still
         // overflow when their centers or deltas are calculated in Float.
         val switchMargin = 12.0 * density.toDouble()
@@ -74,7 +74,7 @@ internal object SwipeTraceDecoder {
             val nearestKey = nearest ?: return@forEach
             if (nearestDistance > maxKeyDistance) return@forEach
 
-            val value = nearestKey.bounds.value.lowercase(locale)
+            val value = nearestKey.value
             val currentKey = activeKey
             if (value != previous && currentKey != null) {
                 val currentDistance = hypot(
