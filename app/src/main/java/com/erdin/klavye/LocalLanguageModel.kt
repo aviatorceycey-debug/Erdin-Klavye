@@ -285,13 +285,24 @@ class LocalLanguageModel(context: Context) {
         val key = normalize(prefix)
         if (key.length < 2) return emptyList()
         val learned = wordCounts
-        return (starterWords.asSequence().filter { it.startsWith(key) } +
+        val candidates = (starterWords.asSequence().filter { it.startsWith(key) } +
             learned.keys.asSequence().filter { it.startsWith(key) })
             .distinct()
             .filterNot { it.equals(key, ignoreCase = true) }
             .sortedWith(compareByDescending<String> { learned[it] ?: 0 }.thenBy { it.length })
             .take(2)
             .toList()
+
+        // Match the casing the user has already started, including Turkish İ/ı.
+        return candidates.map { candidate ->
+            when {
+                typed.all { !it.isLetter() || it.isUpperCase() } ->
+                    candidate.uppercase(locale)
+                typed.firstOrNull()?.isUpperCase() == true ->
+                    candidate.replaceFirstChar { it.uppercase(locale) }
+                else -> candidate
+            }
+        }
     }
 
     /**
