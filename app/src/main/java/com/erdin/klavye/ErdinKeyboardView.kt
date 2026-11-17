@@ -323,6 +323,7 @@ class ErdinKeyboardView(
 
     fun setSuggestions(items: List<String>) {
         suggestions = items.distinct().take(3)
+        suggestionRects.clear()
         accessibilityHelper.invalidateRoot()
         invalidate()
     }
@@ -858,6 +859,7 @@ class ErdinKeyboardView(
                 alternateOptions = emptyList()
                 popupRect = null
                 selectedAlternate = -1
+                accessibilityHelper.invalidateRoot()
                 invalidate()
                 return true
             }
@@ -871,6 +873,7 @@ class ErdinKeyboardView(
                 alternateOptions = emptyList()
                 popupRect = null
                 selectedAlternate = -1
+                accessibilityHelper.invalidateRoot()
                 invalidate()
                 return true
             }
