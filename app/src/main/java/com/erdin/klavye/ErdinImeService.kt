@@ -43,6 +43,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         super.onCurrentInputMethodSubtypeChanged(subtype)
         activeSubtypeLocale = subtype.locale.ifBlank { "tr_TR" }
         keyboardView?.setInputLanguage(activeSubtypeLocale)
+        updateAutoShift()
         invalidateSpellCheckRequests()
         keyboardView?.setSuggestions(emptyList())
         currentInputEditorInfo?.let { attribute ->
@@ -328,7 +329,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val currentWord = before.takeLastWhile { it.isLetter() }
         if (currentWord.isEmpty()) {
             invalidateSpellCheckRequests()
-            if (learningEnabled) {
+            if (learningEnabled && usesTurkishModel()) {
                 languageModel.learn(replacement, lastContextWord, lastContextPreviousWord)
             }
             connection.commitText("$replacement ", 1)
