@@ -427,9 +427,10 @@ class LocalLanguageModel(context: Context) {
     fun deletePersonalWord(word: String) {
         refreshPersonalDataIfChanged()
         val clean = normalize(word)
-        if (clean.isBlank()) return
+        val englishClean = word.trim().lowercase(Locale.US)
+        if (clean.isBlank() && englishClean.isBlank()) return
         wordCounts.remove(clean)
-        englishWordCounts.remove(clean.lowercase(Locale.US))
+        englishWordCounts.remove(englishClean)
         // Remove the word wherever it appears in a learned context, not only
         // when it is the predicted final token.
         PersonalContextPruner.removeWord(pairCounts, trigramCounts, clean)
