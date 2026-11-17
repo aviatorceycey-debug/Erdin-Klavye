@@ -328,9 +328,12 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         when {
             value.startsWith("__SWIPE_WORD__") -> {
                 val traced = value.removePrefix("__SWIPE_WORD__")
-                // The local swipe vocabulary is Turkish-only. Keep the raw trace in English mode
-                // rather than silently replacing it with an unrelated Turkish dictionary word.
-                val decoded = if (usesTurkishModel()) languageModel.decodeSwipePath(traced) else traced
+                // Decode against the active language's separate offline vocabulary.
+                val decoded = if (usesTurkishModel()) {
+                    languageModel.decodeSwipePath(traced)
+                } else {
+                    languageModel.decodeEnglishSwipePath(traced)
+                }
                 if (decoded.isNotBlank()) {
                     connection.commitText(decoded, 1)
                     updateAutoShift()
