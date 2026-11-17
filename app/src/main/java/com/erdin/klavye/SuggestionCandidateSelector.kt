@@ -8,7 +8,7 @@ internal object SuggestionCandidateSelector {
         comparator: Comparator<T>
     ): List<T> {
         if (limit <= 0) return emptyList()
-        val best = ArrayList<T>(limit)
+        val best = ArrayList<T>(minOf(limit, 16))
         candidates.forEach { candidate ->
             var insertionIndex = best.indexOfFirst { comparator.compare(candidate, it) < 0 }
             if (insertionIndex < 0) insertionIndex = best.size
