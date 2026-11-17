@@ -312,9 +312,10 @@ class LocalLanguageModel(context: Context) {
         val context = wordBeforePrevious?.trim()?.lowercase(Locale.US).orEmpty()
         val contextual = if (context.isBlank()) emptyList()
             else englishContextHints["$context>$previous"].orEmpty()
-        return (contextual + englishNextHints[previous].orEmpty())
+        return (contextual.asSequence() + englishNextHints[previous].orEmpty().asSequence())
             .distinct()
             .take(3)
+            .toList()
     }
 
     private fun readCounts(key: String): MutableMap<String, Int> {
