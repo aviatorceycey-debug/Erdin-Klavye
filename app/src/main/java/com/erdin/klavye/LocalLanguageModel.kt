@@ -414,14 +414,14 @@ class LocalLanguageModel(context: Context) {
         val candidates = (seededContext.asSequence() + seeded.asSequence() +
             learned.keys.asSequence() + contextual.keys.asSequence()).distinct().toList()
 
-        // Personal three-word context wins, followed by built-in phrase hints,
-        // personal bigrams and general seed hints.
+        // Personal usage should influence ranking quickly, while built-in hints
+        // remain useful until the user's own patterns become established.
         fun score(word: String): Int {
-            val trigramScore = (contextual[word] ?: 0).coerceAtMost(100) * 5
+            val trigramScore = (contextual[word] ?: 0).coerceAtMost(100) * 12
             val contextIndex = seededContext.indexOf(word)
-            val seededTrigramScore = if (contextIndex < 0) 0 else (seededContext.size - contextIndex) * 8
-            val bigramScore = (learned[word] ?: 0).coerceAtMost(100) * 2
-            val personalWordScore = (wordCounts[word] ?: 0).coerceAtMost(100) / 4
+            val seededTrigramScore = if (contextIndex < 0) 0 else (seededContext.size - contextIndex) * 3
+            val bigramScore = (learned[word] ?: 0).coerceAtMost(100) * 5
+            val personalWordScore = (wordCounts[word] ?: 0).coerceAtMost(100)
             val seedIndex = seeded.indexOf(word)
             val seedScore = if (seedIndex < 0) 0 else (seeded.size - seedIndex) * 2
             return trigramScore + seededTrigramScore + bigramScore + personalWordScore + seedScore
