@@ -510,39 +510,7 @@ class LocalLanguageModel(context: Context) {
             .toList()
         if (candidates.isEmpty()) return clean
 
-        fun distance(a: String, b: String): Int {
-            // Only distance 0 or 1 can be accepted, so stop as soon as
-            // a candidate is provably outside that range.
-            if (kotlin.math.abs(a.length - b.length) > 1) return 2
-            var twoRowsBack = IntArray(b.length + 1) { it }
-            var previous = IntArray(b.length + 1) { it }
-            for (i in 1..a.length) {
-                val current = IntArray(b.length + 1) { 2 }
-                current[0] = i
-                var rowMinimum = current[0]
-                val from = maxOf(1, i - 1)
-                val to = minOf(b.length, i + 1)
-                for (j in from..to) {
-                    val substitution = if (a[i - 1] == b[j - 1]) 0 else 1
-                    var score = minOf(
-                        previous[j] + 1,
-                        current[j - 1] + 1,
-                        previous[j - 1] + substitution
-                    )
-                    if (i > 1 && j > 1 &&
-                        a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]
-                    ) {
-                        score = minOf(score, twoRowsBack[j - 2] + 1)
-                    }
-                    current[j] = score
-                    rowMinimum = minOf(rowMinimum, score)
-                }
-                if (rowMinimum > 1) return 2
-                twoRowsBack = previous
-                previous = current
-            }
-            return previous[b.length].coerceAtMost(2)
-        }
+        fun distance(a: String, b: String): Int = SwipeWordDistance.calculate(a, b)
 
         val ranked = candidates.map { it to distance(clean, it) }
             .sortedWith(compareBy<Pair<String, Int>> { it.second }
@@ -573,32 +541,7 @@ class LocalLanguageModel(context: Context) {
         val candidates = englishStarterWords.filter {
             kotlin.math.abs(it.length - clean.length) <= 1
         }
-        fun distance(a: String, b: String): Int {
-            if (kotlin.math.abs(a.length - b.length) > 1) return 2
-            var previous = IntArray(b.length + 1) { it }
-            var twoRowsBack = IntArray(b.length + 1) { it }
-            for (i in 1..a.length) {
-                val current = IntArray(b.length + 1) { 2 }
-                current[0] = i
-                var rowMinimum = current[0]
-                for (j in maxOf(1, i - 1)..minOf(b.length, i + 1)) {
-                    var score = minOf(
-                        previous[j] + 1,
-                        current[j - 1] + 1,
-                        previous[j - 1] + if (a[i - 1] == b[j - 1]) 0 else 1
-                    )
-                    if (i > 1 && j > 1 && a[i - 1] == b[j - 2] &&
-                        a[i - 2] == b[j - 1]
-                    ) score = minOf(score, twoRowsBack[j - 2] + 1)
-                    current[j] = score
-                    rowMinimum = minOf(rowMinimum, score)
-                }
-                if (rowMinimum > 1) return 2
-                twoRowsBack = previous
-                previous = current
-            }
-            return previous[b.length].coerceAtMost(2)
-        }
+        fun distance(a: String, b: String): Int = SwipeWordDistance.calculate(a, b)
         val ranked = candidates.map { it to distance(clean, it) }
             .sortedWith(compareBy<Pair<String, Int>> { it.second }
                 .thenBy { englishFrequencyRank[it.first] ?: Int.MAX_VALUE })
