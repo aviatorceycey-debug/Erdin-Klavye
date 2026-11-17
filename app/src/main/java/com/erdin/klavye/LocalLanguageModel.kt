@@ -174,7 +174,7 @@ class LocalLanguageModel(context: Context) {
 
     // Two-word English context improves phrase completion beyond single-word hints.
     private val englishContextHints = mapOf(
-        "thank>you" to listOf("for", "so much"),
+        "thank>you" to listOf("for", "again", "so much", "very much"),
         "looking>forward" to listOf("to"),
         "see>you" to listOf("soon", "tomorrow", "there"),
         "how>are" to listOf("you"),
@@ -215,7 +215,7 @@ class LocalLanguageModel(context: Context) {
         "as>far" to listOf("as"),
         "please>feel" to listOf("free", "welcome"),
         "feel>free" to listOf("to", "to ask"),
-        "thank>you" to listOf("again", "very much"),
+
         "see>what" to listOf("happens", "you think", "we can do"),
         "looking>great" to listOf("today", "as always"),
         "hope>everything" to listOf("is", "goes well"),
@@ -252,11 +252,11 @@ class LocalLanguageModel(context: Context) {
         "the", "you", "that", "this", "there", "they", "their", "then", "them",
         "what", "when", "where", "which", "who", "will", "with", "would", "your",
         "have", "has", "had", "how", "here", "help", "hello", "good", "great",
-        "get", "got", "going", "go", "can", "could", "come", " see", "some",
+        "get", "got", "going", "go", "can", "could", "come", "some",
         "for", "from", "first", "find", "feel", "just", "know", "like", "look",
         "make", "more", "most", "much", "need", "new", "now", "not", "one",
         "our", "out", "please", "people", "really", "right", "said", "same",
-        "see", "send", "should", "some", "still", "take", "than", "thank",
+        "see", "send", "should", "still", "take", "than", "thank",
         "think", "time", "today", "tomorrow", "too", "use", "very", "want",
         "way", "well", "were", "work", "world", "yes"
     ).mapIndexed { index, word -> word.trim() to index }.toMap()
