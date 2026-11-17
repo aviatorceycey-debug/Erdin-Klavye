@@ -405,7 +405,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     if (!value.all { it.isLetter() }) invalidateSpellCheckRequests()
                     connection.commitText(value, 1)
                     updateAutoShift()
-                    if (value.all { it.isLetter() }) requestSuggestionsSoon()
+                    if (value.all { it.isLetter() || it == '\'' || it == '’' }) requestSuggestionsSoon()
                     else keyboardView?.setSuggestions(emptyList())
                 }
             }
@@ -436,7 +436,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             pendingSuggestionRunnable = null
             val before = currentInputConnection?.getTextBeforeCursor(80, 0)?.toString().orEmpty()
             val word = before.takeLastWhile { it.isLetter() || it == '\'' || it == '’' }
-            if (word.length < 2) {
+            if (word.length < 2 || word.firstOrNull()?.isLetter() != true || word.lastOrNull()?.isLetter() != true) {
                 lastQueriedWord = ""
                 keyboardView?.setSuggestions(emptyList())
                 return@Runnable
