@@ -855,12 +855,14 @@ class ErdinKeyboardView(
     private fun suggestionBounds(index: Int, count: Int, target: RectF = RectF()): RectF {
         val sideControlWidth = 58f * density
         val cellWidth = (width - sideControlWidth * 2f).coerceAtLeast(0f) / count.coerceAtLeast(1)
-        return target.set(
-            sideControlWidth + index * cellWidth + 4f * density,
-            5f * density,
-            sideControlWidth + (index + 1) * cellWidth - 4f * density,
-            37f * density
-        )
+        return target.apply {
+            set(
+                sideControlWidth + index * cellWidth + 4f * density,
+                5f * density,
+                sideControlWidth + (index + 1) * cellWidth - 4f * density,
+                37f * density
+            )
+        }
     }
 
     private fun drawSuggestionStrip(canvas: Canvas) {
