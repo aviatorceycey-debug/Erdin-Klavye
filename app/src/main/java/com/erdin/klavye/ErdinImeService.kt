@@ -449,9 +449,14 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     val doubleSpacePeriod = getSharedPreferences(
                         "erdin_keyboard_settings", MODE_PRIVATE
                     ).getBoolean("double_space_period", true)
-                    if (doubleSpacePeriodEnabled && doubleSpacePeriod && before.endsWith(" ") &&
+                    if (doubleSpacePeriodEnabled && doubleSpacePeriod &&
+                        connection.getSelectedText(0).isNullOrEmpty() &&
+                        before.endsWith(" ") &&
                         before.dropLast(1).lastOrNull()?.isLetter() == true
                     ) {
+                        // The second space becomes a period, but the word
+                        // before it must still enter the personal language model.
+                        learnWordBeforeBoundary(before.dropLast(1))
                         connection.deleteSurroundingText(1, 0)
                         connection.commitText(". ", 1)
                         keyboardView?.setSuggestions(emptyList())
