@@ -507,7 +507,6 @@ class ErdinKeyboardView(
                     popupRect = null
                     downKey = null
                     downRect = null
-                    accessibilityHelper.invalidateRoot()
                     invalidate()
                     sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
                     return true
@@ -528,7 +527,6 @@ class ErdinKeyboardView(
                     val left = (pair.second.centerX() - popupWidth / 2f).coerceIn(gap, width - popupWidth - gap)
                     val top = (pair.second.top - 52f * density - 7f * density).coerceAtLeast(3f * density)
                     popupRect = RectF(left, top, left + popupWidth, top + 52f * density)
-                    accessibilityHelper.invalidateRoot()
                     invalidate()
                     sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_LONG_CLICKED)
                     return true
@@ -568,9 +566,13 @@ class ErdinKeyboardView(
 
     private fun alternateOptionsFor(key: KeyboardKey): List<String> {
         if (emojiMode || clipboardMode) return emptyList()
-        return punctuationAlternatives[key.value]
-            ?: if (!symbols && activeLanguageLabel == "Türkçe") alternatives[key.value.lowercase()] else null
-            ?: emptyList()
+        val punctuation = punctuationAlternatives[key.value]
+        if (punctuation != null) return punctuation
+        return if (!symbols && activeLanguageLabel == "Türkçe") {
+            alternatives[key.value.lowercase()] ?: emptyList()
+        } else {
+            emptyList()
+        }
     }
 
     private fun performAccessibleKey(key: KeyboardKey) {
