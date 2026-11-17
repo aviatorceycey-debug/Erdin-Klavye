@@ -36,26 +36,31 @@ internal object SwipeTraceDecoder {
         if (validKeys.isEmpty()) return ""
 
         val locale = if (english) Locale.US else Locale("tr", "TR")
-        val switchMargin = 12f * density
-        val maxKeyDistance = 48f * density
+        // Keep geometry arithmetic in Double: finite Float bounds can still
+        // overflow when their centers or deltas are calculated in Float.
+        val switchMargin = 12.0 * density.toDouble()
+        val maxKeyDistance = 48.0 * density.toDouble()
         val word = StringBuilder()
         var previous = ""
         var activeKey: SwipeKeyBounds? = null
 
         path.forEach { (x, y) ->
             if (!x.isFinite() || !y.isFinite()) return@forEach
-            val nearest = validKeys.minByOrNull { key ->
-                val dx = key.centerX - x
-                val dy = key.centerY - y
-                dx * dx + dy * dy
-            } ?: return@forEach
-            val nearestDistance = hypot(nearest.centerX - x, nearest.centerY - y)
+            val pointX = x.toDouble()
+            val pointY = y.toDouble()
+            fun distanceTo(key: SwipeKeyBounds): Double {
+                val centerX = (key.left.toDouble() + key.right.toDouble()) / 2.0
+                val centerY = (key.top.toDouble() + key.bottom.toDouble()) / 2.0
+                return hypot(centerX - pointX, centerY - pointY)
+            }
+            val nearest = validKeys.minByOrNull(::distanceTo) ?: return@forEach
+            val nearestDistance = distanceTo(nearest)
             if (nearestDistance > maxKeyDistance) return@forEach
 
             val value = nearest.value.lowercase(locale)
             val currentKey = activeKey
             if (value != previous && currentKey != null) {
-                val currentDistance = hypot(currentKey.centerX - x, currentKey.centerY - y)
+                val currentDistance = distanceTo(currentKey)
                 // Switch only when the new key is meaningfully closer than the active key.
                 if (nearestDistance + switchMargin >= currentDistance) return@forEach
             }
