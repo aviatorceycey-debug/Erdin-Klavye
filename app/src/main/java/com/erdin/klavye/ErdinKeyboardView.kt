@@ -198,6 +198,12 @@ class ErdinKeyboardView(
                 listOf("☕","🧋","🥤","🍵","🥛","🍺","🍷","🍹"),
                 listOf("🎉","🎁","🎈","❤️","💯","✨","💡","🚀")
             )
+            5 -> listOf(
+                listOf("🚗","🚕","🚌","🚆","✈️","🚀","🚲","🛵"),
+                listOf("🏖️","🏕️","⛺","🗺️","🧭","🏔️","🌋","🏝️"),
+                listOf("⚽","🏀","🎾","🏐","🏓","🎮","🎸","🎨"),
+                listOf("🏆","🥇","🎯","🎳","🎿","🏄","🚴","🧳")
+            )
             else -> buildList {
                 if (recent.isNotEmpty()) add(recent)
                 addAll(listOf(
@@ -455,7 +461,7 @@ class ErdinKeyboardView(
                 }
                 alternateOptions.forEachIndexed { index, _ -> virtualViewIds.add(3000 + index) }
                 if (clipboardAvailable) virtualViewIds.add(2000)
-                if (emojiMode) (0..4).forEach { virtualViewIds.add(2100 + it) }
+                if (emojiMode) (0..5).forEach { virtualViewIds.add(2100 + it) }
                 if (clipboardMode) {
                     virtualViewIds.add(2002)
                     if (clipboardItems.isEmpty()) virtualViewIds.add(2003)
@@ -480,8 +486,8 @@ class ErdinKeyboardView(
                 }
                 if (clipboardAvailable && y < topInset && x < 58f * density) return 2000
                 if (emojiMode && y < topInset && x >= 58f * density && x <= width - 58f * density) {
-                    val categoryWidth = (width - 116f * density) / 5f
-                    return 2100 + (((x - 58f * density) / categoryWidth).toInt().coerceIn(0, 4))
+                    val categoryWidth = (width - 116f * density) / 6f
+                    return 2100 + (((x - 58f * density) / categoryWidth).toInt().coerceIn(0, 5))
                 }
                 if (y < topInset && x > width - 58f * density) return if (clipboardMode) 2002 else 2001
                 return INVALID_ID
@@ -519,9 +525,9 @@ class ErdinKeyboardView(
                     node.setBoundsInParent(Rect(0, topInset.toInt(), width, bottomRowTop.toInt()))
                     return
                 }
-                if (virtualViewId in 2100..2104) {
-                    val labels = listOf("Son", "Yüzler", "İşaretler", "Doğa", "Yiyecek ve diğer")
-                    val englishLabels = listOf("Recent", "Faces", "Gestures", "Nature", "Food and more")
+                if (virtualViewId in 2100..2105) {
+                    val labels = listOf("Son", "Yüzler", "İşaretler", "Doğa", "Yiyecek", "Seyahat ve etkinlik")
+                    val englishLabels = listOf("Recent", "Faces", "Gestures", "Nature", "Food", "Travel and activities")
                     val index = virtualViewId - 2100
                     node.text = if (activeLanguageLabel == "English") englishLabels[index] else labels[index]
                     node.contentDescription = node.text
@@ -530,7 +536,7 @@ class ErdinKeyboardView(
                     node.isClickable = true
                     node.isSelected = emojiCategory == index
                     node.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK)
-                    val cellWidth = (width - 116f * density) / 5f
+                    val cellWidth = (width - 116f * density) / 6f
                     val left = 58f * density + index * cellWidth
                     node.setBoundsInParent(Rect(left.toInt(), 0, (left + cellWidth).toInt(), topInset.toInt()))
                     return
@@ -663,7 +669,7 @@ class ErdinKeyboardView(
                     return true
                 }
                 if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
-                if (virtualViewId in 2100..2104) {
+                if (virtualViewId in 2100..2105) {
                     emojiCategory = virtualViewId - 2100
                     cachedLayoutRows = null
                     invalidateRoot()
@@ -938,8 +944,8 @@ class ErdinKeyboardView(
         }
         if (emojiMode) {
             suggestionRects.clear()
-            val labels = listOf("🕘", "😀", "👍", "🌿", "🍕")
-            val categoryWidth = (width - 116f * density) / 5f
+            val labels = listOf("🕘", "😀", "👍", "🌿", "🍕", "🚗")
+            val categoryWidth = (width - 116f * density) / 6f
             labels.forEachIndexed { index, label ->
                 val left = 58f * density + index * categoryWidth
                 if (emojiCategory == index) {
@@ -1079,8 +1085,8 @@ class ErdinKeyboardView(
                     return true
                 }
                 if (emojiMode && event.y < topInset && event.x >= 58f * density && event.x <= width - 58f * density) {
-                    val categoryWidth = (width - 116f * density) / 5f
-                    emojiCategory = ((event.x - 58f * density) / categoryWidth).toInt().coerceIn(0, 4)
+                    val categoryWidth = (width - 116f * density) / 6f
+                    emojiCategory = ((event.x - 58f * density) / categoryWidth).toInt().coerceIn(0, 5)
                     cachedLayoutRows = null
                     accessibilityHelper.invalidateRoot()
                     invalidate()
