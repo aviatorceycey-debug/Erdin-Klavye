@@ -86,6 +86,10 @@ class ErdinKeyboardView(
     private var symbolsPageTwo = false
     private var emojiMode = false
     private var clipboardMode = false
+    // 0 = regular keyboard, 1 = numeric keypad, 2 = phone keypad.
+    private var numericInputMode = 0
+    private var numericAllowsSign = false
+    private var numericAllowsDecimal = false
     private var clipboardItems: List<String> = emptyList()
     private var activeLanguageLabel = "Türkçe"
     private var downKey: KeyboardKey? = null
@@ -189,6 +193,39 @@ class ErdinKeyboardView(
         KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.25f)
     )
 
+    private fun numericRows(): List<List<KeyboardKey>> {
+        if (numericInputMode == 2) {
+            return listOf(
+                listOf(KeyboardKey("1"), KeyboardKey("2 ABC"), KeyboardKey("3 DEF")),
+                listOf(KeyboardKey("4 GHI"), KeyboardKey("5 JKL"), KeyboardKey("6 MNO")),
+                listOf(KeyboardKey("7 PQRS"), KeyboardKey("8 TUV"), KeyboardKey("9 WXYZ")),
+                listOf(KeyboardKey("*"), KeyboardKey("0", weight = 1.4f), KeyboardKey("#")),
+                listOf(
+                    KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f),
+                    KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
+                    KeyboardKey(activeLanguageLabel, " ", 3.2f, KeyboardKey.Kind.SPACE),
+                    KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.1f)
+                )
+            )
+        }
+        return listOf(
+            listOf(KeyboardKey("1"), KeyboardKey("2"), KeyboardKey("3")),
+            listOf(KeyboardKey("4"), KeyboardKey("5"), KeyboardKey("6")),
+            listOf(KeyboardKey("7"), KeyboardKey("8"), KeyboardKey("9")),
+            listOf(
+                KeyboardKey(if (numericAllowsSign) "−" else "", if (numericAllowsSign) "-" else "", kind = KeyboardKey.Kind.ACTION),
+                KeyboardKey("0", weight = 1.4f),
+                KeyboardKey(if (numericAllowsDecimal) "." else "", if (numericAllowsDecimal) "." else "", kind = KeyboardKey.Kind.ACTION),
+                KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION)
+            ),
+            listOf(
+                KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
+                KeyboardKey(activeLanguageLabel, " ", 3.2f, KeyboardKey.Kind.SPACE),
+                KeyboardKey("↵", kind = KeyboardKey.Kind.ACCENT, weight = 1.1f)
+            )
+        )
+    }
+
     private fun rows() = when {
         clipboardMode -> {
             val items = clipboardItems.take(6).mapIndexed { index, item ->
@@ -206,6 +243,7 @@ class ErdinKeyboardView(
                     KeyboardKey(activeLanguageLabel, " ", 4.8f, KeyboardKey.Kind.SPACE),
                     KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.1f)))
         }
+        numericInputMode != 0 -> numericRows()
         emojiMode -> emojiRows()
         symbols -> symbolRows()
         else -> letterRows()
@@ -249,6 +287,24 @@ class ErdinKeyboardView(
             shift = enabled
             invalidate()
         }
+    }
+
+    fun setNumericInputMode(inputType: Int) {
+        val inputClass = inputType and android.text.InputType.TYPE_MASK_CLASS
+        numericInputMode = when (inputClass) {
+            android.text.InputType.TYPE_CLASS_PHONE -> 2
+            android.text.InputType.TYPE_CLASS_NUMBER -> 1
+            else -> 0
+        }
+        numericAllowsSign = inputType and android.text.InputType.TYPE_NUMBER_FLAG_SIGNED != 0
+        numericAllowsDecimal = inputType and android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL != 0
+        if (numericInputMode != 0) {
+            symbols = false
+            symbolsPageTwo = false
+            emojiMode = false
+            clipboardMode = false
+        }
+        invalidate()
     }
 
     fun setInputLanguage(localeTag: String) {
