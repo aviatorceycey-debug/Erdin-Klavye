@@ -75,7 +75,7 @@ class SwipeCandidateSelectorTest {
             yield(SwipeWordCandidate("help", distance = 1, frequencyRank = 2))
         }
 
-        assertEquals("hello", SwipeCandidateSelector.selectEnglish(candidates, "helo"))
+        assertEquals("hello", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "helo"))
         assertEquals(2, visited)
     }
 
@@ -86,7 +86,7 @@ class SwipeCandidateSelectorTest {
             SwipeWordCandidate("hello", distance = 0, frequencyRank = 50),
             SwipeWordCandidate("hero", distance = 1, frequencyRank = 2)
         )
-        assertEquals("hello", SwipeCandidateSelector.selectEnglish(candidates, "hello"))
+        assertEquals("hello", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "hello"))
     }
 
     @Test
