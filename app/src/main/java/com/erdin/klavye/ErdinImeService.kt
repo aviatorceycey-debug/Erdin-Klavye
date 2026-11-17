@@ -405,6 +405,22 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 requestSuggestionsSoon()
             }
             value == "↵" -> {
+                // Enter also closes the current word; include it in the
+                // on-device Turkish model just like a space or punctuation.
+                if (connection.getSelectedText(0).isNullOrEmpty()) {
+                    val before = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
+                    if (before.lastOrNull()?.isLetter() == true) {
+                        val words = before.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
+                        val current = words.lastOrNull().orEmpty()
+                        val previous = words.getOrNull(words.lastIndex - 1)
+                        val previousPrevious = words.getOrNull(words.lastIndex - 2)
+                        lastContextWord = current
+                        lastContextPreviousWord = previous.orEmpty()
+                        if (learningEnabled && usesTurkishModel() && current.isNotBlank()) {
+                            languageModel.learn(current, previous, previousPrevious)
+                        }
+                    }
+                }
                 val action = currentInputEditorInfo?.imeOptions
                     ?.and(EditorInfo.IME_MASK_ACTION)
                     ?: EditorInfo.IME_ACTION_NONE
