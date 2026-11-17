@@ -1042,6 +1042,10 @@ class ErdinKeyboardView(
                     val letterKeys = keyRects().filter { it.first.value.length == 1 && it.first.value.first().isLetter() }
                     val word = buildString {
                         var previous = ""
+                        var previousDistance = Float.MAX_VALUE
+                        val switchMargin = 12f * density
+                        val switchMarginSquared = switchMargin * switchMargin
+                        val maxKeyDistanceSquared = (48f * density) * (48f * density)
                         swipePath.forEach { (x, y) ->
                             val nearest = letterKeys.minByOrNull { (_, rect) ->
                                 val dx = rect.centerX() - x
@@ -1051,11 +1055,19 @@ class ErdinKeyboardView(
                             val rect = nearest.second
                             val dx = rect.centerX() - x
                             val dy = rect.centerY() - y
-                            if (dx * dx + dy * dy <= (48f * density) * (48f * density)) {
-                                val value = nearest.first.value.lowercase(if (activeLanguageLabel == "English") Locale.US else Locale("tr", "TR"))
-                                if (value != previous) append(value)
-                                previous = value
-                            }
+                            val distanceSquared = dx * dx + dy * dy
+                            if (distanceSquared > maxKeyDistanceSquared) return@forEach
+                            val value = nearest.first.value.lowercase(
+                                if (activeLanguageLabel == "English") Locale.US else Locale("tr", "TR")
+                            )
+                            // Keep the current key through tiny boundary fluctuations.
+                            // A new key must be meaningfully closer before the trace switches.
+                            if (value != previous && previous.isNotEmpty() &&
+                                distanceSquared + switchMarginSquared >= previousDistance
+                            ) return@forEach
+                            if (value != previous) append(value)
+                            previous = value
+                            previousDistance = distanceSquared
                         }
                     }
                     if (word.length >= 3) {
