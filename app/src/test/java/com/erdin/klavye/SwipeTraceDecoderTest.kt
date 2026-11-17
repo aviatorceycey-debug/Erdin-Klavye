@@ -25,8 +25,10 @@ class SwipeTraceDecoderTest {
 
     @Test
     fun keySwitchingIgnoresSmallBoundaryFluctuations() {
-        val path = listOf(10f to 10f, 65f to 10f, 70f to 10f)
-        assertEquals("ca", SwipeTraceDecoder.decode(path, keys, 1f, english = true))
+        val boundaryPath = listOf(10f to 10f, 65f to 10f)
+        val switchedPath = listOf(10f to 10f, 70f to 10f)
+        assertEquals("c", SwipeTraceDecoder.decode(boundaryPath, keys, 1f, english = true))
+        assertEquals("ca", SwipeTraceDecoder.decode(switchedPath, keys, 1f, english = true))
     }
 
     @Test
