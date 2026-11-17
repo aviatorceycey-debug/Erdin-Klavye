@@ -367,6 +367,7 @@ class ErdinKeyboardView(
                 if (!clipboardMode && !emojiMode && !symbols) {
                     suggestions.forEachIndexed { index, _ -> virtualViewIds.add(1000 + index) }
                 }
+                alternateOptions.forEachIndexed { index, _ -> virtualViewIds.add(3000 + index) }
                 virtualViewIds.add(2000)
                 if (clipboardMode) virtualViewIds.add(2002) else virtualViewIds.add(2001)
             }
@@ -378,6 +379,12 @@ class ErdinKeyboardView(
                     val suggestionIndex = suggestionRects.indexOfFirst { it.contains(x, y) }
                     if (suggestionIndex >= 0 && suggestionIndex < suggestions.size) return 1000 + suggestionIndex
                 }
+                val popup = popupRect
+                if (popup != null && popup.contains(x, y) && alternateOptions.isNotEmpty()) {
+                    val optionIndex = floor((x - popup.left) / (popup.width() / alternateOptions.size))
+                        .toInt().coerceIn(0, alternateOptions.lastIndex)
+                    return 3000 + optionIndex
+                }
                 if (y < topInset && x < 58f * density) return 2000
                 if (y < topInset && x > width - 58f * density) return if (clipboardMode) 2002 else 2001
                 return INVALID_ID
@@ -387,6 +394,24 @@ class ErdinKeyboardView(
                 virtualViewId: Int,
                 node: androidx.core.view.accessibility.AccessibilityNodeInfoCompat
             ) {
+                if (virtualViewId >= 3000 && virtualViewId < 4000) {
+                    val option = alternateOptions.getOrNull(virtualViewId - 3000)
+                    if (option == null) {
+                        node.isEnabled = false
+                        return
+                    }
+                    node.text = option
+                    node.contentDescription = if (activeLanguageLabel == "English") "Alternative character: $option" else "Alternatif karakter: $option"
+                    node.className = android.widget.Button::class.java.name
+                    node.isFocusable = true
+                    node.isClickable = true
+                    node.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK)
+                    val popup = popupRect ?: RectF()
+                    val cellWidth = popup.width() / alternateOptions.size
+                    val left = popup.left + (virtualViewId - 3000) * cellWidth
+                    node.setBoundsInParent(Rect(left.toInt(), popup.top.toInt(), (left + cellWidth).toInt(), popup.bottom.toInt()))
+                    return
+                }
                 if (virtualViewId >= 2000) {
                     val label = when (virtualViewId) {
                         2000 -> if (activeLanguageLabel == "English") "Open clipboard" else "Panoyu aç"
@@ -459,6 +484,10 @@ class ErdinKeyboardView(
                 node.isFocusable = true
                 node.isClickable = true
                 node.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK)
+                if (alternateOptionsFor(key).isNotEmpty()) {
+                    node.isLongClickable = true
+                    node.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_LONG_CLICK)
+                }
                 node.setBoundsInParent(Rect(
                     rect.left.toInt(), rect.top.toInt(), rect.right.toInt(), rect.bottom.toInt()
                 ))
@@ -469,6 +498,41 @@ class ErdinKeyboardView(
                 action: Int,
                 arguments: android.os.Bundle?
             ): Boolean {
+                if (virtualViewId >= 3000 && virtualViewId < 4000 &&
+                    action == AccessibilityNodeInfo.ACTION_CLICK
+                ) {
+                    val option = alternateOptions.getOrNull(virtualViewId - 3000) ?: return false
+                    onKey(option)
+                    alternateOptions = emptyList()
+                    popupRect = null
+                    downKey = null
+                    downRect = null
+                    accessibilityHelper.invalidateRoot()
+                    invalidate()
+                    sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
+                    return true
+                }
+                if (action == androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_LONG_CLICK &&
+                    virtualViewId < 1000
+                ) {
+                    val pair = accessibleKeyRects().getOrNull(virtualViewId) ?: return false
+                    val options = alternateOptionsFor(pair.first)
+                    if (options.isEmpty()) return false
+                    downKey = pair.first
+                    downRect = pair.second
+                    longPressed = true
+                    alternateOptions = options
+                    selectedAlternate = -1
+                    val cellWidth = 46f * density
+                    val popupWidth = cellWidth * options.size
+                    val left = (pair.second.centerX() - popupWidth / 2f).coerceIn(gap, width - popupWidth - gap)
+                    val top = (pair.second.top - 52f * density - 7f * density).coerceAtLeast(3f * density)
+                    popupRect = RectF(left, top, left + popupWidth, top + 52f * density)
+                    accessibilityHelper.invalidateRoot()
+                    invalidate()
+                    sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_LONG_CLICKED)
+                    return true
+                }
                 if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
                 if (virtualViewId >= 2000) {
                     when (virtualViewId) {
@@ -500,6 +564,13 @@ class ErdinKeyboardView(
                 return true
             }
         }
+    }
+
+    private fun alternateOptionsFor(key: KeyboardKey): List<String> {
+        if (emojiMode || clipboardMode) return emptyList()
+        return punctuationAlternatives[key.value]
+            ?: if (!symbols && activeLanguageLabel == "Türkçe") alternatives[key.value.lowercase()] else null
+            ?: emptyList()
     }
 
     private fun performAccessibleKey(key: KeyboardKey) {
