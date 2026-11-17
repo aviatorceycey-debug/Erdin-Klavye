@@ -76,6 +76,52 @@ class LocalLanguageModel(context: Context) {
         "güzel" to listOf("oldu", "bir", "gün", "görünüyor")
     )
 
+    // A separate, fixed English vocabulary supports offline completions without
+    // mixing English text into the user's private Turkish learning model.
+    private val englishStarterWords = """
+        about above after again all also always am an and another any are around as ask
+        at away back be because before begin best better between big both bring but by
+        call can change come could day different do does doing down each early easy end
+        even every example feel few find first for from get give go good great had has
+        have he help her here high him his home how I if in into is it its just keep kind
+        know large last later learn leave left let life like little live long look love
+        made make many may me mean might more most much must my name near need never new
+        next no not now number of off often old on once one only open or other our out
+        over own part people place point put read real right same say see seem she should
+        show small so some something start still such take than that the their them then
+        there these they thing think this those through time to together too try turn two
+        under up us use very want was way we well were what when where which while who
+        why will with without word work world would write year yes you your thanks hello
+        today tomorrow please okay sure maybe great morning evening friend message
+    """.trimIndent().split(Regex("\\\\s+")).map { it.lowercase(Locale.US) }.distinct()
+
+    private val englishNextHints = mapOf(
+        "good" to listOf("morning", "to", "idea", "work"),
+        "thank" to listOf("you", "you very much"),
+        "how" to listOf("are", "is", "can", "about"),
+        "I" to listOf("am", "think", "want", "can", "will"),
+        "see" to listOf("you", "that", "what", "how"),
+        "have" to listOf("a", "good", "been", "to"),
+        "let" to listOf("me", "us", "it"),
+        "looking" to listOf("forward", "for"),
+        "nice" to listOf("to", "work", "to meet"),
+        "goodbye" to listOf("and", "for now")
+    )
+
+    @Synchronized
+    fun englishCompletions(prefix: String): List<String> {
+        val key = prefix.trim().lowercase(Locale.US)
+        if (key.length < 2) return emptyList()
+        return englishStarterWords.asSequence()
+            .filter { it.startsWith(key) && it != key }
+            .take(2)
+            .toList()
+    }
+
+    @Synchronized
+    fun englishNextWords(previousWord: String): List<String> =
+        englishNextHints[previousWord.trim().lowercase(Locale.US)].orEmpty().take(3)
+
     private fun readCounts(key: String): MutableMap<String, Int> {
         val json = runCatching { JSONObject(prefs.getString(key, "{}") ?: "{}") }.getOrNull()
             ?: JSONObject()
