@@ -360,6 +360,14 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     else -> decoded
                 }
                 if (formatted.isNotBlank()) {
+                    // A swipe inserts a whole word at once. Keep the same
+                    // two-word phrase context used by ordinary key-by-key typing.
+                    val beforeSwipe = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
+                    val contextWords = beforeSwipe
+                        .split(Regex("[^\\\\p{L}'’]+"))
+                        .filter { it.isNotBlank() }
+                    lastContextPreviousWord = contextWords.lastOrNull().orEmpty()
+                    lastContextWord = formatted
                     connection.commitText(formatted, 1)
                     updateAutoShift()
                     requestSuggestionsSoon()
