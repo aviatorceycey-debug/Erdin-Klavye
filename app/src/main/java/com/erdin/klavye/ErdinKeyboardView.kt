@@ -649,7 +649,10 @@ class ErdinKeyboardView(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val preferredHeight = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
             .getInt("keyboard_height_dp", 310)
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), (density * preferredHeight.coerceIn(260, 380)).toInt())
+        val desiredHeight = (density * preferredHeight.coerceIn(260, 380)).toInt()
+        val measuredWidth = resolveSize(suggestedMinimumWidth, widthMeasureSpec)
+        val measuredHeight = resolveSize(desiredHeight, heightMeasureSpec)
+        setMeasuredDimension(measuredWidth, measuredHeight)
     }
 
     private fun keyRects(): List<Pair<KeyboardKey, RectF>> {
