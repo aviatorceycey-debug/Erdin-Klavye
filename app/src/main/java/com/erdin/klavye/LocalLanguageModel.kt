@@ -337,6 +337,24 @@ class LocalLanguageModel(context: Context) {
     private var wordCounts = readCounts("word_counts")
     private var pairCounts = readCounts("pair_counts")
     private var trigramCounts = readCounts("trigram_counts")
+    // Prefix indexes avoid scanning every learned pair and trigram for each suggestion.
+    private var pairNextCounts = indexContextCounts(pairCounts, 1)
+    private var trigramNextCounts = indexContextCounts(trigramCounts, 2)
+
+    private fun indexContextCounts(
+        source: Map<String, Int>,
+        prefixWords: Int
+    ): MutableMap<String, MutableMap<String, Int>> {
+        val index = mutableMapOf<String, MutableMap<String, Int>>()
+        source.forEach { (key, count) ->
+            val parts = key.split('>')
+            if (parts.size == prefixWords + 1 && parts.all { it.isNotBlank() }) {
+                val prefix = parts.take(prefixWords).joinToString(">")
+                index.getOrPut(prefix) { mutableMapOf() }[parts.last()] = count
+            }
+        }
+        return index
+    }
 
     private fun refreshPersonalDataIfChanged() {
         val revision = prefs.getLong("personal_data_revision", 0L)
@@ -344,6 +362,8 @@ class LocalLanguageModel(context: Context) {
         wordCounts = readCounts("word_counts")
         pairCounts = readCounts("pair_counts")
         trigramCounts = readCounts("trigram_counts")
+        pairNextCounts = indexContextCounts(pairCounts, 1)
+        trigramNextCounts = indexContextCounts(trigramCounts, 2)
         loadedRevision = revision
     }
 
@@ -371,6 +391,8 @@ class LocalLanguageModel(context: Context) {
         wordCounts.clear()
         pairCounts.clear()
         trigramCounts.clear()
+        pairNextCounts.clear()
+        trigramNextCounts.clear()
         val revision = maxOf(loadedRevision, prefs.getLong("personal_data_revision", 0L)) + 1L
         prefs.edit()
             .remove("word_counts")
@@ -400,6 +422,8 @@ class LocalLanguageModel(context: Context) {
         // when it is the predicted final token.
         pairCounts.keys.removeAll { key -> key.split('>').any { it == clean } }
         trigramCounts.keys.removeAll { key -> key.split('>').any { it == clean } }
+        pairNextCounts = indexContextCounts(pairCounts, 1)
+        trigramNextCounts = indexContextCounts(trigramCounts, 2)
         persistPersonalData()
     }
 
@@ -420,6 +444,7 @@ class LocalLanguageModel(context: Context) {
             val pairs = pairCounts
             val key = "$previous>$clean"
             pairs[key] = (pairs[key] ?: 0) + 1
+            pairNextCounts.getOrPut(previous) { mutableMapOf() }[clean] = pairs.getValue(key)
             if (pairs.size > 5000) {
                 pairs.entries.sortedBy { it.value }.take(pairs.size - 4000)
                     .forEach { pairs.remove(it.key) }
@@ -429,8 +454,10 @@ class LocalLanguageModel(context: Context) {
         val previousPrevious = previousPreviousWord?.let(::normalize).orEmpty()
         if (previousPrevious.isNotBlank() && previous.isNotBlank()) {
             val trigrams = trigramCounts
-            val key = "$previousPrevious>$previous>$clean"
+            val prefix = "$previousPrevious>$previous"
+            val key = "$prefix>$clean"
             trigrams[key] = (trigrams[key] ?: 0) + 1
+            trigramNextCounts.getOrPut(prefix) { mutableMapOf() }[clean] = trigrams.getValue(key)
             if (trigrams.size > 6000) {
                 trigrams.entries.sortedBy { it.value }.take(trigrams.size - 4500)
                     .forEach { trigrams.remove(it.key) }
@@ -586,16 +613,11 @@ class LocalLanguageModel(context: Context) {
         val previous = normalize(previousWord)
         if (previous.isBlank()) return emptyList()
 
-        val learned = pairCounts.asSequence()
-            .filter { (key, _) -> key.startsWith("$previous>") }
-            .associate { (key, count) -> key.substringAfter('>') to count }
+        val learned = pairNextCounts[previous].orEmpty()
         val previousPrevious = previousPreviousWord?.let(::normalize).orEmpty()
-        val trigramPrefix = if (previousPrevious.isBlank()) "" else "$previousPrevious>$previous>"
-        val contextual = if (trigramPrefix.isBlank()) emptyMap() else {
-            trigramCounts.asSequence()
-                .filter { (key, _) -> key.startsWith(trigramPrefix) }
-                .associate { (key, count) -> key.substringAfterLast('>') to count }
-        }
+        val trigramPrefix = if (previousPrevious.isBlank()) "" else "$previousPrevious>$previous"
+        val contextual = if (trigramPrefix.isBlank()) emptyMap()
+            else trigramNextCounts[trigramPrefix].orEmpty()
         val seeded = starterNextWords[previous].orEmpty()
         val seededContext = starterTrigrams["$previousPrevious>$previous"].orEmpty()
         val candidates = (seededContext.asSequence() + seeded.asSequence() +
