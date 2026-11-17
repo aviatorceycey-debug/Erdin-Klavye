@@ -125,10 +125,6 @@ class ErdinKeyboardView(
     private var swipeTyping = false
     private val swipePath = mutableListOf<Pair<Float, Float>>()
 
-    private fun appendSwipeSample(x: Float, y: Float) {
-        SwipePathSampler.append(swipePath, x, y, density)
-    }
-
     private fun appendSwipeSegment(x: Float, y: Float) {
         SwipePathSampler.appendSegment(swipePath, x, y, density)
     }
