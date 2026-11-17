@@ -58,6 +58,10 @@ class ErdinKeyboardView(
     private fun upper(value: String) = value.uppercase(if (activeLanguageLabel == "English") Locale.US else Locale("tr", "TR"))
     // Resolve the theme once per frame; every key and popup shares this palette.
     private var activeDrawPalette: KeyboardPalette? = null
+    private var cachedBackgroundShader: LinearGradient? = null
+    private var cachedBackgroundWidth = -1
+    private var cachedBackgroundHeight = -1
+    private var cachedBackgroundColorsHash = 0
 
     private fun loadPalette(): KeyboardPalette {
         return when (context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
@@ -690,8 +694,21 @@ class ErdinKeyboardView(
         super.onDraw(canvas)
         activeDrawPalette = loadPalette()
         val colors = palette()
-        paint.shader = LinearGradient(0f, 0f, width.toFloat(), height.toFloat(),
-            colors.background, null, Shader.TileMode.CLAMP)
+        val backgroundColorsHash = colors.background.contentHashCode()
+        if (cachedBackgroundShader == null ||
+            cachedBackgroundWidth != width ||
+            cachedBackgroundHeight != height ||
+            cachedBackgroundColorsHash != backgroundColorsHash
+        ) {
+            cachedBackgroundShader = LinearGradient(
+                0f, 0f, width.toFloat(), height.toFloat(),
+                colors.background, null, Shader.TileMode.CLAMP
+            )
+            cachedBackgroundWidth = width
+            cachedBackgroundHeight = height
+            cachedBackgroundColorsHash = backgroundColorsHash
+        }
+        paint.shader = cachedBackgroundShader
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
 
