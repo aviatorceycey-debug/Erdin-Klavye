@@ -274,7 +274,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val suggestions = if (usesTurkishModel()) {
             languageModel.nextWords(current, previous)
         } else {
-            languageModel.englishNextWords(current)
+            languageModel.englishNextWords(current, previous)
         }
         val autoCapitalization = getSharedPreferences(
             "erdin_keyboard_settings", MODE_PRIVATE
