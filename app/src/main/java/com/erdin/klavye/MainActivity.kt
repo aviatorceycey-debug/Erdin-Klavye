@@ -22,10 +22,22 @@ class MainActivity : Activity() {
     private var setupStatus: TextView? = null
     private var enableKeyboardButton: Button? = null
     private var chooseKeyboardButton: Button? = null
+    private var learningStatus: TextView? = null
 
     override fun onResume() {
         super.onResume()
         refreshSetupStatus()
+        refreshLearningStatus()
+    }
+
+    private fun refreshLearningStatus() {
+        val prefs = getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+        val enabled = prefs.getBoolean("personal_learning_enabled", true)
+        val learnedCount = LocalLanguageModel(this).learnedWords().size
+        learningStatus?.apply {
+            text = if (enabled) "Açık  •  cihazda $learnedCount kelime öğrenildi" else "Kapalı  •  yeni kelime öğrenilmiyor"
+            contentDescription = if (enabled) "Kişisel kelime öğrenme açık. Cihazda $learnedCount kelime öğrenildi." else "Kişisel kelime öğrenme kapalı. Yeni kelime öğrenilmiyor."
+        }
     }
 
     private fun refreshSetupStatus() {
@@ -333,10 +345,19 @@ class MainActivity : Activity() {
             isChecked = prefs.getBoolean("personal_learning_enabled", true)
             setOnCheckedChangeListener { _, checked ->
                 prefs.edit().putBoolean("personal_learning_enabled", checked).apply()
+                refreshLearningStatus()
             }
         }
-        learningSwitch.setPadding(0, 10, 0, 8)
+        learningSwitch.setPadding(0, 10, 0, 4)
         root.addView(learningSwitch)
+        learningStatus = TextView(this).apply {
+            textSize = 12f
+            setTextColor(0xFF9FB4D2.toInt())
+            setPadding(4, 0, 4, 12)
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        }
+        root.addView(learningStatus)
+        refreshLearningStatus()
 
         val privacyNote = TextView(this).apply {
             text = "GİZLİLİK  •  Yazdıkların sunucuya gönderilmez. Kişisel kelime öğrenme verileri yalnızca bu cihazda saklanır. Şifreli ve önerilerin kapalı olduğu alanlarda öğrenme devre dışıdır. İstediğinde aşağıdan silebilirsin."
@@ -357,6 +378,7 @@ class MainActivity : Activity() {
                     .setNegativeButton("Vazgeç", null)
                     .setPositiveButton("Temizle") { _, _ ->
                         LocalLanguageModel(this@MainActivity).clearPersonalData()
+                        refreshLearningStatus()
                         Toast.makeText(this@MainActivity, "Kişisel kelime verileri temizlendi", Toast.LENGTH_SHORT).show()
                     }
                     .show()
