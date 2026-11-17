@@ -128,7 +128,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
-        mainHandler.removeCallbacksAndMessages(null)
+        cancelPendingSuggestion()
         lastQueriedWord = ""
         suggestionRequestSequence++
         lastContextWord = ""
@@ -197,7 +197,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     }
 
     override fun onFinishInput() {
-        mainHandler.removeCallbacksAndMessages(null)
+        cancelPendingSuggestion()
         suggestionRequestSequence++
         lastQueriedWord = ""
         // Clipboard snippets are intentionally session-only; discard them when
@@ -392,6 +392,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     }
 
     private fun invalidateSpellCheckRequests() {
+        cancelPendingSuggestion()
         suggestionRequestSequence++
         lastQueriedWord = ""
     }
