@@ -199,16 +199,16 @@ class ErdinKeyboardView(
                 listOf("🎉","🎁","🎈","❤️","💯","✨","💡","🚀")
             )
             else -> buildList {
-                if (recent.isNotEmpty()) add(recent.map { KeyboardKey(it) })
+                if (recent.isNotEmpty()) add(recent)
                 addAll(listOf(
                     listOf("😀","😃","😄","😁","😆","😅","😂","🤣"),
                     listOf("😊","😍","🥰","😘","😎","🤩","🥳","😭"),
                     listOf("👍","👎","👏","🙏","❤️","🔥","✨","💯"),
                     listOf("🎉","🌹","☀️","🌙","🐱","🐶","🍀","☕")
-                ).map { row -> row.map { KeyboardKey(it) } })
+                ))
             }
         }
-        val rows = groups.map { row -> row.map { if (it is KeyboardKey) it else KeyboardKey(it.toString()) } }.toMutableList()
+        val rows = groups.map { row -> row.map { KeyboardKey(it) } }.toMutableList()
         rows += listOf(
             KeyboardKey("ABC", kind = KeyboardKey.Kind.ACCENT, weight = 1.2f),
             KeyboardKey("🌐", kind = KeyboardKey.Kind.ACTION, weight = .9f),
