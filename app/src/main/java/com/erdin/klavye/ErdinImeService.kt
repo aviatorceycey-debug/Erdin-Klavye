@@ -435,7 +435,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             if (requestSequence != suggestionRequestSequence) return@Runnable
             pendingSuggestionRunnable = null
             val before = currentInputConnection?.getTextBeforeCursor(80, 0)?.toString().orEmpty()
-            val word = before.takeLastWhile { it.isLetter() }
+            val word = before.takeLastWhile { it.isLetter() || it == '\'' || it == '’' }
             if (word.length < 2) {
                 lastQueriedWord = ""
                 keyboardView?.setSuggestions(emptyList())
@@ -455,7 +455,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private fun applySuggestion(replacement: String) {
         val connection = currentInputConnection ?: return
         val before = connection.getTextBeforeCursor(80, 0)?.toString().orEmpty()
-        val currentWord = before.takeLastWhile { it.isLetter() }
+        val currentWord = before.takeLastWhile { it.isLetter() || it == '\'' || it == '’' }
         if (currentWord.isEmpty()) {
             invalidateSpellCheckRequests()
             val insertedWords = replacement.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
