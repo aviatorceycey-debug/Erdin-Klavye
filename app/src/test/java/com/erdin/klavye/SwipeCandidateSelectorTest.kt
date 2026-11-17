@@ -10,7 +10,7 @@ class SwipeCandidateSelectorTest {
             SwipeWordCandidate("kitap", distance = 1, personalCount = 0),
             SwipeWordCandidate("kalem", distance = 2, personalCount = 20)
         )
-        assertEquals("kitap", SwipeCandidateSelector.selectTurkish(candidates, "kitapx"))
+        assertEquals("kitap", SwipeCandidateSelector.selectTurkish(candidates.asSequence(), "kitapx"))
     }
 
     @Test
@@ -44,7 +44,7 @@ class SwipeCandidateSelectorTest {
     fun bothSelectorsRejectCandidatesMoreThanOneEditAway() {
         val candidates = listOf(SwipeWordCandidate("telefon", distance = 2, personalCount = 100))
         assertEquals("televon", SwipeCandidateSelector.selectTurkish(candidates, "televon"))
-        assertEquals("televon", SwipeCandidateSelector.selectEnglish(candidates, "televon"))
+        assertEquals("televon", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "televon"))
     }
 
     @Test
@@ -67,7 +67,7 @@ class SwipeCandidateSelectorTest {
 
     @Test
     fun emptyCandidateListsPreserveOriginalTrace() {
-        assertEquals("trace", SwipeCandidateSelector.selectTurkish(emptyList(), "trace"))
-        assertEquals("trace", SwipeCandidateSelector.selectEnglish(emptyList(), "trace"))
+        assertEquals("trace", SwipeCandidateSelector.selectTurkish(emptyList<SwipeWordCandidate>().asSequence(), "trace"))
+        assertEquals("trace", SwipeCandidateSelector.selectEnglish(emptyList<SwipeWordCandidate>().asSequence(), "trace"))
     }
 }
