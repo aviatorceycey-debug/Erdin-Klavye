@@ -278,12 +278,11 @@ class ErdinKeyboardView(
             longPressed = true
             onKey("⌫")
             handler.postDelayed(deleteRepeatRunnable, 180)
-        } else if (!emojiMode && key.value.length == 1) {
-            // Punctuation alternatives must also work on the symbols page
-            // (for example, long-pressing "-" to choose an em dash).
-            val options = punctuationAlternatives[key.value]
-                ?: if (!symbols && activeLanguageLabel == "Türkçe") alternatives[key.value.lowercase()] else null
-            if (!options.isNullOrEmpty()) {
+        } else if (key.value.length == 1) {
+            // Keep touch and screen-reader long-press rules identical.
+            // This also prevents clipboard items from opening character popups.
+            val options = alternateOptionsFor(key)
+            if (options.isNotEmpty()) {
                 longPressed = true
                 alternateOptions = options
                 selectedAlternate = -1
