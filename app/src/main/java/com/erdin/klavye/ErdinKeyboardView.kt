@@ -903,10 +903,13 @@ class ErdinKeyboardView(
             canvas.drawText("ERDİN  •  ${if (activeLanguageLabel == "English") "English" else "Türkçe"} klavye", width / 2f, 25f * density, paint)
             return
         }
-        val cellWidth = width.toFloat() / count
+        // Keep suggestion hit targets clear of the fixed clipboard and theme controls.
+        val sideControlWidth = 58f * density
+        val suggestionsWidth = (width - sideControlWidth * 2f).coerceAtLeast(0f)
+        val cellWidth = suggestionsWidth / count
         suggestions.forEachIndexed { index, suggestion ->
-            val rect = RectF(index * cellWidth + 4f * density, 5f * density,
-                (index + 1) * cellWidth - 4f * density, 37f * density)
+            val rect = RectF(sideControlWidth + index * cellWidth + 4f * density, 5f * density,
+                sideControlWidth + (index + 1) * cellWidth - 4f * density, 37f * density)
             suggestionRects += rect
             if (index == 1) {
                 paint.color = palette().suggestion
