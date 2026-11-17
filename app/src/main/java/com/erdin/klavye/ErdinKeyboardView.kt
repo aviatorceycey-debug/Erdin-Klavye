@@ -816,6 +816,23 @@ class ErdinKeyboardView(
     private fun findKey(x: Float, y: Float): Pair<KeyboardKey, RectF>? =
         keyRects().firstOrNull { it.second.contains(x, y) }
 
+    override fun onDetachedFromWindow() {
+        // A keyboard view can be recreated as the IME switches editors or windows.
+        // Stop pending repeats and release the short-lived system audio resource.
+        handler.removeCallbacks(longPressRunnable)
+        handler.removeCallbacks(deleteRepeatRunnable)
+        keyTone?.release()
+        keyTone = null
+        downKey = null
+        downRect = null
+        alternateOptions = emptyList()
+        popupRect = null
+        selectedAlternate = -1
+        swipePath.clear()
+        swipeTyping = false
+        super.onDetachedFromWindow()
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
