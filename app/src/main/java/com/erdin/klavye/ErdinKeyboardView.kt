@@ -542,7 +542,7 @@ class ErdinKeyboardView(
                     node.isClickable = true
                     node.isSelected = emojiCategory == index
                     node.addAction(androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_CLICK)
-                    val cellWidth = (width - 116f * density) / 6f
+                    val cellWidth = (width - 116f * density) / 7f
                     val left = 58f * density + index * cellWidth
                     node.setBoundsInParent(Rect(left.toInt(), 0, (left + cellWidth).toInt(), topInset.toInt()))
                     return
@@ -951,7 +951,7 @@ class ErdinKeyboardView(
         if (emojiMode) {
             suggestionRects.clear()
             val labels = listOf("🕘", "😀", "👍", "🌿", "🍕", "🚗", "💻")
-            val categoryWidth = (width - 116f * density) / 6f
+            val categoryWidth = (width - 116f * density) / 7f
             labels.forEachIndexed { index, label ->
                 val left = 58f * density + index * categoryWidth
                 if (emojiCategory == index) {
@@ -1091,7 +1091,7 @@ class ErdinKeyboardView(
                     return true
                 }
                 if (emojiMode && event.y < topInset && event.x >= 58f * density && event.x <= width - 58f * density) {
-                    val categoryWidth = (width - 116f * density) / 6f
+                    val categoryWidth = (width - 116f * density) / 7f
                     emojiCategory = ((event.x - 58f * density) / categoryWidth).toInt().coerceIn(0, 6)
                     cachedLayoutRows = null
                     accessibilityHelper.invalidateRoot()
