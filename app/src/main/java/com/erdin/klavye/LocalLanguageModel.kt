@@ -377,7 +377,7 @@ class LocalLanguageModel(context: Context) {
     fun learn(word: String, previousWord: String?, previousPreviousWord: String? = null) {
         refreshPersonalDataIfChanged()
         val clean = normalize(word)
-        if (clean.length < 2 || clean.any { !it.isLetter() }) return
+        if (clean.length < 2 || clean.firstOrNull()?.isLetter() != true || clean.lastOrNull()?.isLetter() != true || clean.any { !it.isLetter() && it != '\'' && it != '’' }) return
 
         val words = wordCounts
         words[clean] = (words[clean] ?: 0) + 1
