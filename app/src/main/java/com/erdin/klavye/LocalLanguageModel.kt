@@ -510,24 +510,14 @@ class LocalLanguageModel(context: Context) {
             .toList()
         if (candidates.isEmpty()) return clean
 
-        fun distance(a: String, b: String): Int = SwipeWordDistance.calculate(a, b)
-
-        val ranked = candidates.map { it to distance(clean, it) }
-            .sortedWith(compareBy<Pair<String, Int>> { it.second }
-                .thenByDescending { wordCounts[it.first] ?: 0 })
-        val best = ranked.firstOrNull() ?: return clean
-        val maxDistance = 1
-        val runnerUp = ranked.getOrNull(1)
-        val bestPersonalCount = wordCounts[best.first] ?: 0
-        val runnerUpPersonalCount = runnerUp?.let { wordCounts[it.first] ?: 0 } ?: 0
-        val clearlyLearned = bestPersonalCount >= 3 &&
-            bestPersonalCount >= runnerUpPersonalCount * 2
-        val unambiguous = runnerUp == null || runnerUp.second > best.second
-        return if (best.second <= maxDistance && (unambiguous || clearlyLearned)) {
-            best.first
-        } else {
-            clean
+        val rankedCandidates = candidates.map { word ->
+            SwipeWordCandidate(
+                word = word,
+                distance = SwipeWordDistance.calculate(clean, word),
+                personalCount = wordCounts[word] ?: 0
+            )
         }
+        return SwipeCandidateSelector.selectTurkish(rankedCandidates, clean)
     }
 
     /**
@@ -541,15 +531,14 @@ class LocalLanguageModel(context: Context) {
         val candidates = englishStarterWords.filter {
             kotlin.math.abs(it.length - clean.length) <= 1
         }
-        fun distance(a: String, b: String): Int = SwipeWordDistance.calculate(a, b)
-        val ranked = candidates.map { it to distance(clean, it) }
-            .sortedWith(compareBy<Pair<String, Int>> { it.second }
-                .thenBy { englishFrequencyRank[it.first] ?: Int.MAX_VALUE })
-        val best = ranked.firstOrNull() ?: return clean
-        val runnerUp = ranked.getOrNull(1)
-        return if (best.second <= 1 && (runnerUp == null || runnerUp.second > best.second)) {
-            best.first
-        } else clean
+        val rankedCandidates = candidates.map { word ->
+            SwipeWordCandidate(
+                word = word,
+                distance = SwipeWordDistance.calculate(clean, word),
+                frequencyRank = englishFrequencyRank[word] ?: Int.MAX_VALUE
+            )
+        }
+        return SwipeCandidateSelector.selectEnglish(rankedCandidates, clean)
     }
 
     @Synchronized
