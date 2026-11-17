@@ -1,5 +1,4 @@
 package com.erdin.klavye
-import java.util.Locale
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -17,6 +16,7 @@ import android.widget.RadioGroup
 import android.widget.RadioButton
 import android.widget.Switch
 import android.widget.Toast
+import java.util.Locale
 
 class MainActivity : Activity() {
     private var setupStatus: TextView? = null
