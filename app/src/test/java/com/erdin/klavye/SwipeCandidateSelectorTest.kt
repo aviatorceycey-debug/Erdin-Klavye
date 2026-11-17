@@ -19,7 +19,7 @@ class SwipeCandidateSelectorTest {
             SwipeWordCandidate("kalem", distance = 1, personalCount = 2),
             SwipeWordCandidate("kelam", distance = 1, personalCount = 2)
         )
-        assertEquals("kalam", SwipeCandidateSelector.selectTurkish(candidates, "kalam"))
+        assertEquals("kalam", SwipeCandidateSelector.selectTurkish(candidates.asSequence(), "kalam"))
     }
 
     @Test
@@ -28,7 +28,7 @@ class SwipeCandidateSelectorTest {
             SwipeWordCandidate("merhaba", distance = 1, personalCount = 8),
             SwipeWordCandidate("merhuba", distance = 1, personalCount = 3)
         )
-        assertEquals("merhaba", SwipeCandidateSelector.selectTurkish(candidates, "merhabe"))
+        assertEquals("merhaba", SwipeCandidateSelector.selectTurkish(candidates.asSequence(), "merhabe"))
     }
 
     @Test
@@ -37,13 +37,13 @@ class SwipeCandidateSelectorTest {
             SwipeWordCandidate("öğrenilen", distance = 1, personalCount = Int.MAX_VALUE),
             SwipeWordCandidate("öğrenilen2", distance = 1, personalCount = Int.MAX_VALUE / 2)
         )
-        assertEquals("öğrenilen", SwipeCandidateSelector.selectTurkish(candidates, "ogrenilen"))
+        assertEquals("öğrenilen", SwipeCandidateSelector.selectTurkish(candidates.asSequence(), "ogrenilen"))
     }
 
     @Test
     fun bothSelectorsRejectCandidatesMoreThanOneEditAway() {
         val candidates = listOf(SwipeWordCandidate("telefon", distance = 2, personalCount = 100))
-        assertEquals("televon", SwipeCandidateSelector.selectTurkish(candidates, "televon"))
+        assertEquals("televon", SwipeCandidateSelector.selectTurkish(candidates.asSequence(), "televon"))
         assertEquals("televon", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "televon"))
     }
 
@@ -53,7 +53,7 @@ class SwipeCandidateSelectorTest {
             SwipeWordCandidate("there", distance = 1, frequencyRank = 4),
             SwipeWordCandidate("their", distance = 1, frequencyRank = 8)
         )
-        assertEquals("thare", SwipeCandidateSelector.selectEnglish(candidates, "thare"))
+        assertEquals("thare", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "thare"))
     }
 
     @Test
@@ -62,7 +62,31 @@ class SwipeCandidateSelectorTest {
             SwipeWordCandidate("hello", distance = 1, frequencyRank = 20),
             SwipeWordCandidate("help", distance = 0, frequencyRank = 100)
         )
-        assertEquals("help", SwipeCandidateSelector.selectEnglish(candidates, "help"))
+        assertEquals("help", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "help"))
+    }
+
+    @Test
+    fun selectorsConsumeCandidateSequenceOnlyOnce() {
+        var visited = 0
+        val candidates = sequence {
+            visited++
+            yield(SwipeWordCandidate("hello", distance = 0, frequencyRank = 1))
+            visited++
+            yield(SwipeWordCandidate("help", distance = 1, frequencyRank = 2))
+        }
+
+        assertEquals("hello", SwipeCandidateSelector.selectEnglish(candidates, "helo"))
+        assertEquals(2, visited)
+    }
+
+    @Test
+    fun selectorFindsBestCandidatesRegardlessOfInputOrder() {
+        val candidates = sequenceOf(
+            SwipeWordCandidate("later", distance = 1, frequencyRank = 5),
+            SwipeWordCandidate("hello", distance = 0, frequencyRank = 50),
+            SwipeWordCandidate("hero", distance = 1, frequencyRank = 2)
+        )
+        assertEquals("hello", SwipeCandidateSelector.selectEnglish(candidates, "hello"))
     }
 
     @Test
