@@ -80,6 +80,13 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             suggestionsEnabled = plainTextField && !passwordField &&
                 !explicitlyNoSuggestions && suggestionsPreference
             clipboardEnabled = !passwordField && inputClass != InputType.TYPE_CLASS_NUMBER
+            if (!clipboardEnabled) {
+                // A subtype change can happen without a new editor session. If the
+                // destination is sensitive, discard any previously visible snippets.
+                clipboardHistory.clear()
+                keyboardView?.setClipboardItems(emptyList())
+                keyboardView?.hideClipboard()
+            }
             doubleSpacePeriodEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
             val personalLearningEnabled = getSharedPreferences(
                 "erdin_keyboard_settings", MODE_PRIVATE
