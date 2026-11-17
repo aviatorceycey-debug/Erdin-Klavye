@@ -43,6 +43,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         super.onCurrentInputMethodSubtypeChanged(subtype)
         activeSubtypeLocale = subtype.locale.ifBlank { "tr_TR" }
         keyboardView?.setInputLanguage(activeSubtypeLocale)
+        keyboardView?.setEditorActionDescription(editorActionDescription(currentInputEditorInfo))
         updateAutoShift()
         invalidateSpellCheckRequests()
         keyboardView?.setSuggestions(emptyList())
@@ -84,6 +85,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         ).also {
             keyboardView = it
             it.setInputLanguage(activeSubtypeLocale)
+            it.setEditorActionDescription(editorActionDescription(currentInputEditorInfo))
             it.setNumericInputMode(currentInputEditorInfo?.inputType ?: InputType.TYPE_NULL)
             updateAutoShift()
         }
@@ -98,6 +100,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         lastContextPreviousWord = ""
         val inputType = attribute?.inputType ?: InputType.TYPE_NULL
         keyboardView?.setNumericInputMode(inputType)
+        keyboardView?.setEditorActionDescription(editorActionDescription(attribute))
         val inputClass = inputType and InputType.TYPE_MASK_CLASS
         val variation = inputType and InputType.TYPE_MASK_VARIATION
         val plainTextField = inputClass == InputType.TYPE_CLASS_TEXT &&
@@ -146,6 +149,21 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         spellCheckerLocale = null
         keyboardView?.setSuggestions(emptyList())
         super.onFinishInput()
+    }
+
+    private fun editorActionDescription(info: EditorInfo?): String? {
+        if (info == null) return null
+        info.actionLabel?.toString()?.takeIf { it.isNotBlank() }?.let { return it }
+        val english = activeSubtypeLocale.startsWith("en", ignoreCase = true)
+        return when (info.imeOptions and EditorInfo.IME_MASK_ACTION) {
+            EditorInfo.IME_ACTION_GO -> if (english) "Go" else "Git"
+            EditorInfo.IME_ACTION_SEARCH -> if (english) "Search" else "Ara"
+            EditorInfo.IME_ACTION_SEND -> if (english) "Send" else "Gönder"
+            EditorInfo.IME_ACTION_NEXT -> if (english) "Next field" else "Sonraki alan"
+            EditorInfo.IME_ACTION_DONE -> if (english) "Done" else "Bitti"
+            EditorInfo.IME_ACTION_PREVIOUS -> if (english) "Previous field" else "Önceki alan"
+            else -> if (english) "Enter" else "Yeni satır"
+        }
     }
 
     private fun updateAutoShift() {
