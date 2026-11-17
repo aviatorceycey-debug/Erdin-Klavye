@@ -40,6 +40,18 @@ class SuggestionCandidateSelectorTest {
     }
 
     @Test
+    fun veryLargeLimitDoesNotPreallocateTheRequestedCapacity() {
+        assertEquals(
+            listOf("one", "two"),
+            SuggestionCandidateSelector.top(
+                sequenceOf("one", "two"),
+                Int.MAX_VALUE,
+                compareBy { it }
+            )
+        )
+    }
+
+    @Test
     fun selectorConsumesSequenceOnlyOnce() {
         var visited = 0
         val candidates = sequence {
