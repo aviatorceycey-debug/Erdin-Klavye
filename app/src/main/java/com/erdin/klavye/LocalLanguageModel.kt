@@ -357,6 +357,30 @@ class LocalLanguageModel(context: Context) {
     private var englishPairNextCounts = indexContextCounts(englishPairCounts, 1)
     private var englishTrigramNextCounts = indexContextCounts(englishTrigramCounts, 2)
 
+    // Persist canonicalized legacy keys once, so migration survives restarts.
+    init {
+        fun encode(values: Map<String, Int>): String {
+            val json = JSONObject()
+            values.forEach { (word, count) -> json.put(word, count) }
+            return json.toString()
+        }
+        val tables = listOf(
+            "word_counts" to wordCounts,
+            "english_word_counts" to englishWordCounts,
+            "pair_counts" to pairCounts,
+            "trigram_counts" to trigramCounts,
+            "english_pair_counts" to englishPairCounts,
+            "english_trigram_counts" to englishTrigramCounts
+        )
+        if (tables.any { (key, values) -> prefs.getString(key, "{}") != encode(values) }) {
+            val revision = loadedRevision + 1L
+            val editor = prefs.edit()
+            tables.forEach { (key, values) -> editor.putString(key, encode(values)) }
+            editor.putLong("personal_data_revision", revision).apply()
+            loadedRevision = revision
+        }
+    }
+
     private fun indexContextCounts(
         source: Map<String, Int>,
         prefixWords: Int
