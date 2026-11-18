@@ -511,7 +511,23 @@ class ErdinKeyboardView(
                         return
                     }
                     node.text = option
-                    node.contentDescription = if (activeLanguageLabel == "English") "Alternative character: $option" else "Alternatif karakter: $option"
+                    val optionIndex = virtualViewId - 3000
+                    val isEmojiTone = emojiMode && optionIndex > 0 &&
+                        optionIndex < alternateOptions.size && option.length > alternateOptions.first().length
+                    node.contentDescription = if (isEmojiTone) {
+                        val tone = when (optionIndex) {
+                            1 -> if (activeLanguageLabel == "English") "light skin tone" else "açık ten rengi"
+                            2 -> if (activeLanguageLabel == "English") "medium-light skin tone" else "açık-orta ten rengi"
+                            3 -> if (activeLanguageLabel == "English") "medium skin tone" else "orta ten rengi"
+                            4 -> if (activeLanguageLabel == "English") "medium-dark skin tone" else "orta-koyu ten rengi"
+                            else -> if (activeLanguageLabel == "English") "dark skin tone" else "koyu ten rengi"
+                        }
+                        if (activeLanguageLabel == "English") "$tone: $option" else "$tone: $option"
+                    } else if (activeLanguageLabel == "English") {
+                        "Emoji or alternative character: $option"
+                    } else {
+                        "Emoji veya alternatif karakter: $option"
+                    }
                     node.className = android.widget.Button::class.java.name
                     node.isFocusable = true
                     node.isClickable = true
