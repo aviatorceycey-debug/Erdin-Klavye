@@ -210,14 +210,15 @@ class ErdinKeyboardView(
                 listOf("📚","📖","✏️","🖊️","📝","📎","📌","✂️","🗂️","📏"),
                 listOf("🔑","🔒","🔔","🎁","🛍️","💳","🧰","⚙️","🪙","🧸")
             )
-            else -> buildList {
-                if (recent.isNotEmpty()) add(recent)
-                addAll(listOf(
+            else -> if (emojiCategory == 0 && recent.isNotEmpty()) {
+                listOf(recent)
+            } else {
+                listOf(
                     listOf("😀","😃","😄","😁","😆","😅","😂","🤣"),
                     listOf("😊","😍","🥰","😘","😎","🤩","🥳","😭"),
                     listOf("👍","👎","👏","🙏","❤️","🔥","✨","💯"),
                     listOf("🎉","🌹","☀️","🌙","🐱","🐶","🍀","☕")
-                ))
+                )
             }
         }
         val rows = groups.map { row -> row.map { KeyboardKey(it) } }.toMutableList()
