@@ -68,6 +68,18 @@ class SwipeTraceDecoderTest {
     }
 
     @Test
+    fun ignoresNonLetterAndMultiCharacterKeyLabels() {
+        val invalidLabels = listOf(
+            SwipeKeyBounds("⌫", 0f, 0f, 20f, 20f),
+            SwipeKeyBounds("ab", 100f, 0f, 120f, 20f),
+            SwipeKeyBounds(" ", 200f, 0f, 220f, 20f)
+        )
+        val path = listOf(10f to 10f, 110f to 10f, 210f to 10f)
+
+        assertEquals("", SwipeTraceDecoder.decode(path, invalidLabels, 1f, english = true))
+    }
+
+    @Test
     fun invalidDensityProducesNoTrace() {
         assertEquals("",
             SwipeTraceDecoder.decode(listOf(10f to 10f), keys, Float.NaN, english = true)
