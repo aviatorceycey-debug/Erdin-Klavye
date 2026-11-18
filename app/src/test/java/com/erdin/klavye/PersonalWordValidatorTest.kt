@@ -20,6 +20,11 @@ class PersonalWordValidatorTest {
     }
 
     @Test
+    fun acceptsDecomposedUnicodeLetters() {
+        assertTrue(PersonalWordValidator.isValid("cafe\\u0301"))
+    }
+
+    @Test
     fun rejectsNumbersSpacesAndPunctuation() {
         listOf("abc1", "iki kelime", "merhaba!", "12345", "").forEach {
             assertFalse("$it should be invalid", PersonalWordValidator.isValid(it))
