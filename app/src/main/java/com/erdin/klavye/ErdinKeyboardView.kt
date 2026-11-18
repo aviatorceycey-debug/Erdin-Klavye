@@ -248,7 +248,7 @@ class ErdinKeyboardView(
         if (!emojiMode || value !in skinToneBases) return value
         val tone = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
             .getString("preferred_emoji_skin_tone", "").orEmpty()
-        return if (value == "🧑‍🍼") "🧑${tone}‍🍼" else value + tone
+        return EmojiSkinTone.apply(value, tone)
     }
 
     private fun rememberEmoji(value: String) {
@@ -760,7 +760,7 @@ class ErdinKeyboardView(
         if (clipboardMode) return emptyList()
         // Emoji skin-tone variants are offered only on long press.
         if (emojiMode && key.value in skinToneBases) {
-            return skinToneModifiers.map { tone -> if (tone.isEmpty()) key.value else key.value + tone }
+            return skinToneModifiers.map { tone -> EmojiSkinTone.apply(key.value, tone) }
         }
         if (emojiMode) return emptyList()
         val punctuation = punctuationAlternatives[key.value]
@@ -1245,7 +1245,7 @@ class ErdinKeyboardView(
                     if (selectedAlternate >= 0) {
                         val selected = alternateOptions[selectedAlternate]
                         if (emojiMode) {
-                            val tone = skinToneModifiers.firstOrNull { it.isNotEmpty() && selected.endsWith(it) }.orEmpty()
+                            val tone = EmojiSkinTone.modifierFrom(selected)
                             context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
                                 .edit().putString("preferred_emoji_skin_tone", tone).apply()
                             rememberEmoji(selected)
