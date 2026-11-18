@@ -117,6 +117,7 @@ class ErdinKeyboardView(
     private var clipboardItems: List<String> = emptyList()
     private var activeLanguageLabel = "Türkçe"
     private var editorActionDescription: String? = null
+    private val multiTouchGuard = MultiTouchGestureGuard()
     private var downKey: KeyboardKey? = null
     private var downRect: RectF? = null
     private var longPressed = false
@@ -1115,6 +1116,11 @@ class ErdinKeyboardView(
         keyRects().firstOrNull { it.second.contains(x, y) }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            multiTouchGuard.beginGesture()
+        } else if (multiTouchGuard.shouldIgnore(event.action)) {
+            return true
+        }
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 if (clipboardAvailable && event.y < topInset && event.x < 58f * density) {
@@ -1291,6 +1297,24 @@ class ErdinKeyboardView(
                 popupRect = null
                 selectedAlternate = -1
                 accessibilityHelper.invalidateRoot()
+                invalidate()
+                return true
+            }
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                // Multi-finger gestures are not supported. Cancel the original
+                // key gesture so lifting either finger cannot insert a character.
+                multiTouchGuard.onAdditionalPointerDown()
+                handler.removeCallbacks(longPressRunnable)
+                handler.removeCallbacks(deleteRepeatRunnable)
+                downKey = null
+                downRect = null
+                longPressed = false
+                cursorMoved = false
+                swipeTyping = false
+                swipePath.clear()
+                alternateOptions = emptyList()
+                popupRect = null
+                selectedAlternate = -1
                 invalidate()
                 return true
             }
