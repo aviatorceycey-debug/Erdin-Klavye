@@ -484,7 +484,13 @@ class ErdinKeyboardView(
     }
 
     fun setInputLanguage(localeTag: String) {
-        activeLanguageLabel = if (localeTag.startsWith("en", ignoreCase = true)) "English" else "Türkçe"
+        val nextLanguage = if (localeTag.startsWith("en", ignoreCase = true)) "English" else "Türkçe"
+        if (activeLanguageLabel == nextLanguage) return
+        // The language label is embedded in the cached spacebar key. Rebuild
+        // the layout and discard any gesture that began under the old label.
+        cancelTransientKeyInteraction()
+        activeLanguageLabel = nextLanguage
+        cachedLayoutRows = null
         accessibilityHelper.invalidateRoot()
         invalidate()
     }
