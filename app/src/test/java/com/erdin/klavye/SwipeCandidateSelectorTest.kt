@@ -66,6 +66,21 @@ class SwipeCandidateSelectorTest {
     }
 
     @Test
+    fun englishLearnedTieResolutionIsIndependentOfCandidateOrder() {
+        val candidates = listOf(
+            SwipeWordCandidate("hello", distance = 1, personalCount = 8, frequencyRank = 20),
+            SwipeWordCandidate("hullo", distance = 1, personalCount = 3, frequencyRank = 1)
+        )
+        val orders = listOf(candidates, candidates.reversed())
+        orders.forEach { order ->
+            assertEquals(
+                "hello",
+                SwipeCandidateSelector.selectEnglish(order.asSequence(), "hellu")
+            )
+        }
+    }
+
+    @Test
     fun englishSelectorKeepsTieWhenPersonalLearningIsNotStrongEnough() {
         val candidates = listOf(
             SwipeWordCandidate("hello", distance = 1, personalCount = 5, frequencyRank = 20),
