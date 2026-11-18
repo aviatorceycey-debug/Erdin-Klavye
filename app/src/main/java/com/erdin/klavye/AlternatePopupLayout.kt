@@ -11,6 +11,7 @@ internal data class PopupBounds(
     val bottom: Float
 ) {
     val width: Float get() = right - left
+    val height: Float get() = bottom - top
 }
 
 internal object AlternatePopupLayout {
