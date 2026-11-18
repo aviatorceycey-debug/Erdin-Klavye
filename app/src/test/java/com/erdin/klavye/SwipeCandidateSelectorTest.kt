@@ -57,6 +57,33 @@ class SwipeCandidateSelectorTest {
     }
 
     @Test
+    fun englishSelectorUsesStrongPersonalLearningToResolveTie() {
+        val candidates = listOf(
+            SwipeWordCandidate("hello", distance = 1, personalCount = 8, frequencyRank = 20),
+            SwipeWordCandidate("hullo", distance = 1, personalCount = 3, frequencyRank = 1)
+        )
+        assertEquals("hello", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "hellu"))
+    }
+
+    @Test
+    fun englishSelectorKeepsTieWhenPersonalLearningIsNotStrongEnough() {
+        val candidates = listOf(
+            SwipeWordCandidate("hello", distance = 1, personalCount = 5, frequencyRank = 20),
+            SwipeWordCandidate("hullo", distance = 1, personalCount = 3, frequencyRank = 1)
+        )
+        assertEquals("hellu", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "hellu"))
+    }
+
+    @Test
+    fun englishSelectorDoesNotOverflowLargePersonalCounts() {
+        val candidates = listOf(
+            SwipeWordCandidate("hello", distance = 1, personalCount = Int.MAX_VALUE),
+            SwipeWordCandidate("hullo", distance = 1, personalCount = Int.MAX_VALUE / 2)
+        )
+        assertEquals("hello", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "hellu"))
+    }
+
+    @Test
     fun englishSelectorUsesFrequencyOnlyAfterDistance() {
         val candidates = listOf(
             SwipeWordCandidate("hello", distance = 1, frequencyRank = 20),
