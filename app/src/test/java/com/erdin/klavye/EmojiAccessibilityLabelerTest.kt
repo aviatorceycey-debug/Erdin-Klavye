@@ -57,6 +57,16 @@ class EmojiAccessibilityLabelerTest {
     }
 
     @Test
+    fun commonHeartAndExpressionEmojiHaveLocalizedNames() {
+        assertEquals("kırmızı kalp", EmojiAccessibilityLabeler.label("❤️", false))
+        assertEquals("blue heart", EmojiAccessibilityLabeler.label("💙", true))
+        assertEquals("kırık kalp", EmojiAccessibilityLabeler.label("💔", false))
+        assertEquals("winking face", EmojiAccessibilityLabeler.label("😉", true))
+        assertEquals("yalvaran yüz", EmojiAccessibilityLabeler.label("🥺", false))
+        assertEquals("hugging face", EmojiAccessibilityLabeler.label("🤗", true))
+    }
+
+    @Test
     fun unknownEmojiKeepsAUsefulFallbackLabel() {
         assertEquals("emoji", EmojiAccessibilityLabeler.label("🫥", false))
         assertEquals("emoji", EmojiAccessibilityLabeler.label("🫥", true))
