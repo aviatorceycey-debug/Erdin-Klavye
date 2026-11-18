@@ -11,7 +11,7 @@ internal object PersonalWordValidator {
             val character = word[index]
             when (character) {
                 '\'', '’' -> index > 0 && index < word.lastIndex &&
-                    word[index - 1].isLetter() && word[index + 1].isLetter()
+                    isLetterOrMark(word[index - 1]) && isLetterOrMark(word[index + 1])
                 else -> character.isLetter() ||
                     (isCombiningMark(character) && index > 0 && isLetterOrMark(word[index - 1]))
             }
