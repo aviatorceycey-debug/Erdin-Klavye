@@ -1,5 +1,6 @@
 package com.erdin.klavye
 
+import kotlin.math.ceil
 import kotlin.math.hypot
 
 /**
@@ -50,7 +51,7 @@ internal object SwipePathSampler {
         val dy = y.toDouble() - last.second.toDouble()
         val distance = hypot(dx, dy)
         val stepLength = 10.0 * density.toDouble()
-        val steps = (distance / stepLength).toInt().coerceIn(1, 12)
+        val steps = ceil(distance / stepLength).toInt().coerceIn(1, 12)
         for (step in 1..steps) {
             val fraction = step.toDouble() / steps
             val sampleX = (last.first.toDouble() + dx * fraction).toFloat()
