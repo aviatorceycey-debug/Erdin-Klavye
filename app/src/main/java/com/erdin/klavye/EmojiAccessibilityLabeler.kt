@@ -253,6 +253,16 @@ object EmojiAccessibilityLabeler {
         "⚙️" to ("gear" to "dişli çark"),
         "🪙" to ("coin" to "madeni para"),
         "🧸" to ("teddy bear" to "oyuncak ayı"),
+        "⭐" to ("star" to "yıldız"),
+        "🐶" to ("dog face" to "köpek yüzü"),
+        "🍎" to ("red apple" to "kırmızı elma"),
+        "🚗" to ("car" to "araba"),
+        "✈️" to ("airplane" to "uçak"),
+        "📱" to ("mobile phone" to "cep telefonu"),
+        "🧑‍🍼" to ("person feeding baby" to "bebek besleyen kişi"),
+        "💅" to ("nail polish" to "oje süren el"),
+        "🌐" to ("globe with meridians" to "dünya küresi"),
+        "↵" to ("enter symbol" to "enter tuşu"),
     )
 
     fun label(emoji: String, english: Boolean): String {
