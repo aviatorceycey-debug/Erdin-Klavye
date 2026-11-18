@@ -441,7 +441,9 @@ class LocalLanguageModel(context: Context) {
         return (wordCounts.entries + englishWordCounts.entries)
             .filter { it.value > 0 }
             .groupBy { it.key }
-            .map { (word, entries) -> word to entries.sumOf { it.value } }
+            .map { (word, entries) ->
+                word to entries.fold(0) { total, entry -> PersonalCount.combine(total, entry.value) }
+            }
             .sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first })
     }
 
