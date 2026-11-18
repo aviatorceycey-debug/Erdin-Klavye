@@ -52,12 +52,16 @@ internal object SwipeCandidateSelector {
         val (best, runnerUp) = topTwo(
             candidates,
             compareBy<SwipeWordCandidate> { it.distance }
+                .thenByDescending { it.personalCount }
                 .thenBy { it.frequencyRank }
                 .thenBy { it.word }
         )
         best ?: return fallback
+        val clearlyLearned = runnerUp != null &&
+            best.personalCount >= 3 &&
+            best.personalCount.toLong() >= runnerUp.personalCount.toLong() * 2L
         return if (best.distance in 0..1 &&
-            (runnerUp == null || runnerUp.distance > best.distance)
+            (runnerUp == null || runnerUp.distance > best.distance || clearlyLearned)
         ) best.word else fallback
     }
 }
