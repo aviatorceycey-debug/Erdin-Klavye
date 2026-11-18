@@ -1206,7 +1206,9 @@ class ErdinKeyboardView(
                     }
                 } else if (longPressed && alternateOptions.isNotEmpty()) {
                     if (selectedAlternate >= 0) {
-                        onKey(alternateOptions[selectedAlternate])
+                        val selected = alternateOptions[selectedAlternate]
+                        if (emojiMode) rememberEmoji(selected)
+                        onKey(selected)
                     } else if (key != null) {
                         onKey(if (shift || capsLock) upper(key.value) else key.value)
                     }
