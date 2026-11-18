@@ -413,21 +413,12 @@ class ErdinKeyboardView(
     }
 
     fun resetPanelsForInput() {
-        handler.removeCallbacks(longPressRunnable)
-        handler.removeCallbacks(deleteRepeatRunnable)
-        downKey = null
-        downRect = null
-        longPressed = false
-        cursorMoved = false
-        swipeTyping = false
-        swipePath.clear()
+        cancelTransientKeyInteraction()
         clipboardMode = false
         emojiMode = false
         symbols = false
         symbolsPageTwo = false
-        alternateOptions = emptyList()
-        popupRect = null
-        selectedAlternate = -1
+        cachedLayoutRows = null
         accessibilityHelper.invalidateRoot()
         invalidate()
     }
@@ -847,15 +838,10 @@ class ErdinKeyboardView(
     init { isFocusable = true; ViewCompat.setAccessibilityDelegate(this, accessibilityHelper) }
 
     override fun onDetachedFromWindow() {
-        // Stop pending touch actions and release the short-lived system audio resource.
+        // A detached keyboard must not retain a half-finished key or swipe gesture.
         handler.removeCallbacksAndMessages(null)
-        downKey = null
-        downRect = null
-        alternateOptions = emptyList()
-        popupRect = null
-        selectedAlternate = -1
-        swipePath.clear()
-        swipeTyping = false
+        cancelTransientKeyInteraction()
+        multiTouchGuard.beginGesture()
         keyTone?.release()
         keyTone = null
         super.onDetachedFromWindow()
