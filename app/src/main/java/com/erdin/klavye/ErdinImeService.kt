@@ -72,26 +72,18 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
             val inputType = attribute.inputType
             keyboardView?.setNumericInputMode(inputType)
-            val inputClass = inputType and InputType.TYPE_MASK_CLASS
-            val variation = inputType and InputType.TYPE_MASK_VARIATION
-            val plainTextField = inputClass == InputType.TYPE_CLASS_TEXT &&
-                variation == InputType.TYPE_TEXT_VARIATION_NORMAL
-            val passwordField = (inputClass == InputType.TYPE_CLASS_TEXT &&
-                variation in setOf(
-                    InputType.TYPE_TEXT_VARIATION_PASSWORD,
-                    InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
-                    InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
-                )) || (inputClass == InputType.TYPE_CLASS_NUMBER &&
-                variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
-            val explicitlyNoSuggestions = inputClass == InputType.TYPE_CLASS_TEXT &&
-                (inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0
-            val suggestionsPreference = getSharedPreferences(
-                "erdin_keyboard_settings", MODE_PRIVATE
-            ).getBoolean("suggestions_enabled", true)
-            suggestionsEnabled = plainTextField && !passwordField &&
-                !explicitlyNoSuggestions && suggestionsPreference
-            clipboardEnabled = inputClass == InputType.TYPE_CLASS_TEXT && !passwordField &&
-                ((attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING) == 0
+            val policy = EditorInputPolicy.from(
+                inputType = inputType,
+                imeOptions = attribute.imeOptions,
+                personalLearningPreference = getSharedPreferences(
+                    "erdin_keyboard_settings", MODE_PRIVATE
+                ).getBoolean("personal_learning_enabled", true),
+                suggestionsPreference = getSharedPreferences(
+                    "erdin_keyboard_settings", MODE_PRIVATE
+                ).getBoolean("suggestions_enabled", true)
+            )
+            suggestionsEnabled = policy.suggestionsEnabled
+            clipboardEnabled = policy.clipboardEnabled
             keyboardView?.setClipboardAvailable(clipboardEnabled)
             if (!clipboardEnabled) {
                 // A subtype change can happen without a new editor session. If the
@@ -100,14 +92,8 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 keyboardView?.setClipboardItems(emptyList())
                 keyboardView?.hideClipboard()
             }
-            doubleSpacePeriodEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
-            val personalLearningEnabled = getSharedPreferences(
-                "erdin_keyboard_settings", MODE_PRIVATE
-            ).getBoolean("personal_learning_enabled", true)
-            val editorDisablesPersonalLearning =
-                attribute.imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0
-            learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
-                personalLearningEnabled && !editorDisablesPersonalLearning
+            doubleSpacePeriodEnabled = policy.doubleSpacePeriodEnabled
+            learningEnabled = policy.learningEnabled
             if (suggestionsEnabled) {
                 refreshSpellCheckerSession()
                 requestSuggestionsSoon()
@@ -147,32 +133,20 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         keyboardView?.resetPanelsForInput()
         keyboardView?.setNumericInputMode(inputType)
         keyboardView?.setEditorActionDescription(editorActionDescription(attribute))
-        val inputClass = inputType and InputType.TYPE_MASK_CLASS
-        val variation = inputType and InputType.TYPE_MASK_VARIATION
-        val plainTextField = inputClass == InputType.TYPE_CLASS_TEXT &&
-            variation == InputType.TYPE_TEXT_VARIATION_NORMAL
-        val passwordField = (inputClass == InputType.TYPE_CLASS_TEXT &&
-            variation in setOf(
-                InputType.TYPE_TEXT_VARIATION_PASSWORD,
-                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
-                InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
-            )) || (inputClass == InputType.TYPE_CLASS_NUMBER &&
-            variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
-        val explicitlyNoSuggestions = inputClass == InputType.TYPE_CLASS_TEXT &&
-            (inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0
-        val personalLearningEnabled = getSharedPreferences("erdin_keyboard_settings", MODE_PRIVATE)
-            .getBoolean("personal_learning_enabled", true)
-        val editorDisablesPersonalLearning =
-            (attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0
-        learningEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
-            personalLearningEnabled && !editorDisablesPersonalLearning
-        val suggestionsPreference = getSharedPreferences("erdin_keyboard_settings", MODE_PRIVATE)
-            .getBoolean("suggestions_enabled", true)
-        suggestionsEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions &&
-            suggestionsPreference
-        doubleSpacePeriodEnabled = plainTextField && !passwordField && !explicitlyNoSuggestions
-        clipboardEnabled = inputClass == InputType.TYPE_CLASS_TEXT && !passwordField &&
-                ((attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING) == 0
+        val policy = EditorInputPolicy.from(
+            inputType = inputType,
+            imeOptions = attribute?.imeOptions ?: 0,
+            personalLearningPreference = getSharedPreferences(
+                "erdin_keyboard_settings", MODE_PRIVATE
+            ).getBoolean("personal_learning_enabled", true),
+            suggestionsPreference = getSharedPreferences(
+                "erdin_keyboard_settings", MODE_PRIVATE
+            ).getBoolean("suggestions_enabled", true)
+        )
+        learningEnabled = policy.learningEnabled
+        suggestionsEnabled = policy.suggestionsEnabled
+        doubleSpacePeriodEnabled = policy.doubleSpacePeriodEnabled
+        clipboardEnabled = policy.clipboardEnabled
         keyboardView?.setClipboardAvailable(clipboardEnabled)
         // Each editor session starts with an empty clipboard panel. This
         // prevents snippets copied in one app or field from appearing in another.
