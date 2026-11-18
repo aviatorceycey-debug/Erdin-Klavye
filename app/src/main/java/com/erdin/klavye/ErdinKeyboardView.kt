@@ -373,16 +373,15 @@ class ErdinKeyboardView(
     }
 
     private fun alternatePopupBounds(anchor: RectF, optionCount: Int): RectF {
-        val safeInset = minOf(gap, width / 2f)
-        // Six emoji skin-tone choices need 276dp at the preferred size.
-        // Constrain the popup to the actual view width on compact screens.
-        val availableWidth = (width - safeInset * 2f).coerceAtLeast(1f)
-        val popupWidth = minOf(46f * density * optionCount, availableWidth)
-        val leftLimit = (width - popupWidth - safeInset).coerceAtLeast(safeInset)
-        val left = (anchor.centerX() - popupWidth / 2f).coerceIn(safeInset, leftLimit)
-        val popupHeight = 52f * density
-        val top = (anchor.top - popupHeight - 7f * density).coerceAtLeast(3f * density)
-        return RectF(left, top, left + popupWidth, top + popupHeight)
+        val bounds = AlternatePopupLayout.calculate(
+            viewWidth = width.toFloat(),
+            gap = gap,
+            density = density,
+            anchorCenterX = anchor.centerX(),
+            anchorTop = anchor.top,
+            optionCount = optionCount
+        )
+        return RectF(bounds.left, bounds.top, bounds.right, bounds.bottom)
     }
 
     private fun showAlternateOptions(key: KeyboardKey, anchor: RectF) {
