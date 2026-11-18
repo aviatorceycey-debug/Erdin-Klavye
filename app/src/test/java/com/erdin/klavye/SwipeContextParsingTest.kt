@@ -6,15 +6,18 @@ import org.junit.Test
 class SwipeContextParsingTest {
     @Test
     fun unicodeLettersAndTurkishWordsRemainIntact() {
-        val words = "İyi günler, görüşürüz! Şimdi".split(Regex("[^\\p{L}'’]+"))
-            .filter { it.isNotBlank() }
+        val words = WordContextParser.words("İyi günler, görüşürüz! Şimdi")
         assertEquals(listOf("İyi", "günler", "görüşürüz", "Şimdi"), words)
     }
 
     @Test
     fun apostrophesStayInsideWords() {
-        val words = "I'm ready; user's choice".split(Regex("[^\\p{L}'’]+"))
-            .filter { it.isNotBlank() }
+        val words = WordContextParser.words("I'm ready; user's choice")
         assertEquals(listOf("I'm", "ready", "user's", "choice"), words)
+    }
+
+    @Test
+    fun punctuationOnlyInputProducesNoContextWords() {
+        assertEquals(emptyList<String>(), WordContextParser.words("— … !!!"))
     }
 }
