@@ -1357,17 +1357,10 @@ class ErdinKeyboardView(
                 // Multi-finger gestures are not supported. Cancel the original
                 // key gesture so lifting either finger cannot insert a character.
                 multiTouchGuard.onAdditionalPointerDown()
-                handler.removeCallbacks(longPressRunnable)
-                handler.removeCallbacks(deleteRepeatRunnable)
-                downKey = null
-                downRect = null
-                longPressed = false
-                cursorMoved = false
-                swipeTyping = false
-                swipePath.clear()
-                alternateOptions = emptyList()
-                popupRect = null
-                selectedAlternate = -1
+                cancelTransientKeyInteraction()
+                // Removing a long-press popup also removes its virtual
+                // accessibility nodes; refresh the tree immediately.
+                accessibilityHelper.invalidateRoot()
                 invalidate()
                 return true
             }
