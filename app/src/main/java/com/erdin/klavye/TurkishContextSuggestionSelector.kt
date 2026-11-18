@@ -20,9 +20,9 @@ internal object TurkishContextSuggestionSelector {
             val trigram = learnedTrigramCounts[word]?.coerceAtLeast(0)?.coerceAtMost(100) ?: 0
             val pair = learnedPairCounts[word]?.coerceAtLeast(0)?.coerceAtMost(100) ?: 0
             val contextIndex = contextualHints.indexOf(word)
-            val seededTrigram = if (contextIndex < 0) 0 else (contextualHints.size - contextIndex) * 3
+            val seededTrigram = if (contextIndex < 0) 0 else (contextualHints.size - contextIndex) * 4
             val seedIndex = seededHints.indexOf(word)
-            val seededPair = if (seedIndex < 0) 0 else (seededHints.size - seedIndex) * 2
+            val seededPair = if (seedIndex < 0) 0 else seededHints.size - seedIndex
             return trigram.toLong() * 12L + pair.toLong() * 5L +
                 seededTrigram.toLong() + seededPair.toLong()
         }
