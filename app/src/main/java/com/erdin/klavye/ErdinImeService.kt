@@ -408,9 +408,31 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 val index = value.removePrefix("__CLIP_ITEM__").toIntOrNull()
                 val item = index?.let { clipboardHistory.getOrNull(it) }
                 if (item != null) {
-                    currentInputConnection?.commitText(item, 1)
+                    connection.commitText(item, 1)
+                    // Pasted text may contain several words. Rebuild the same
+                    // two-word context used by normal typing so predictions
+                    // immediately follow the pasted content rather than stale text.
+                    val afterPaste = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
+                    val pastedWords = afterPaste
+                        .split(Regex("[^\\p{L}'’]+"))
+                        .filter { it.isNotBlank() }
+                    lastContextWord = pastedWords.lastOrNull().orEmpty()
+                    lastContextPreviousWord = pastedWords.getOrNull(pastedWords.lastIndex - 1).orEmpty()
                     keyboardView?.hideClipboard()
-                    requestSuggestionsSoon()
+                    updateAutoShift()
+                    val endsAtBoundary = item.lastOrNull()?.let {
+                        it.isWhitespace() || it in ".,!?;:…—-"
+                    } == true
+                    if (endsAtBoundary && lastContextWord.isNotBlank()) {
+                        invalidateSpellCheckRequests()
+                        keyboardView?.setSuggestions(
+                            if (suggestionsEnabled) nextWordsForActiveLanguage(
+                                lastContextWord, lastContextPreviousWord
+                            ) else emptyList()
+                        )
+                    } else {
+                        requestSuggestionsSoon()
+                    }
                 }
             }
             value == "__CURSOR_LEFT__" -> {
