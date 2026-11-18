@@ -23,6 +23,18 @@ class EmojiAccessibilityLabelerTest {
     }
 
     @Test
+    fun compoundEmojiSkinToneIsIncludedInAccessibleName() {
+        assertEquals(
+            "bebek besleyen kişi, orta ten rengi",
+            EmojiAccessibilityLabeler.label("🧑🏽‍🍼", false)
+        )
+        assertEquals(
+            "person feeding baby, medium skin tone",
+            EmojiAccessibilityLabeler.label("🧑🏽‍🍼", true)
+        )
+    }
+
+    @Test
     fun natureFoodTravelAndObjectEmojiHaveLocalizedNames() {
         assertEquals("kedi yüzü", EmojiAccessibilityLabeler.label("🐱", false))
         assertEquals("butterfly", EmojiAccessibilityLabeler.label("🦋", true))
