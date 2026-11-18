@@ -14,7 +14,7 @@ internal object WordContextParser {
      */
     fun trailingWord(text: CharSequence): String {
         val candidate = text.takeLastWhile {
-            it.isLetter() || it == '\\'' || it == '’'
+            it.isLetter() || it == '\'' || it == '’'
         }
         if (candidate.firstOrNull()?.isLetter() != true ||
             candidate.lastOrNull()?.isLetter() != true
