@@ -23,6 +23,15 @@ class EmojiAccessibilityLabelerTest {
     }
 
     @Test
+    fun natureFoodTravelAndObjectEmojiHaveLocalizedNames() {
+        assertEquals("kedi yüzü", EmojiAccessibilityLabeler.label("🐱", false))
+        assertEquals("butterfly", EmojiAccessibilityLabeler.label("🦋", true))
+        assertEquals("pizza", EmojiAccessibilityLabeler.label("🍕", true))
+        assertEquals("pusula", EmojiAccessibilityLabeler.label("🧭", false))
+        assertEquals("klavye", EmojiAccessibilityLabeler.label("⌨️", false))
+    }
+
+    @Test
     fun unknownEmojiKeepsAUsefulFallbackLabel() {
         assertEquals("emoji", EmojiAccessibilityLabeler.label("🫄", false))
         assertEquals("emoji", EmojiAccessibilityLabeler.label("🫄", true))
