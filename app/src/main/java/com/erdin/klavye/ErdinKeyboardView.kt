@@ -937,7 +937,16 @@ class ErdinKeyboardView(
             return cachedKeyRectangles
         }
 
-        val rowHeight = (height - topInset - gap * (current.size + 1)) / current.size
+        val availableHeight = height - topInset - gap * (current.size + 1)
+        val isLetterLayout = !symbols && !emojiMode && !clipboardMode && numericInputMode == 0
+        // Keep the number row visually quieter and give the main letter rows
+        // more vertical room, matching the compact reference keyboard.
+        val rowWeights = current.indices.map { index ->
+            if (isLetterLayout && index == 0) 0.72f else 1f
+        }
+        val totalRowWeight = rowWeights.sum()
+        val rowHeights = rowWeights.map { availableHeight * it / totalRowWeight }
+        var rowTop = topInset + gap
         val result = mutableListOf<Pair<KeyboardKey, RectF>>()
         val contentWidth = if (mode == "normal") width.toFloat() else width * 0.82f
         val offset = when (mode) {
@@ -960,10 +969,11 @@ class ErdinKeyboardView(
             var x = offset + rowInset + gap
             row.forEach { key ->
                 val keyWidth = available * key.weight / totalWeight
-                val y = topInset + gap + rowIndex * (rowHeight + gap)
-                result += key to RectF(x, y, x + keyWidth, y + rowHeight)
+                val currentRowHeight = rowHeights[rowIndex]
+                result += key to RectF(x, rowTop, x + keyWidth, rowTop + currentRowHeight)
                 x += keyWidth + gap
             }
+            rowTop += rowHeights[rowIndex] + gap
         }
         cachedLayoutRows = current
         cachedLayoutMode = mode
