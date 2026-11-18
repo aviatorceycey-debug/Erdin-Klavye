@@ -1318,13 +1318,10 @@ class ErdinKeyboardView(
                         }
                     }
                 }
-                downKey = null
-                downRect = null
-                swipeTyping = false
-                swipePath.clear()
-                alternateOptions = emptyList()
-                popupRect = null
-                selectedAlternate = -1
+                // End the completed gesture through the same reset path used
+                // for cancellation and panel changes; no long-press or cursor
+                // state should leak into accessibility actions after ACTION_UP.
+                cancelTransientKeyInteraction()
                 accessibilityHelper.invalidateRoot()
                 invalidate()
                 return true
