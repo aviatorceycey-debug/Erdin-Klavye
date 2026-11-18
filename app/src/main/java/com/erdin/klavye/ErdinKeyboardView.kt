@@ -718,12 +718,12 @@ class ErdinKeyboardView(
                 ) {
                     val option = alternateOptions.getOrNull(virtualViewId - 3000) ?: return false
                     commitAlternateOption(option)
-                    // Complete the screen-reader selection through the same
-                    // full cleanup path used after touch gestures.
+                    // Announce the click while the virtual option still exists;
+                    // then remove the popup and refresh the accessibility tree.
+                    sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
                     cancelTransientKeyInteraction()
                     invalidateRoot()
                     invalidate()
-                    sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
                     return true
                 }
                 if (action == androidx.core.view.accessibility.AccessibilityNodeInfoCompat.ACTION_LONG_CLICK &&
