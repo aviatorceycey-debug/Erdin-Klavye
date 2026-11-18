@@ -398,16 +398,8 @@ class ErdinKeyboardView(
         emojiMode = false
         symbols = false
         symbolsPageTwo = false
-        // A panel switch must not leave an old long-press popup attached
-        // to a key that no longer exists in the clipboard layout.
-        handler.removeCallbacks(longPressRunnable)
-        handler.removeCallbacks(deleteRepeatRunnable)
-        downKey = null
-        downRect = null
-        longPressed = false
-        alternateOptions = emptyList()
-        popupRect = null
-        selectedAlternate = -1
+        // A panel switch must not leave stale key gestures or popups behind.
+        cancelTransientKeyInteraction()
         cachedLayoutRows = null
         accessibilityHelper.invalidateRoot()
         invalidate()
@@ -797,7 +789,22 @@ class ErdinKeyboardView(
         onKey(value)
     }
 
+    private fun cancelTransientKeyInteraction() {
+        handler.removeCallbacks(longPressRunnable)
+        handler.removeCallbacks(deleteRepeatRunnable)
+        downKey = null
+        downRect = null
+        longPressed = false
+        cursorMoved = false
+        swipeTyping = false
+        swipePath.clear()
+        alternateOptions = emptyList()
+        popupRect = null
+        selectedAlternate = -1
+    }
+
     private fun showEmojiPanel() {
+        cancelTransientKeyInteraction()
         emojiMode = true
         symbols = false
         symbolsPageTwo = false
