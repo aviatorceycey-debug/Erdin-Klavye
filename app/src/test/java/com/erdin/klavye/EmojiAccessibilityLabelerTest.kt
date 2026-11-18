@@ -73,6 +73,13 @@ class EmojiAccessibilityLabelerTest {
     }
 
     @Test
+    fun variationSelectorNormalizationPreservesExistingNames() {
+        assertEquals("güneş", EmojiAccessibilityLabeler.label("☀", false))
+        assertEquals("scissors", EmojiAccessibilityLabeler.label("✂", true))
+        assertEquals("gear", EmojiAccessibilityLabeler.label("⚙", true))
+    }
+
+    @Test
     fun mixedSkinToneHandshakeIsDescribedClearly() {
         assertEquals(
             "tokalaşma, farklı ten tonları",
