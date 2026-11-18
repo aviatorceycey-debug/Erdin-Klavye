@@ -22,7 +22,7 @@ internal object WordContextParser {
     }
 
     private fun isWordCharacter(char: Char): Boolean =
-        isLetterOrMark(char) || char == '\'' || char == '’'
+        isLetterOrMark(char) || char.code == 39 || char == '’'
 
     private fun isLetterOrMark(char: Char): Boolean =
         char.isLetter() || when (Character.getType(char)) {
