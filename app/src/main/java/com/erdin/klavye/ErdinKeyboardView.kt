@@ -959,8 +959,11 @@ class ErdinKeyboardView(
             // A restrained QWERTY stagger gives the letter rows their own
             // ergonomic rhythm instead of making every row look like a grid.
             val rowInset = if (!symbols && !emojiMode && !clipboardMode && numericInputMode == 0) {
+                // Give the home row a clear ergonomic offset and keep the
+                // bottom row centered without squeezing the modifier keys.
                 when (rowIndex) {
-                    2 -> contentWidth * 0.035f
+                    2 -> contentWidth * 0.048f
+                    3 -> contentWidth * 0.012f
                     else -> 0f
                 }
             } else 0f
@@ -1035,7 +1038,7 @@ class ErdinKeyboardView(
                 rect.left, rect.top, rect.left, rect.bottom,
                 keyColor, keyBottom, Shader.TileMode.CLAMP
             )
-            canvas.drawRoundRect(rect, 11f * density, 11f * density, paint)
+            canvas.drawRoundRect(rect, 8.5f * density, 8.5f * density, paint)
             paint.shader = null
             paint.clearShadowLayer()
             paint.style = Paint.Style.STROKE
@@ -1045,7 +1048,7 @@ class ErdinKeyboardView(
                 KeyboardKey.Kind.SPACE -> colors.spaceOutline
                 else -> blendColor(keyColor, 0xFFFFFFFF.toInt(), 0.13f)
             }
-            canvas.drawRoundRect(rect, 11f * density, 11f * density, paint)
+            canvas.drawRoundRect(rect, 8.5f * density, 8.5f * density, paint)
             paint.style = Paint.Style.FILL
             // A small upper highlight makes the keycaps feel dimensional
             // without introducing a glossy, oversized SwiftKey-like style.
