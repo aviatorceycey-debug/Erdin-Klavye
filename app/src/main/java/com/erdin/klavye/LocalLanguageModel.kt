@@ -471,7 +471,7 @@ class LocalLanguageModel(context: Context) {
         if (!PersonalWordValidator.isValid(clean)) return
 
         val words = wordCounts
-        words[clean] = (words[clean] ?: 0) + 1
+        words[clean] = PersonalCount.increment(words[clean] ?: 0)
         if (words.size > 2500) {
             words.entries.sortedBy { it.value }.take(words.size - 2000)
                 .forEach { words.remove(it.key) }
@@ -480,7 +480,7 @@ class LocalLanguageModel(context: Context) {
         if (previous.isNotBlank()) {
             val pairs = pairCounts
             val key = "$previous>$clean"
-            pairs[key] = (pairs[key] ?: 0) + 1
+            pairs[key] = PersonalCount.increment(pairs[key] ?: 0)
             pairNextCounts.getOrPut(previous) { mutableMapOf() }[clean] = pairs.getValue(key)
             if (pairs.size > 5000) {
                 pairs.entries.sortedBy { it.value }.take(pairs.size - 4000)
@@ -494,7 +494,7 @@ class LocalLanguageModel(context: Context) {
             val trigrams = trigramCounts
             val prefix = "$previousPrevious>$previous"
             val key = "$prefix>$clean"
-            trigrams[key] = (trigrams[key] ?: 0) + 1
+            trigrams[key] = PersonalCount.increment(trigrams[key] ?: 0)
             trigramNextCounts.getOrPut(prefix) { mutableMapOf() }[clean] = trigrams.getValue(key)
             if (trigrams.size > 6000) {
                 trigrams.entries.sortedBy { it.value }.take(trigrams.size - 4500)
@@ -515,18 +515,18 @@ class LocalLanguageModel(context: Context) {
         refreshPersonalDataIfChanged()
         val clean = word.trim().lowercase(Locale.US)
         if (!PersonalWordValidator.isValid(clean)) return
-        englishWordCounts[clean] = (englishWordCounts[clean] ?: 0) + 1
+        englishWordCounts[clean] = PersonalCount.increment(englishWordCounts[clean] ?: 0)
         val previous = previousWord?.trim()?.lowercase(Locale.US).orEmpty()
         if (PersonalWordValidator.isValid(previous)) {
             val key = "$previous>$clean"
-            englishPairCounts[key] = (englishPairCounts[key] ?: 0) + 1
+            englishPairCounts[key] = PersonalCount.increment(englishPairCounts[key] ?: 0)
             englishPairNextCounts.getOrPut(previous) { mutableMapOf() }[clean] = englishPairCounts.getValue(key)
         }
         val previousPrevious = previousPreviousWord?.trim()?.lowercase(Locale.US).orEmpty()
         if (PersonalWordValidator.isValid(previousPrevious) && PersonalWordValidator.isValid(previous)) {
             val prefix = "$previousPrevious>$previous"
             val key = "$prefix>$clean"
-            englishTrigramCounts[key] = (englishTrigramCounts[key] ?: 0) + 1
+            englishTrigramCounts[key] = PersonalCount.increment(englishTrigramCounts[key] ?: 0)
             englishTrigramNextCounts.getOrPut(prefix) { mutableMapOf() }[clean] = englishTrigramCounts.getValue(key)
         }
         if (englishWordCounts.size > 2500) {
