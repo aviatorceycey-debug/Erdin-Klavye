@@ -15,6 +15,11 @@ class EmojiSkinToneTest {
     }
 
     @Test
+    fun appliesSkinToneToBothHandsInHandshake() {
+        assertEquals("🫱🏽‍🫲🏽", EmojiSkinTone.apply("🫱‍🫲", "🏽"))
+    }
+
+    @Test
     fun extractsToneFromCompoundEmoji() {
         assertEquals("🏽", EmojiSkinTone.modifierFrom("🧑🏽‍🍼"))
     }
