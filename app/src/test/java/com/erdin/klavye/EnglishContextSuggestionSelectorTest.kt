@@ -96,6 +96,19 @@ class EnglishContextSuggestionSelectorTest {
     }
 
     @Test
+    fun learnedEnglishPhraseContextOutranksVeryFrequentPersonalWord() {
+        val result = EnglishContextSuggestionSelector.select(
+            contextualHints = listOf("phrase-word"),
+            seededHints = listOf("seeded"),
+            learnedPairCounts = emptyMap(),
+            learnedTrigramCounts = mapOf("phrase-word" to 1),
+            limit = 3,
+            personalWordCounts = mapOf("frequent" to Int.MAX_VALUE)
+        )
+        assertEquals("phrase-word", result.first())
+    }
+
+    @Test
     fun nonPositiveLimitReturnsNoCandidates() {
         assertEquals(
             emptyList<String>(),
