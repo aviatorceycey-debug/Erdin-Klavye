@@ -67,6 +67,24 @@ class EmojiAccessibilityLabelerTest {
     }
 
     @Test
+    fun variationSelectorsDoNotChangeAccessibleNames() {
+        assertEquals("kırmızı kalp", EmojiAccessibilityLabeler.label("❤", false))
+        assertEquals("airplane", EmojiAccessibilityLabeler.label("✈", true))
+    }
+
+    @Test
+    fun mixedSkinToneHandshakeIsDescribedClearly() {
+        assertEquals(
+            "tokalaşma, farklı ten tonları",
+            EmojiAccessibilityLabeler.label("🫱🏽‍🫲🏻", false)
+        )
+        assertEquals(
+            "handshake, mixed skin tones",
+            EmojiAccessibilityLabeler.label("🫱🏽‍🫲🏻", true)
+        )
+    }
+
+    @Test
     fun unknownEmojiKeepsAUsefulFallbackLabel() {
         assertEquals("emoji", EmojiAccessibilityLabeler.label("🫥", false))
         assertEquals("emoji", EmojiAccessibilityLabeler.label("🫥", true))
