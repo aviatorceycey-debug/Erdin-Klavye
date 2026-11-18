@@ -106,6 +106,16 @@ class SwipeWordDistanceTest {
     }
 
     @Test
+    fun longerFirstAndSecondArgumentsProduceTheSameResult() {
+        val shortWord = "klavye"
+        val longWord = "klavyee"
+        assertEquals(1, SwipeWordDistance.calculate(longWord, shortWord))
+        assertEquals(1, SwipeWordDistance.calculate(shortWord, longWord))
+        assertEquals(1, SwipeWordDistance.calculate("kitap", "ktap"))
+        assertEquals(1, SwipeWordDistance.calculate("ktap", "kitap"))
+    }
+
+    @Test
     fun multipleEditsAreCappedAtTwo() {
         assertEquals(2, SwipeWordDistance.calculate("kitap", "kalem"))
         assertEquals(2, SwipeWordDistance.calculate("a", "abcd"))
