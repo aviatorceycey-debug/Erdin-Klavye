@@ -72,6 +72,30 @@ class EnglishContextSuggestionSelectorTest {
     }
 
     @Test
+    fun learnedEnglishWordsJoinSuggestionsWithoutOvertakingPhraseContext() {
+        val result = EnglishContextSuggestionSelector.select(
+            contextualHints = listOf("contextual"),
+            seededHints = listOf("seeded"),
+            learnedPairCounts = emptyMap(),
+            learnedTrigramCounts = emptyMap(),
+            personalWordCounts = mapOf("my-word" to 5)
+        )
+        assertEquals(listOf("contextual", "my-word", "seeded"), result)
+    }
+
+    @Test
+    fun personalEnglishFrequencyBreaksEqualContextScores() {
+        val result = EnglishContextSuggestionSelector.select(
+            contextualHints = emptyList(),
+            seededHints = emptyList(),
+            learnedPairCounts = mapOf("often" to 2, "rare" to 2),
+            learnedTrigramCounts = emptyMap(),
+            personalWordCounts = mapOf("often" to 9, "rare" to 1)
+        )
+        assertEquals(listOf("often", "rare"), result)
+    }
+
+    @Test
     fun nonPositiveLimitReturnsNoCandidates() {
         assertEquals(
             emptyList<String>(),
