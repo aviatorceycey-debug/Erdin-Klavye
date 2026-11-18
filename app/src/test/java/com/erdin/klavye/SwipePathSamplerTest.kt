@@ -57,6 +57,17 @@ class SwipePathSamplerTest {
     }
 
     @Test
+    fun roundsInterpolationStepsUpToAvoidOversizedGaps() {
+        val samples = mutableListOf(0f to 0f)
+        SwipePathSampler.appendSegment(samples, 19f, 0f, 1f)
+
+        assertEquals(19f to 0f, samples.last())
+        assertEquals(3, samples.size)
+        val largestGap = samples.zipWithNext().maxOf { (a, b) -> b.first - a.first }
+        assertTrue("Interpolated gaps should not exceed the target step", largestGap <= 10f)
+    }
+
+    @Test
     fun preservesCornersWhenConsecutiveMotionSegmentsTurn() {
         val samples = mutableListOf(0f to 0f)
         SwipePathSampler.appendSegment(samples, 30f, 0f, 1f)
