@@ -5,7 +5,11 @@ object EmojiSkinTone {
 
     fun apply(emoji: String, tone: String): String {
         if (tone.isEmpty()) return emoji
-        return if (emoji == "🧑‍🍼") "🧑${tone}‍🍼" else emoji + tone
+        return when (emoji) {
+            "🧑‍🍼" -> "🧑${tone}‍🍼"
+            "🫱‍🫲" -> "🫱${tone}‍🫲${tone}"
+            else -> emoji + tone
+        }
     }
 
     fun modifierFrom(emoji: String): String =
