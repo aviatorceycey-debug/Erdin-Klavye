@@ -30,6 +30,13 @@ class WordContextParserTest {
     }
 
     @Test
+    fun keepsDecomposedUnicodeLettersTogether() {
+        val decomposed = "cafe\\u0301"
+        assertEquals(decomposed, WordContextParser.trailingWord(decomposed))
+        assertEquals(listOf(decomposed), WordContextParser.words(decomposed))
+    }
+
+    @Test
     fun handlesEmptyAndPunctuationOnlyInput() {
         assertEquals("", WordContextParser.trailingWord(""))
         assertEquals("", WordContextParser.trailingWord("..."))
