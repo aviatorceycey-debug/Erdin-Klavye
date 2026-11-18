@@ -795,15 +795,46 @@ class ErdinKeyboardView(
         selectedAlternate = -1
     }
 
+    private fun refreshPanelLayout() {
+        cachedLayoutRows = null
+        accessibilityHelper.invalidateRoot()
+        invalidate()
+    }
+
     private fun showEmojiPanel() {
         cancelTransientKeyInteraction()
         emojiMode = true
         symbols = false
         symbolsPageTwo = false
         clipboardMode = false
-        cachedLayoutRows = null
-        accessibilityHelper.invalidateRoot()
-        invalidate()
+        refreshPanelLayout()
+    }
+
+    private fun showSymbolsPanel() {
+        cancelTransientKeyInteraction()
+        symbols = true
+        symbolsPageTwo = false
+        emojiMode = false
+        clipboardMode = false
+        refreshPanelLayout()
+    }
+
+    private fun showLetterPanel() {
+        cancelTransientKeyInteraction()
+        symbols = false
+        symbolsPageTwo = false
+        emojiMode = false
+        clipboardMode = false
+        refreshPanelLayout()
+    }
+
+    private fun setSymbolsPageTwo(enabled: Boolean) {
+        cancelTransientKeyInteraction()
+        symbols = true
+        symbolsPageTwo = enabled
+        emojiMode = false
+        clipboardMode = false
+        refreshPanelLayout()
     }
 
     private fun performAccessibleKey(key: KeyboardKey) {
@@ -815,10 +846,10 @@ class ErdinKeyboardView(
                 invalidate()
             }
             "⌫" -> onKey("⌫")
-            "?123" -> { symbols = true; emojiMode = false; invalidate() }
-            "ABC" -> { symbols = false; symbolsPageTwo = false; emojiMode = false; clipboardMode = false; invalidate() }
-            "=\\<" -> { symbolsPageTwo = true; invalidate() }
-            "123" -> { symbolsPageTwo = false; invalidate() }
+            "?123" -> showSymbolsPanel()
+            "ABC" -> showLetterPanel()
+            "=\\<" -> setSymbolsPageTwo(true)
+            "123" -> setSymbolsPageTwo(false)
             "😊" -> showEmojiPanel()
             "🌐" -> onKey("🌐")
             activeLanguageLabel -> onKey(" ")
@@ -1299,10 +1330,10 @@ class ErdinKeyboardView(
                             invalidate()
                         }
                         "⌫" -> onKey("⌫")
-                        "=\\<" -> { symbolsPageTwo = true; invalidate() }
-                        "123" -> { symbolsPageTwo = false; invalidate() }
-                        "?123" -> { symbols = true; emojiMode = false; invalidate() }
-                        "ABC" -> { symbols = false; symbolsPageTwo = false; emojiMode = false; clipboardMode = false; invalidate() }
+                        "=\\<" -> setSymbolsPageTwo(true)
+                        "123" -> setSymbolsPageTwo(false)
+                        "?123" -> showSymbolsPanel()
+                        "ABC" -> showLetterPanel()
                         "😊" -> showEmojiPanel()
                         "🌐" -> onKey("🌐")
                         activeLanguageLabel -> onKey(" ")
