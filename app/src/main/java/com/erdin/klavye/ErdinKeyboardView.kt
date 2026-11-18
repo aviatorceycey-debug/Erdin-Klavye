@@ -240,7 +240,7 @@ class ErdinKeyboardView(
         "🫵", "👐", "🤲", "🫳", "🫴", "💅", "🤌", "🖖", "🤦", "🤷", "🙋", "🙅",
         "👶", "👦", "👧", "🧑", "👨", "👩", "🧓", "👴", "👵", "🧔", "👮", "👷",
         "💂", "🕵️", "👳", "👲", "👼", "🎅", "🤶", "🧙", "🧚", "🧛", "🧜", "🧝",
-        "🧞", "🧟", "🤰", "🤱", "🫄"
+        "🧞", "🧟", "🤰", "🤱", "🧑‍🍼", "🫄"
     )
     private val skinToneModifiers = listOf("", "🏻", "🏼", "🏽", "🏾", "🏿")
 
@@ -248,7 +248,7 @@ class ErdinKeyboardView(
         if (!emojiMode || value !in skinToneBases) return value
         val tone = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
             .getString("preferred_emoji_skin_tone", "").orEmpty()
-        return value + tone
+        return if (value == "🧑‍🍼") "🧑${tone}‍🍼" else value + tone
     }
 
     private fun rememberEmoji(value: String) {
