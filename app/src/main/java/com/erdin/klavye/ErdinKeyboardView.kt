@@ -784,6 +784,16 @@ class ErdinKeyboardView(
         onKey(value)
     }
 
+    private fun showEmojiPanel() {
+        emojiMode = true
+        symbols = false
+        symbolsPageTwo = false
+        clipboardMode = false
+        cachedLayoutRows = null
+        accessibilityHelper.invalidateRoot()
+        invalidate()
+    }
+
     private fun performAccessibleKey(key: KeyboardKey) {
         when (key.label) {
             "⇧" -> {
@@ -797,7 +807,7 @@ class ErdinKeyboardView(
             "ABC" -> { symbols = false; symbolsPageTwo = false; emojiMode = false; clipboardMode = false; invalidate() }
             "=\\<" -> { symbolsPageTwo = true; invalidate() }
             "123" -> { symbolsPageTwo = false; invalidate() }
-            "😊" -> { emojiMode = true; symbols = false; symbolsPageTwo = false; invalidate() }
+            "😊" -> showEmojiPanel()
             "🌐" -> onKey("🌐")
             activeLanguageLabel -> onKey(" ")
             else -> if (key.value.isNotEmpty()) {
@@ -1286,7 +1296,7 @@ class ErdinKeyboardView(
                         "123" -> { symbolsPageTwo = false; invalidate() }
                         "?123" -> { symbols = true; emojiMode = false; invalidate() }
                         "ABC" -> { symbols = false; symbolsPageTwo = false; emojiMode = false; clipboardMode = false; invalidate() }
-                        "😊" -> { emojiMode = true; symbols = false; symbolsPageTwo = false; clipboardMode = false; invalidate() }
+                        "😊" -> showEmojiPanel()
                         "🌐" -> onKey("🌐")
                         activeLanguageLabel -> onKey(" ")
                         else -> {
