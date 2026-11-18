@@ -53,6 +53,18 @@ class TurkishContextSuggestionSelectorTest {
     }
 
     @Test
+    fun learnedWordsCanEnterTheTopThreeWithoutOvertakingPhraseContext() {
+        val result = TurkishContextSuggestionSelector.select(
+            contextualHints = listOf("phrase-context"),
+            seededHints = listOf("seed-one", "seed-two", "seed-three"),
+            learnedPairCounts = emptyMap(),
+            learnedTrigramCounts = emptyMap(),
+            personalWordCounts = mapOf("my-word" to 3)
+        )
+        assertEquals(listOf("phrase-context", "seed-one", "my-word"), result)
+    }
+
+    @Test
     fun nonPositiveLimitReturnsNoSuggestions() {
         assertEquals(
             emptyList<String>(),
