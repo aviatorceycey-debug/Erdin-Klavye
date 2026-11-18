@@ -23,7 +23,10 @@ internal object SwipePathSampler {
             if (hypot(dx, dy) < 2.0 * density.toDouble()) return
         }
         if (samples.size >= MAX_SAMPLES) {
-            val compacted = samples.filterIndexed { index, _ -> index % 2 == 0 }
+            val compacted = samples.filterIndexed { index, _ -> index % 2 == 0 }.toMutableList()
+            // Keep the previous endpoint: appendSegment uses it as the origin
+            // for the next interpolation and must not bridge across a lost point.
+            if (samples.lastIndex % 2 != 0) compacted += samples.last()
             samples.clear()
             samples.addAll(compacted)
         }
