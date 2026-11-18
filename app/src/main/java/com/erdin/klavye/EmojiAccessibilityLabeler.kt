@@ -261,8 +261,8 @@ object EmojiAccessibilityLabeler {
     )
 
     fun label(emoji: String, english: Boolean): String {
-        val tone = toneModifiers.firstOrNull { emoji.endsWith(it) }
-        val base = if (tone == null) emoji else emoji.removeSuffix(tone)
+        val tone = toneModifiers.firstOrNull { it.isNotEmpty() && emoji.contains(it) }
+        val base = if (tone == null) emoji else emoji.replace(tone, "")
         val name = names[base]?.let { if (english) it.first else it.second }
             ?: if (english) "emoji" else "emoji"
         if (tone == null) return name
