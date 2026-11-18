@@ -3,7 +3,7 @@ package com.erdin.klavye
 /** Shared Unicode-aware tokenizer for local phrase context. */
 internal object WordContextParser {
     // Include combining marks so decomposed Unicode text remains one word.
-    private val separators = Regex("[^\\\\p{L}\\\\p{M}'’]+")
+    private val separators = Regex("[^\p{L}\p{M}'’]+")
 
     fun words(text: CharSequence): List<String> =
         text.split(separators).filter { it.isNotBlank() }
@@ -22,7 +22,7 @@ internal object WordContextParser {
     }
 
     private fun isWordCharacter(char: Char): Boolean =
-        isLetterOrMark(char) || char == '\\'' || char == '’'
+        isLetterOrMark(char) || char == '\'' || char == '’'
 
     private fun isLetterOrMark(char: Char): Boolean =
         char.isLetter() || when (Character.getType(char)) {
