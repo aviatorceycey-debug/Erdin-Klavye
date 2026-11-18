@@ -61,7 +61,7 @@ class TurkishContextSuggestionSelectorTest {
             learnedTrigramCounts = emptyMap(),
             personalWordCounts = mapOf("my-word" to 3)
         )
-        assertEquals(listOf("phrase-context", "seed-one", "my-word"), result)
+        assertEquals(listOf("phrase-context", "my-word", "seed-one"), result)
     }
 
     @Test
