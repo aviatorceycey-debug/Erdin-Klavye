@@ -21,7 +21,7 @@ class PersonalWordValidatorTest {
 
     @Test
     fun acceptsDecomposedUnicodeLetters() {
-        assertTrue(PersonalWordValidator.isValid("cafe\\u0301"))
+        assertTrue(PersonalWordValidator.isValid("cafe\u0301"))
     }
 
     @Test
