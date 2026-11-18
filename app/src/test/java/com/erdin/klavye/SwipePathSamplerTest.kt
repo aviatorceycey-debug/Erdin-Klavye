@@ -24,9 +24,19 @@ class SwipePathSamplerTest {
     fun compactsLongGesturesAndPreservesNewestPoint() {
         val samples = MutableList(SwipePathSampler.MAX_SAMPLES) { it.toFloat() to 0f }
         SwipePathSampler.append(samples, 250f, 0f, 1f)
-        assertEquals(91, samples.size)
+        assertEquals(92, samples.size)
         assertEquals(250f to 0f, samples.last())
         assertTrue(samples.size < SwipePathSampler.MAX_SAMPLES)
+    }
+
+    @Test
+    fun compactionPreservesThePreviousEndpointBeforeAppendingANewPoint() {
+        val samples = MutableList(SwipePathSampler.MAX_SAMPLES) { it.toFloat() to 0f }
+        val previousEndpoint = samples.last()
+        SwipePathSampler.append(samples, 250f, 0f, 1f)
+
+        assertTrue(samples.contains(previousEndpoint))
+        assertEquals(250f to 0f, samples.last())
     }
 
     @Test
