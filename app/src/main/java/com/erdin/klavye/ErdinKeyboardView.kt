@@ -432,6 +432,11 @@ class ErdinKeyboardView(
     }
 
     fun setNumericInputMode(inputType: Int) {
+        // Editor type can change while the IME view remains attached (for
+        // example, when switching fields or input subtypes). Never let a
+        // gesture started under the previous layout complete in the new one.
+        cancelTransientKeyInteraction()
+        cachedLayoutRows = null
         val inputClass = inputType and android.text.InputType.TYPE_MASK_CLASS
         numericInputMode = when (inputClass) {
             android.text.InputType.TYPE_CLASS_PHONE -> 2
