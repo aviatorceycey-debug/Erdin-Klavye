@@ -19,6 +19,7 @@ object EmojiAccessibilityLabeler {
         "👏" to ("clapping hands" to "alkış"),
         "🙏" to ("folded hands" to "birleşmiş eller"),
         "🤝" to ("handshake" to "tokalaşma"),
+        "🫱‍🫲" to ("handshake" to "tokalaşma"),
         "👌" to ("OK hand" to "tamam işareti"),
         "✌️" to ("victory hand" to "zafer işareti"),
         "🤞" to ("crossed fingers" to "çapraz parmaklar"),
@@ -288,12 +289,19 @@ object EmojiAccessibilityLabeler {
     )
 
     fun label(emoji: String, english: Boolean): String {
-        val tone = toneModifiers.firstOrNull { it.isNotEmpty() && emoji.contains(it) }
-        val base = if (tone == null) emoji else emoji.replace(tone, "")
-        val name = names[base]?.let { if (english) it.first else it.second }
+        val tones = toneModifiers.filter { emoji.contains(it) }.distinct()
+        // Variation selectors are presentation hints, not part of the spoken name.
+        val base = toneModifiers.fold(emoji) { value, modifier ->
+            value.replace(modifier, "")
+        }.replace("\uFE0F", "")
+        val normalizedBase = base
+        val name = names[normalizedBase]?.let { if (english) it.first else it.second }
             ?: if (english) "emoji" else "emoji"
-        if (tone == null) return name
-        val toneName = when (tone) {
+        if (tones.isEmpty()) return name
+        if (tones.size > 1) {
+            return "$name, " + if (english) "mixed skin tones" else "farklı ten tonları"
+        }
+        val toneName = when (tones.single()) {
             "🏻" -> if (english) "light skin tone" else "açık ten rengi"
             "🏼" -> if (english) "medium-light skin tone" else "açık-orta ten rengi"
             "🏽" -> if (english) "medium skin tone" else "orta ten rengi"
