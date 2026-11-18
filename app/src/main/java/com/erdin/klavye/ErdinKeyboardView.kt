@@ -947,8 +947,17 @@ class ErdinKeyboardView(
         }
         current.forEachIndexed { rowIndex, row ->
             val totalWeight = row.sumOf { it.weight.toDouble() }.toFloat()
-            val available = contentWidth - gap * (row.size + 1)
-            var x = offset + gap
+            // A restrained QWERTY stagger gives the letter rows their own
+            // ergonomic rhythm instead of making every row look like a grid.
+            val rowInset = if (!symbols && !emojiMode && !clipboardMode && numericInputMode == 0) {
+                when (rowIndex) {
+                    2 -> contentWidth * 0.035f
+                    else -> 0f
+                }
+            } else 0f
+            val rowWidth = contentWidth - rowInset * 2f
+            val available = rowWidth - gap * (row.size + 1)
+            var x = offset + rowInset + gap
             row.forEach { key ->
                 val keyWidth = available * key.weight / totalWeight
                 val y = topInset + gap + rowIndex * (rowHeight + gap)
@@ -962,6 +971,17 @@ class ErdinKeyboardView(
         cachedLayoutHeight = height
         cachedKeyRectangles = result
         return cachedKeyRectangles
+    }
+
+    private fun blendColor(from: Int, to: Int, amount: Float): Int {
+        val t = amount.coerceIn(0f, 1f)
+        fun channel(shift: Int): Int {
+            val a = (from ushr shift) and 0xFF
+            val b = (to ushr shift) and 0xFF
+            return (a + (b - a) * t).toInt().coerceIn(0, 255)
+        }
+        return (channel(24) shl 24) or (channel(16) shl 16) or
+            (channel(8) shl 8) or channel(0)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -989,22 +1009,42 @@ class ErdinKeyboardView(
         drawSuggestionStrip(canvas)
         keyRects().forEach { (key, rect) ->
             if (key.label.isBlank()) return@forEach
-            paint.setShadowLayer(4f * density, 0f, 2f * density, 0x77000000)
-            paint.color = when (key.kind) {
+            val keyColor = when (key.kind) {
                 KeyboardKey.Kind.SPACE -> colors.space
                 KeyboardKey.Kind.ACCENT -> colors.accent
                 KeyboardKey.Kind.ACTION -> colors.action
                 KeyboardKey.Kind.NORMAL -> colors.normal
             }
-            canvas.drawRoundRect(rect, 10f * density, 10f * density, paint)
-            paint.clearShadowLayer()
-            if (key.kind == KeyboardKey.Kind.ACCENT || key.kind == KeyboardKey.Kind.SPACE) {
-                paint.style = Paint.Style.STROKE
-                paint.strokeWidth = density
-                paint.color = if (key.kind == KeyboardKey.Kind.SPACE) colors.spaceOutline else colors.accentOutline
-                canvas.drawRoundRect(rect, 10f * density, 10f * density, paint)
-                paint.style = Paint.Style.FILL
+            val keyBottom = when (key.kind) {
+                KeyboardKey.Kind.ACCENT -> blendColor(keyColor, 0xFF101A32.toInt(), 0.20f)
+                KeyboardKey.Kind.SPACE -> blendColor(keyColor, 0xFF101A32.toInt(), 0.16f)
+                else -> blendColor(keyColor, 0xFF080E1A.toInt(), 0.22f)
             }
+            paint.setShadowLayer(5f * density, 0f, 2.5f * density, 0x99000000.toInt())
+            paint.shader = LinearGradient(
+                rect.left, rect.top, rect.left, rect.bottom,
+                keyColor, keyBottom, Shader.TileMode.CLAMP
+            )
+            canvas.drawRoundRect(rect, 11f * density, 11f * density, paint)
+            paint.shader = null
+            paint.clearShadowLayer()
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 0.7f * density
+            paint.color = when (key.kind) {
+                KeyboardKey.Kind.ACCENT -> colors.accentOutline
+                KeyboardKey.Kind.SPACE -> colors.spaceOutline
+                else -> blendColor(keyColor, 0xFFFFFFFF.toInt(), 0.13f)
+            }
+            canvas.drawRoundRect(rect, 11f * density, 11f * density, paint)
+            paint.style = Paint.Style.FILL
+            // A small upper highlight makes the keycaps feel dimensional
+            // without introducing a glossy, oversized SwiftKey-like style.
+            paint.color = 0x22FFFFFF
+            canvas.drawRoundRect(
+                RectF(rect.left + density, rect.top + density,
+                    rect.right - density, rect.top + 3f * density),
+                2f * density, 2f * density, paint
+            )
             val label = when {
                 key.kind == KeyboardKey.Kind.SPACE -> key.label
                 (shift || capsLock) && !symbols && key.label.length == 1 -> upper(key.label)
