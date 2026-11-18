@@ -513,7 +513,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             if (requestSequence != suggestionRequestSequence) return@Runnable
             pendingSuggestionRunnable = null
             val before = currentInputConnection?.getTextBeforeCursor(80, 0)?.toString().orEmpty()
-            val word = before.takeLastWhile { it.isLetter() || it == '\'' || it == '’' }
+            val word = WordContextParser.trailingWord(before)
             if (word.length < 2 || word.firstOrNull()?.isLetter() != true || word.lastOrNull()?.isLetter() != true) {
                 lastQueriedWord = ""
                 keyboardView?.setSuggestions(emptyList())
