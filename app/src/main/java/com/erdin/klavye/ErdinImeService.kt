@@ -533,7 +533,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private fun applySuggestion(replacement: String) {
         val connection = currentInputConnection ?: return
         val before = connection.getTextBeforeCursor(80, 0)?.toString().orEmpty()
-        val currentWord = before.takeLastWhile { it.isLetter() || it == '\'' || it == '’' }
+        val currentWord = WordContextParser.trailingWord(before)
         if (currentWord.isEmpty()) {
             invalidateSpellCheckRequests()
             val insertedWords = replacement.let(WordContextParser::words)
