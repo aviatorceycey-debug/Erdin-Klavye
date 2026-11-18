@@ -46,6 +46,17 @@ class EmojiAccessibilityLabelerTest {
     }
 
     @Test
+    fun remainingFrequentlyUsedEmojiHaveLocalizedNames() {
+        assertEquals("köpek yüzü", EmojiAccessibilityLabeler.label("🐶", false))
+        assertEquals("red apple", EmojiAccessibilityLabeler.label("🍎", true))
+        assertEquals("araba", EmojiAccessibilityLabeler.label("🚗", false))
+        assertEquals("mobile phone", EmojiAccessibilityLabeler.label("📱", true))
+        assertEquals("uçak", EmojiAccessibilityLabeler.label("✈️", false))
+        assertEquals("globe with meridians", EmojiAccessibilityLabeler.label("🌐", true))
+        assertEquals("oje süren el", EmojiAccessibilityLabeler.label("💅", false))
+    }
+
+    @Test
     fun unknownEmojiKeepsAUsefulFallbackLabel() {
         assertEquals("emoji", EmojiAccessibilityLabeler.label("🫥", false))
         assertEquals("emoji", EmojiAccessibilityLabeler.label("🫥", true))
