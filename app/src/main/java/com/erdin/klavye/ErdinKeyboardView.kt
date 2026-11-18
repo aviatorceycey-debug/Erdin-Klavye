@@ -507,11 +507,20 @@ class ErdinKeyboardView(
     private val accessibilityHelper by lazy {
         object : ExploreByTouchHelper(this) {
             override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
-                accessibleKeyRects().forEachIndexed { index, _ -> virtualViewIds.add(index) }
+                val accessibleKeys = accessibleKeyRects()
+                val activeAlternateKeyIndex = downKey?.let { activeKey ->
+                    accessibleKeys.indexOfFirst { it.first == activeKey }
+                } ?: -1
+                virtualViewIds.addAll(
+                    AlternateAccessibilityNodeOrder.insertAfterKey(
+                        keyCount = accessibleKeys.size,
+                        activeKeyIndex = activeAlternateKeyIndex,
+                        optionCount = alternateOptions.size
+                    )
+                )
                 if (!clipboardMode && !emojiMode && !symbols) {
                     suggestions.forEachIndexed { index, _ -> virtualViewIds.add(1000 + index) }
                 }
-                alternateOptions.forEachIndexed { index, _ -> virtualViewIds.add(3000 + index) }
                 if (clipboardAvailable) virtualViewIds.add(2000)
                 if (emojiMode) (0..6).forEach { virtualViewIds.add(2100 + it) }
                 if (clipboardMode) {
