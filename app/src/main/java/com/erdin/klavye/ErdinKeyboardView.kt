@@ -372,6 +372,19 @@ class ErdinKeyboardView(
         }
     }
 
+    private fun alternatePopupBounds(anchor: RectF, optionCount: Int): RectF {
+        val safeInset = minOf(gap, width / 2f)
+        // Six emoji skin-tone choices need 276dp at the preferred size.
+        // Constrain the popup to the actual view width on compact screens.
+        val availableWidth = (width - safeInset * 2f).coerceAtLeast(1f)
+        val popupWidth = minOf(46f * density * optionCount, availableWidth)
+        val leftLimit = (width - popupWidth - safeInset).coerceAtLeast(safeInset)
+        val left = (anchor.centerX() - popupWidth / 2f).coerceIn(safeInset, leftLimit)
+        val popupHeight = 52f * density
+        val top = (anchor.top - popupHeight - 7f * density).coerceAtLeast(3f * density)
+        return RectF(left, top, left + popupWidth, top + popupHeight)
+    }
+
     private fun showAlternateOptions(key: KeyboardKey, anchor: RectF) {
         val options = alternateOptionsFor(key)
         if (options.isEmpty()) return
@@ -385,12 +398,7 @@ class ErdinKeyboardView(
         swipePath.clear()
         alternateOptions = options
         selectedAlternate = -1
-        val cellWidth = 46f * density
-        val popupHeight = 52f * density
-        val popupWidth = cellWidth * options.size
-        val left = (anchor.centerX() - popupWidth / 2f).coerceIn(gap, width - popupWidth - gap)
-        val top = (anchor.top - popupHeight - 7f * density).coerceAtLeast(3f * density)
-        popupRect = RectF(left, top, left + popupWidth, top + popupHeight)
+        popupRect = alternatePopupBounds(anchor, options.size)
         accessibilityHelper.invalidateRoot()
         invalidate()
     }
@@ -1144,13 +1152,11 @@ class ErdinKeyboardView(
     private fun drawAlternatePopup(canvas: Canvas) {
         val anchor = downRect ?: return
         if (alternateOptions.isEmpty()) return
-        val cellWidth = 46f * density
-        val popupHeight = 52f * density
-        val popupWidth = cellWidth * alternateOptions.size
-        val left = (anchor.centerX() - popupWidth / 2f).coerceIn(gap, width - popupWidth - gap)
-        val top = (anchor.top - popupHeight - 7f * density).coerceAtLeast(3f * density)
-        val rect = RectF(left, top, left + popupWidth, top + popupHeight)
-        popupRect = rect
+        val rect = popupRect ?: alternatePopupBounds(anchor, alternateOptions.size)
+        val cellWidth = rect.width() / alternateOptions.size
+        val left = rect.left
+        val top = rect.top
+        val popupHeight = rect.height()
         paint.setShadowLayer(9f * density, 0f, 3f * density, 0xAA000000.toInt())
         paint.color = palette().popup
         canvas.drawRoundRect(rect, 13f * density, 13f * density, paint)
