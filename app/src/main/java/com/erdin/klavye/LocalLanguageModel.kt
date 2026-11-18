@@ -325,6 +325,7 @@ class LocalLanguageModel(context: Context) {
             seededHints = englishNextHints[previous].orEmpty(),
             learnedPairCounts = learnedPair,
             learnedTrigramCounts = learnedTrigram,
+            personalWordCounts = englishWordCounts,
             limit = 3
         )
     }
