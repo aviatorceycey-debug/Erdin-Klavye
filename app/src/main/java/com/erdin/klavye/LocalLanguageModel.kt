@@ -660,30 +660,13 @@ class LocalLanguageModel(context: Context) {
             else trigramNextCounts[trigramPrefix].orEmpty()
         val seeded = starterNextWords[previous].orEmpty()
         val seededContext = starterTrigrams["$previousPrevious>$previous"].orEmpty()
-        val candidates = (seededContext.asSequence() + seeded.asSequence() +
-            learned.keys.asSequence() + contextual.keys.asSequence()).distinct()
-
-        // Personal usage should influence ranking quickly, while built-in hints
-        // remain useful until the user's own patterns become established.
-        fun score(word: String): Int {
-            val trigramScore = (contextual[word] ?: 0).coerceAtMost(100) * 12
-            val contextIndex = seededContext.indexOf(word)
-            val seededTrigramScore = if (contextIndex < 0) 0 else (seededContext.size - contextIndex) * 3
-            val bigramScore = (learned[word] ?: 0).coerceAtMost(100) * 5
-            val seedIndex = seeded.indexOf(word)
-            val seedScore = if (seedIndex < 0) 0 else (seeded.size - seedIndex) * 2
-            return trigramScore + seededTrigramScore + bigramScore + seedScore
-        }
-
-        return SuggestionCandidateSelector.top(
-            candidates,
-            limit = 3,
-            comparator = compareByDescending<String> { score(it) }
-                .thenByDescending { contextual[it] ?: 0 }
-                .thenByDescending { learned[it] ?: 0 }
-                // Overall word frequency breaks ties; it must not overpower phrase context.
-                .thenByDescending { wordCounts[it] ?: 0 }
-                .thenBy { it.length }
+        return TurkishContextSuggestionSelector.select(
+            contextualHints = seededContext,
+            seededHints = seeded,
+            learnedPairCounts = learned,
+            learnedTrigramCounts = contextual,
+            personalWordCounts = wordCounts,
+            limit = 3
         )
     }
 
