@@ -97,6 +97,16 @@ class SwipePathSamplerTest {
     }
 
     @Test
+    fun interpolationRemainsOrderedAndBoundedWhenCompactionOccursMidSegment() {
+        val samples = MutableList(179) { it.toFloat() to 0f }
+        SwipePathSampler.appendSegment(samples, 400f, 0f, 1f)
+
+        assertEquals(400f to 0f, samples.last())
+        assertTrue(samples.size <= SwipePathSampler.MAX_SAMPLES)
+        assertTrue(samples.zipWithNext().all { (a, b) -> b.first > a.first })
+    }
+
+    @Test
     fun rejectsNonFiniteCoordinatesAndDensity() {
         val samples = mutableListOf(10f to 10f)
         SwipePathSampler.append(samples, Float.NaN, 20f, 1f)
