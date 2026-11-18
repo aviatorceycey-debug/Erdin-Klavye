@@ -365,7 +365,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     // two-word phrase context used by ordinary key-by-key typing.
                     val beforeSwipe = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
                     val contextWords = beforeSwipe
-                        .split(Regex("[^\\\\p{L}'’]+"))
+                        .split(Regex("[^\\p{L}'’]+"))
                         .filter { it.isNotBlank() }
                     lastContextPreviousWord = contextWords.lastOrNull().orEmpty()
                     lastContextWord = formatted
