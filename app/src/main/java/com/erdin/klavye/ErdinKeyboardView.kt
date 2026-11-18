@@ -716,10 +716,7 @@ class ErdinKeyboardView(
                 if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
                 val selectedEmojiCategory = EmojiCategoryAccessibility.indexFor(virtualViewId)
                 if (selectedEmojiCategory != null) {
-                    emojiCategory = selectedEmojiCategory
-                    cachedLayoutRows = null
-                    invalidateRoot()
-                    invalidate()
+                    setEmojiCategory(selectedEmojiCategory)
                     sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
                     return true
                 }
@@ -799,6 +796,14 @@ class ErdinKeyboardView(
         cachedLayoutRows = null
         accessibilityHelper.invalidateRoot()
         invalidate()
+    }
+
+    private fun setEmojiCategory(category: Int) {
+        // Category changes replace the visible emoji keys. Cancel any gesture
+        // or alternate popup tied to the previous category before relayout.
+        cancelTransientKeyInteraction()
+        emojiCategory = category.coerceIn(0, 6)
+        refreshPanelLayout()
     }
 
     private fun showEmojiPanel() {
@@ -1207,10 +1212,8 @@ class ErdinKeyboardView(
                 }
                 if (emojiMode && event.y < topInset && event.x >= 58f * density && event.x <= width - 58f * density) {
                     val categoryWidth = (width - 116f * density) / 7f
-                    emojiCategory = ((event.x - 58f * density) / categoryWidth).toInt().coerceIn(0, 6)
-                    cachedLayoutRows = null
-                    accessibilityHelper.invalidateRoot()
-                    invalidate()
+                    val category = ((event.x - 58f * density) / categoryWidth).toInt().coerceIn(0, 6)
+                    setEmojiCategory(category)
                     return true
                 }
                 if (!emojiMode && !symbols && !clipboardMode) {
