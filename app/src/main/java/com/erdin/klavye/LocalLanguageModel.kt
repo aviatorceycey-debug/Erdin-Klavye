@@ -361,7 +361,7 @@ class LocalLanguageModel(context: Context) {
     init {
         fun encode(values: Map<String, Int>): String {
             val json = JSONObject()
-            values.forEach { (word, count) -> json.put(word, count) }
+            values.toSortedMap().forEach { (word, count) -> json.put(word, count) }
             return json.toString()
         }
         val tables = listOf(
@@ -418,7 +418,7 @@ class LocalLanguageModel(context: Context) {
         val revision = maxOf(loadedRevision, prefs.getLong("personal_data_revision", 0L)) + 1L
         fun encode(values: Map<String, Int>): String {
             val json = JSONObject()
-            values.forEach { (word, count) -> json.put(word, count) }
+            values.toSortedMap().forEach { (word, count) -> json.put(word, count) }
             return json.toString()
         }
         prefs.edit()
