@@ -17,8 +17,8 @@ internal object EnglishContextSuggestionSelector {
             candidates,
             limit,
             compareByDescending<String> {
-                (learnedTrigramCounts[it]?.coerceAtLeast(0) ?: 0) * 3 +
-                    (learnedPairCounts[it]?.coerceAtLeast(0) ?: 0)
+                (learnedTrigramCounts[it]?.coerceAtLeast(0)?.toLong() ?: 0L) * 3L +
+                    (learnedPairCounts[it]?.coerceAtLeast(0)?.toLong() ?: 0L)
             }
         )
     }
