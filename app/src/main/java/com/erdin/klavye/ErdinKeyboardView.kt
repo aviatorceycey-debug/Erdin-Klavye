@@ -646,7 +646,11 @@ class ErdinKeyboardView(
                         "😊" -> "Emoji"
                         else -> key.label
                     }
-                    else -> key.label
+                    else -> if (emojiMode) {
+                        EmojiAccessibilityLabeler.label(preferredEmoji(key.value), english)
+                    } else {
+                        key.label
+                    }
                 }
                 node.text = description
                 node.contentDescription = description
