@@ -343,7 +343,7 @@ class ErdinKeyboardView(
             longPressed = true
             onKey("⌫")
             handler.postDelayed(deleteRepeatRunnable, 180)
-        } else if (key.value.length == 1) {
+        } else if (key.value.isNotBlank()) {
             // Keep touch and screen-reader long-press rules identical.
             // This also prevents clipboard items from opening character popups.
             val options = alternateOptionsFor(key)
