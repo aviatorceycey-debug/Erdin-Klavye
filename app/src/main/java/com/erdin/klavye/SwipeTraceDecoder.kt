@@ -33,7 +33,7 @@ internal object SwipeTraceDecoder {
     ): String {
         if (path.isEmpty() || keys.isEmpty() || !density.isFinite() || density <= 0f) return ""
         val validKeys = keys.filter { key ->
-            key.value.isNotBlank() &&
+            key.value.length == 1 && key.value[0].isLetter() &&
                 key.left.isFinite() && key.top.isFinite() &&
                 key.right.isFinite() && key.bottom.isFinite() &&
                 key.right > key.left && key.bottom > key.top
