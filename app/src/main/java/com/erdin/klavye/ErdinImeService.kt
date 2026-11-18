@@ -66,8 +66,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             val textBeforeCursor = currentInputConnection
                 ?.getTextBeforeCursor(120, 0)?.toString().orEmpty()
             val contextWords = textBeforeCursor
-                .split(Regex("[^\\p{L}'’]+"))
-                .filter { it.isNotBlank() }
+                .let(WordContextParser::words)
             lastContextWord = contextWords.lastOrNull().orEmpty()
             lastContextPreviousWord = contextWords.getOrNull(contextWords.lastIndex - 1).orEmpty()
 
@@ -209,15 +208,14 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             val beforeSelection = currentInputConnection
                 ?.getTextBeforeCursor(120, 0)?.toString().orEmpty()
             val contextWords = beforeSelection
-                .split(Regex("[^\\p{L}'’]+"))
-                .filter { it.isNotBlank() }
+                .let(WordContextParser::words)
             lastContextWord = contextWords.lastOrNull().orEmpty()
             lastContextPreviousWord = contextWords.getOrNull(contextWords.lastIndex - 1).orEmpty()
         } else if (newSelStart != oldSelStart || newSelEnd != oldSelEnd) {
             // Rebuild the local phrase context from the text immediately before
             // the caret. This keeps next-word learning accurate after cursor moves.
             val before = currentInputConnection?.getTextBeforeCursor(120, 0)?.toString().orEmpty()
-            val words = before.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
+            val words = before.let(WordContextParser::words)
             lastContextWord = words.lastOrNull().orEmpty()
             lastContextPreviousWord = words.getOrNull(words.lastIndex - 1).orEmpty()
             requestSuggestionsSoon()
@@ -324,7 +322,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     }
 
     private fun learnWordBeforeBoundary(before: String): Pair<String, String?> {
-        val words = before.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
+        val words = before.let(WordContextParser::words)
         val current = words.lastOrNull().orEmpty()
         val previous = words.getOrNull(words.lastIndex - 1)
         val previousPrevious = words.getOrNull(words.lastIndex - 2)
@@ -365,8 +363,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     // two-word phrase context used by ordinary key-by-key typing.
                     val beforeSwipe = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
                     val contextWords = beforeSwipe
-                        .split(Regex("[^\\p{L}'’]+"))
-                        .filter { it.isNotBlank() }
+                        .let(WordContextParser::words)
                     lastContextPreviousWord = contextWords.lastOrNull().orEmpty()
                     lastContextWord = formatted
                     connection.commitText(formatted, 1)
@@ -414,8 +411,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                     // immediately follow the pasted content rather than stale text.
                     val afterPaste = connection.getTextBeforeCursor(120, 0)?.toString().orEmpty()
                     val pastedWords = afterPaste
-                        .split(Regex("[^\\p{L}'’]+"))
-                        .filter { it.isNotBlank() }
+                        .let(WordContextParser::words)
                     lastContextWord = pastedWords.lastOrNull().orEmpty()
                     lastContextPreviousWord = pastedWords.getOrNull(pastedWords.lastIndex - 1).orEmpty()
                     keyboardView?.hideClipboard()
@@ -566,7 +562,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         val currentWord = before.takeLastWhile { it.isLetter() || it == '\'' || it == '’' }
         if (currentWord.isEmpty()) {
             invalidateSpellCheckRequests()
-            val insertedWords = replacement.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
+            val insertedWords = replacement.let(WordContextParser::words)
             var previousContext = lastContextWord
             var previousPreviousContext = lastContextPreviousWord
             if (learningEnabled) {
@@ -591,14 +587,14 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             )
             return
         }
-        val contextWords = before.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
+        val contextWords = before.let(WordContextParser::words)
         // The final token is the word being replaced, even when it repeats
         // an earlier word (for example: "çok çok").
         var previousContext = contextWords.dropLast(1).lastOrNull()
             ?: lastContextWord
         var previousPreviousContext = contextWords.dropLast(2).lastOrNull()
             ?: lastContextPreviousWord
-        val insertedWords = replacement.split(Regex("[^\\p{L}'’]+")).filter { it.isNotBlank() }
+        val insertedWords = replacement.let(WordContextParser::words)
         if (insertedWords.isNotEmpty()) {
             insertedWords.forEach { word ->
                 if (learningEnabled &&
