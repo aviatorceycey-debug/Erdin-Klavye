@@ -2,7 +2,6 @@ package com.erdin.klavye
 
 import android.content.Context
 import org.json.JSONObject
-import java.text.Normalizer
 import java.util.Locale
 
 /**
