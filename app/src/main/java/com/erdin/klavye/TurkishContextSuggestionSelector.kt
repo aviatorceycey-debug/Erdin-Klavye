@@ -23,8 +23,9 @@ internal object TurkishContextSuggestionSelector {
             val seededTrigram = if (contextIndex < 0) 0 else (contextualHints.size - contextIndex) * 4
             val seedIndex = seededHints.indexOf(word)
             val seededPair = if (seedIndex < 0) 0 else seededHints.size - seedIndex
+            val personalFrequency = personalWordCounts[word]?.coerceAtLeast(0)?.coerceAtMost(3) ?: 0
             return trigram.toLong() * 12L + pair.toLong() * 5L +
-                seededTrigram.toLong() + seededPair.toLong()
+                seededTrigram.toLong() + seededPair.toLong() + personalFrequency.toLong()
         }
 
         return SuggestionCandidateSelector.top(
