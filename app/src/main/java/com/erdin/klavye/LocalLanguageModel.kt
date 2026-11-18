@@ -2,6 +2,7 @@ package com.erdin.klavye
 
 import android.content.Context
 import org.json.JSONObject
+import java.text.Normalizer
 import java.util.Locale
 
 /**
@@ -288,7 +289,7 @@ class LocalLanguageModel(context: Context) {
     @Synchronized
     fun englishCompletions(prefix: String): List<String> {
         val typed = prefix.trim()
-        val key = typed.lowercase(Locale.US)
+        val key = UnicodeWordNormalizer.normalize(typed, Locale.US)
         if (key.length < 2) return emptyList()
         refreshPersonalDataIfChanged()
         val candidates = SuggestionCandidateSelector.top(
@@ -312,9 +313,9 @@ class LocalLanguageModel(context: Context) {
 
     @Synchronized
     fun englishNextWords(previousWord: String, wordBeforePrevious: String? = null): List<String> {
-        val previous = previousWord.trim().lowercase(Locale.US)
+        val previous = UnicodeWordNormalizer.normalize(previousWord, Locale.US)
         if (previous.isBlank()) return emptyList()
-        val context = wordBeforePrevious?.trim()?.lowercase(Locale.US).orEmpty()
+        val context = wordBeforePrevious?.let { UnicodeWordNormalizer.normalize(it, Locale.US) }.orEmpty()
         val contextual = if (context.isBlank()) emptyList()
             else englishContextHints["$context>$previous"].orEmpty()
         val learnedPair = englishPairNextCounts[previous].orEmpty()
@@ -451,7 +452,7 @@ class LocalLanguageModel(context: Context) {
     fun deletePersonalWord(word: String) {
         refreshPersonalDataIfChanged()
         val clean = normalize(word)
-        val englishClean = word.trim().lowercase(Locale.US)
+        val englishClean = UnicodeWordNormalizer.normalize(word, Locale.US)
         if (clean.isBlank() && englishClean.isBlank()) return
         wordCounts.remove(clean)
         englishWordCounts.remove(englishClean)
@@ -515,16 +516,16 @@ class LocalLanguageModel(context: Context) {
         previousPreviousWord: String? = null
     ) {
         refreshPersonalDataIfChanged()
-        val clean = word.trim().lowercase(Locale.US)
+        val clean = UnicodeWordNormalizer.normalize(word, Locale.US)
         if (!PersonalWordValidator.isValid(clean)) return
         englishWordCounts[clean] = PersonalCount.increment(englishWordCounts[clean] ?: 0)
-        val previous = previousWord?.trim()?.lowercase(Locale.US).orEmpty()
+        val previous = previousWord?.let { UnicodeWordNormalizer.normalize(it, Locale.US) }.orEmpty()
         if (PersonalWordValidator.isValid(previous)) {
             val key = "$previous>$clean"
             englishPairCounts[key] = PersonalCount.increment(englishPairCounts[key] ?: 0)
             englishPairNextCounts.getOrPut(previous) { mutableMapOf() }[clean] = englishPairCounts.getValue(key)
         }
-        val previousPrevious = previousPreviousWord?.trim()?.lowercase(Locale.US).orEmpty()
+        val previousPrevious = previousPreviousWord?.let { UnicodeWordNormalizer.normalize(it, Locale.US) }.orEmpty()
         if (PersonalWordValidator.isValid(previousPrevious) && PersonalWordValidator.isValid(previous)) {
             val prefix = "$previousPrevious>$previous"
             val key = "$prefix>$clean"
@@ -662,5 +663,5 @@ class LocalLanguageModel(context: Context) {
         )
     }
 
-    private fun normalize(value: String): String = value.trim().lowercase(locale)
+    private fun normalize(value: String): String = UnicodeWordNormalizer.normalize(value, locale)
 }
