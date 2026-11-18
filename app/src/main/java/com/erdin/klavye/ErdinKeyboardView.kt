@@ -1348,15 +1348,10 @@ class ErdinKeyboardView(
                 return true
             }
             MotionEvent.ACTION_CANCEL -> {
-                handler.removeCallbacks(longPressRunnable)
-                handler.removeCallbacks(deleteRepeatRunnable)
-                downKey = null
-                downRect = null
-                swipeTyping = false
-                swipePath.clear()
-                alternateOptions = emptyList()
-                popupRect = null
-                selectedAlternate = -1
+                // Android can cancel a gesture without a normal ACTION_UP
+                // (for example, when the IME is interrupted). Clear every
+                // transient flag, including long-press and cursor movement.
+                cancelTransientKeyInteraction()
                 accessibilityHelper.invalidateRoot()
                 invalidate()
                 return true
