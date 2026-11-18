@@ -3,7 +3,7 @@ package com.erdin.klavye
 /** Shared Unicode-aware tokenizer for local phrase context. */
 internal object WordContextParser {
     // Include combining marks so decomposed Unicode text remains one word.
-    private val separators = Regex("[^\p{L}\p{M}'’]+")
+    private val separators = Regex("[^\\p{L}\\p{M}'’]+")
 
     fun words(text: CharSequence): List<String> =
         text.split(separators).filter { it.isNotBlank() }
