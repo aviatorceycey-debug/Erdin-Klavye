@@ -11,7 +11,8 @@ internal object TurkishContextSuggestionSelector {
         limit: Int = 3
     ): List<String> {
         val candidates = (contextualHints.asSequence() + seededHints.asSequence() +
-            learnedPairCounts.keys.asSequence() + learnedTrigramCounts.keys.asSequence())
+            learnedPairCounts.keys.asSequence() + learnedTrigramCounts.keys.asSequence() +
+            personalWordCounts.asSequence().filter { it.value > 0 }.map { it.key })
             .filter { it.isNotBlank() }
             .distinct()
 
