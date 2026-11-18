@@ -717,7 +717,16 @@ class ErdinKeyboardView(
     }
 
     private fun alternateOptionsFor(key: KeyboardKey): List<String> {
-        if (emojiMode || clipboardMode) return emptyList()
+        if (clipboardMode) return emptyList()
+        // Emoji skin-tone variants are offered only on long press, keeping the
+        // regular emoji grid compact and the default tap behavior unchanged.
+        val skinToneBases = setOf("👍", "👎", "👏", "🙏", "🤝", "👌", "✌️", "🤞", "🫶", "🙌", "👋", "🖐️", "✋", "🤟", "🤘", "💪", "👊", "✊", "☝️", "👇", "👆", "👉", "👈", "🤙", "🫰", "🫵", "👐", "🤲", "🫳", "🫴", "💅", "🤌", "🖖")
+        if (emojiMode && key.value in skinToneBases) {
+            return listOf(key.value, "🏻", "🏼", "🏽", "🏾", "🏿").mapIndexed { index, tone ->
+                if (index == 0) tone else key.value + tone
+            }
+        }
+        if (emojiMode) return emptyList()
         val punctuation = punctuationAlternatives[key.value]
         if (punctuation != null) return punctuation
         return if (!symbols && activeLanguageLabel == "Türkçe") {
