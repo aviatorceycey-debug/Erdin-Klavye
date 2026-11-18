@@ -50,6 +50,28 @@ class EnglishContextSuggestionSelectorTest {
     }
 
     @Test
+    fun largePersonalCountsDoNotOverflowAndReverseTheRanking() {
+        val result = EnglishContextSuggestionSelector.select(
+            contextualHints = emptyList(),
+            seededHints = emptyList(),
+            learnedPairCounts = mapOf("pair" to Int.MAX_VALUE, "trigram" to Int.MAX_VALUE),
+            learnedTrigramCounts = mapOf("trigram" to Int.MAX_VALUE)
+        )
+        assertEquals(listOf("trigram", "pair"), result)
+    }
+
+    @Test
+    fun negativeCorruptCountsDoNotBoostCandidates() {
+        val result = EnglishContextSuggestionSelector.select(
+            contextualHints = listOf("context"),
+            seededHints = listOf("seed"),
+            learnedPairCounts = mapOf("context" to -100, "seed" to -5),
+            learnedTrigramCounts = mapOf("context" to -50)
+        )
+        assertEquals(listOf("context", "seed"), result)
+    }
+
+    @Test
     fun nonPositiveLimitReturnsNoCandidates() {
         assertEquals(
             emptyList<String>(),
