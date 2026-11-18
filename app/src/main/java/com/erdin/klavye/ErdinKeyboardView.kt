@@ -717,8 +717,9 @@ class ErdinKeyboardView(
                     return true
                 }
                 if (action != AccessibilityNodeInfo.ACTION_CLICK) return false
-                if (virtualViewId in 2100..2105) {
-                    emojiCategory = virtualViewId - 2100
+                val selectedEmojiCategory = EmojiCategoryAccessibility.indexFor(virtualViewId)
+                if (selectedEmojiCategory != null) {
+                    emojiCategory = selectedEmojiCategory
                     cachedLayoutRows = null
                     invalidateRoot()
                     invalidate()
