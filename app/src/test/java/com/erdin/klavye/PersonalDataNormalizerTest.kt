@@ -35,9 +35,9 @@ class PersonalDataNormalizerTest {
     @Test
     fun clampsNegativeCountsAndPreventsOverflowWhenMerging() {
         val result = PersonalDataNormalizer.normalizeCounts(
-            mapOf("word" to -8, "word" to Int.MAX_VALUE),
+            mapOf("cafe\u0301" to -8, "café" to Int.MAX_VALUE),
             Locale.US
         )
-        assertEquals(Int.MAX_VALUE, result["word"])
+        assertEquals(Int.MAX_VALUE, result["café"])
     }
 }
