@@ -367,22 +367,32 @@ class ErdinKeyboardView(
         } else if (key.value.isNotBlank()) {
             // Keep touch and screen-reader long-press rules identical.
             // This also prevents clipboard items from opening character popups.
-            val options = alternateOptionsFor(key)
-            if (options.isNotEmpty()) {
-                longPressed = true
-                alternateOptions = options
-                selectedAlternate = -1
-                val anchor = downRect ?: return@Runnable
-                val cellWidth = 46f * density
-                val popupHeight = 52f * density
-                val popupWidth = cellWidth * options.size
-                val left = (anchor.centerX() - popupWidth / 2f).coerceIn(gap, width - popupWidth - gap)
-                val top = (anchor.top - popupHeight - 7f * density).coerceAtLeast(3f * density)
-                popupRect = RectF(left, top, left + popupWidth, top + popupHeight)
-                accessibilityHelper.invalidateRoot()
-                invalidate()
-            }
+            val anchor = downRect ?: return@Runnable
+            showAlternateOptions(key, anchor)
         }
+    }
+
+    private fun showAlternateOptions(key: KeyboardKey, anchor: RectF) {
+        val options = alternateOptionsFor(key)
+        if (options.isEmpty()) return
+        handler.removeCallbacks(longPressRunnable)
+        handler.removeCallbacks(deleteRepeatRunnable)
+        downKey = key
+        downRect = anchor
+        longPressed = true
+        cursorMoved = false
+        swipeTyping = false
+        swipePath.clear()
+        alternateOptions = options
+        selectedAlternate = -1
+        val cellWidth = 46f * density
+        val popupHeight = 52f * density
+        val popupWidth = cellWidth * options.size
+        val left = (anchor.centerX() - popupWidth / 2f).coerceIn(gap, width - popupWidth - gap)
+        val top = (anchor.top - popupHeight - 7f * density).coerceAtLeast(3f * density)
+        popupRect = RectF(left, top, left + popupWidth, top + popupHeight)
+        accessibilityHelper.invalidateRoot()
+        invalidate()
     }
 
     fun setClipboardAvailable(enabled: Boolean) {
@@ -686,10 +696,9 @@ class ErdinKeyboardView(
                 ) {
                     val option = alternateOptions.getOrNull(virtualViewId - 3000) ?: return false
                     commitAlternateOption(option)
-                    alternateOptions = emptyList()
-                    popupRect = null
-                    downKey = null
-                    downRect = null
+                    // Complete the screen-reader selection through the same
+                    // full cleanup path used after touch gestures.
+                    cancelTransientKeyInteraction()
                     invalidateRoot()
                     invalidate()
                     sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
@@ -699,21 +708,8 @@ class ErdinKeyboardView(
                     virtualViewId < 1000
                 ) {
                     val pair = accessibleKeyRects().getOrNull(virtualViewId) ?: return false
-                    val options = alternateOptionsFor(pair.first)
-                    if (options.isEmpty()) return false
-                    downKey = pair.first
-                    downRect = pair.second
-                    longPressed = true
-                    alternateOptions = options
-                    selectedAlternate = -1
-                    val cellWidth = 46f * density
-                    val popupHeight = 52f * density
-                    val popupWidth = cellWidth * options.size
-                    val left = (pair.second.centerX() - popupWidth / 2f).coerceIn(gap, width - popupWidth - gap)
-                    val top = (pair.second.top - popupHeight - 7f * density).coerceAtLeast(3f * density)
-                    popupRect = RectF(left, top, left + popupWidth, top + popupHeight)
-                    invalidateRoot()
-                    invalidate()
+                    if (alternateOptionsFor(pair.first).isEmpty()) return false
+                    showAlternateOptions(pair.first, pair.second)
                     sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_LONG_CLICKED)
                     return true
                 }
