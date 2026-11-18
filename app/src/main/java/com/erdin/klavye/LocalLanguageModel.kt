@@ -329,28 +329,28 @@ class LocalLanguageModel(context: Context) {
         )
     }
 
-    private fun readCounts(key: String): MutableMap<String, Int> {
+    private fun readCounts(key: String, dataLocale: Locale): MutableMap<String, Int> {
         val json = runCatching { JSONObject(prefs.getString(key, "{}") ?: "{}") }.getOrNull()
             ?: JSONObject()
-        val result = mutableMapOf<String, Int>()
+        val stored = mutableMapOf<String, Int>()
         val keys = json.keys()
         while (keys.hasNext()) {
             val word = keys.next()
-            result[word] = json.optInt(word, 0).coerceAtLeast(0)
+            stored[word] = json.optInt(word, 0).coerceAtLeast(0)
         }
-        return result
+        return PersonalDataNormalizer.normalizeCounts(stored, dataLocale)
     }
 
     // Keep the small personal model in memory while the keyboard is open.
     // A revision marker lets separate Settings/IME instances see each other's edits
     // without reparsing the JSON on every key press.
     private var loadedRevision = prefs.getLong("personal_data_revision", 0L)
-    private var wordCounts = readCounts("word_counts")
-    private var englishWordCounts = readCounts("english_word_counts")
-    private var pairCounts = readCounts("pair_counts")
-    private var trigramCounts = readCounts("trigram_counts")
-    private var englishPairCounts = readCounts("english_pair_counts")
-    private var englishTrigramCounts = readCounts("english_trigram_counts")
+    private var wordCounts = readCounts("word_counts", locale)
+    private var englishWordCounts = readCounts("english_word_counts", Locale.US)
+    private var pairCounts = readCounts("pair_counts", locale)
+    private var trigramCounts = readCounts("trigram_counts", locale)
+    private var englishPairCounts = readCounts("english_pair_counts", Locale.US)
+    private var englishTrigramCounts = readCounts("english_trigram_counts", Locale.US)
     // Prefix indexes avoid scanning every learned pair and trigram for each suggestion.
     private var pairNextCounts = indexContextCounts(pairCounts, 1)
     private var trigramNextCounts = indexContextCounts(trigramCounts, 2)
@@ -375,12 +375,12 @@ class LocalLanguageModel(context: Context) {
     private fun refreshPersonalDataIfChanged() {
         val revision = prefs.getLong("personal_data_revision", 0L)
         if (revision == loadedRevision) return
-        wordCounts = readCounts("word_counts")
-        englishWordCounts = readCounts("english_word_counts")
-        pairCounts = readCounts("pair_counts")
-        trigramCounts = readCounts("trigram_counts")
-        englishPairCounts = readCounts("english_pair_counts")
-        englishTrigramCounts = readCounts("english_trigram_counts")
+        wordCounts = readCounts("word_counts", locale)
+        englishWordCounts = readCounts("english_word_counts", Locale.US)
+        pairCounts = readCounts("pair_counts", locale)
+        trigramCounts = readCounts("trigram_counts", locale)
+        englishPairCounts = readCounts("english_pair_counts", Locale.US)
+        englishTrigramCounts = readCounts("english_trigram_counts", Locale.US)
         pairNextCounts = indexContextCounts(pairCounts, 1)
         trigramNextCounts = indexContextCounts(trigramCounts, 2)
         englishPairNextCounts = indexContextCounts(englishPairCounts, 1)
