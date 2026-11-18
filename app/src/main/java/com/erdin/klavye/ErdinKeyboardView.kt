@@ -395,9 +395,9 @@ class ErdinKeyboardView(
     fun setClipboardItems(items: List<String>) {
         clipboardItems = items.take(6)
         clipboardMode = true
-        accessibilityHelper.invalidateRoot()
         emojiMode = false
         symbols = false
+        accessibilityHelper.invalidateRoot()
         invalidate()
     }
 
@@ -450,13 +450,13 @@ class ErdinKeyboardView(
         }
         numericAllowsSign = inputType and android.text.InputType.TYPE_NUMBER_FLAG_SIGNED != 0
         numericAllowsDecimal = inputType and android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL != 0
-        accessibilityHelper.invalidateRoot()
         if (numericInputMode != 0) {
             symbols = false
             symbolsPageTwo = false
             emojiMode = false
             clipboardMode = false
         }
+        accessibilityHelper.invalidateRoot()
         invalidate()
     }
 
