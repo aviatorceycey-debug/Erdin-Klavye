@@ -16,6 +16,8 @@ import android.widget.RadioGroup
 import android.widget.RadioButton
 import android.widget.Switch
 import android.widget.Toast
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import java.util.Locale
 
 class MainActivity : Activity() {
@@ -449,6 +451,41 @@ class MainActivity : Activity() {
             prefs.edit().putString("keyboard_theme", selected).apply()
         }
         root.addView(themeLabel); root.addView(themeGroup)
+
+        val skinToneLabel = TextView(this).apply {
+            text = "Emoji ten rengi"
+            textSize = 15f
+            setTextColor(0xFFEAF1FC.toInt())
+            setPadding(0, 24, 0, 8)
+        }
+        val skinToneValues = listOf("", "🏻", "🏼", "🏽", "🏾", "🏿")
+        val skinToneLabels = listOf(
+            "Sistem varsayılanı", "Açık ton 🏻", "Orta açık ton 🏼",
+            "Orta ton 🏽", "Orta koyu ton 🏾", "Koyu ton 🏿"
+        )
+        val skinToneSpinner = Spinner(this).apply {
+            adapter = ArrayAdapter(
+                this@MainActivity,
+                android.R.layout.simple_spinner_item,
+                skinToneLabels
+            ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+            contentDescription = "Emoji için tercih edilen ten rengi"
+            val selectedTone = prefs.getString("preferred_emoji_skin_tone", "").orEmpty()
+            setSelection(skinToneValues.indexOf(selectedTone).coerceAtLeast(0), false)
+            onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
+                override fun onItemSelected(
+                    parent: android.widget.AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    prefs.edit().putString("preferred_emoji_skin_tone", skinToneValues[position]).apply()
+                }
+            }
+        }
+        root.addView(skinToneLabel)
+        root.addView(skinToneSpinner)
         val settingsScroll = android.widget.ScrollView(this).apply {
             isFillViewport = true
             clipToPadding = false
