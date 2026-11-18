@@ -1191,10 +1191,38 @@ class ErdinKeyboardView(
         val count = suggestions.size
         if (count == 0) {
             suggestionRects.clear()
-            paint.color = 0xFF9EABC2.toInt()
-            paint.textSize = 11f * density
+            val centerY = 21f * density
+            val brandX = width / 2f
+            // A restrained identity strip replaces the generic placeholder:
+            // monogram, wordmark and a subtle electric-blue baseline.
+            paint.color = palette().accent
+            canvas.drawCircle(brandX - 61f * density, centerY - 1f * density, 12f * density, paint)
+            paint.color = 0xFFFFFFFF.toInt()
             paint.textAlign = Paint.Align.CENTER
-            canvas.drawText("ERDİN  •  ${if (activeLanguageLabel == "English") "English" else "Türkçe"} klavye", width / 2f, 25f * density, paint)
+            paint.textSize = 14f * density
+            paint.isFakeBoldText = true
+            canvas.drawText("E", brandX - 61f * density, centerY + 4f * density, paint)
+            paint.isFakeBoldText = false
+            paint.textAlign = Paint.Align.LEFT
+            paint.color = 0xFFF2F6FF.toInt()
+            paint.textSize = 12f * density
+            paint.isFakeBoldText = true
+            canvas.drawText("ERDİN", brandX - 42f * density, centerY - 1f * density, paint)
+            paint.isFakeBoldText = false
+            paint.color = 0xFF9EABC2.toInt()
+            paint.textSize = 8f * density
+            canvas.drawText(
+                if (activeLanguageLabel == "English") "SMART KEYBOARD" else "AKILLI KLAVYE",
+                brandX - 42f * density, centerY + 10f * density, paint
+            )
+            paint.shader = LinearGradient(
+                brandX + 65f * density, centerY, width - 18f * density, centerY,
+                intArrayOf(palette().accent, 0x003F9DFF), null, Shader.TileMode.CLAMP
+            )
+            paint.strokeWidth = 1.2f * density
+            canvas.drawLine(brandX + 65f * density, centerY + 12f * density,
+                width - 18f * density, centerY + 12f * density, paint)
+            paint.shader = null
             return
         }
         suggestions.forEachIndexed { index, suggestion ->
