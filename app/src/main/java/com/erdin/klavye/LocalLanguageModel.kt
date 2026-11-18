@@ -670,10 +670,9 @@ class LocalLanguageModel(context: Context) {
             val contextIndex = seededContext.indexOf(word)
             val seededTrigramScore = if (contextIndex < 0) 0 else (seededContext.size - contextIndex) * 3
             val bigramScore = (learned[word] ?: 0).coerceAtMost(100) * 5
-            val personalWordScore = (wordCounts[word] ?: 0).coerceAtMost(100)
             val seedIndex = seeded.indexOf(word)
             val seedScore = if (seedIndex < 0) 0 else (seeded.size - seedIndex) * 2
-            return trigramScore + seededTrigramScore + bigramScore + personalWordScore + seedScore
+            return trigramScore + seededTrigramScore + bigramScore + seedScore
         }
 
         return SuggestionCandidateSelector.top(
@@ -682,6 +681,8 @@ class LocalLanguageModel(context: Context) {
             comparator = compareByDescending<String> { score(it) }
                 .thenByDescending { contextual[it] ?: 0 }
                 .thenByDescending { learned[it] ?: 0 }
+                // Overall word frequency breaks ties; it must not overpower phrase context.
+                .thenByDescending { wordCounts[it] ?: 0 }
                 .thenBy { it.length }
         )
     }
