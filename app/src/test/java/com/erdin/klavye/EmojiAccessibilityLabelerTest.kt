@@ -29,11 +29,13 @@ class EmojiAccessibilityLabelerTest {
         assertEquals("pizza", EmojiAccessibilityLabeler.label("🍕", true))
         assertEquals("pusula", EmojiAccessibilityLabeler.label("🧭", false))
         assertEquals("klavye", EmojiAccessibilityLabeler.label("⌨️", false))
+        assertEquals("bebek besleyen kişi", EmojiAccessibilityLabeler.label("🧑‍🍼", false))
+        assertEquals("star", EmojiAccessibilityLabeler.label("⭐", true))
     }
 
     @Test
     fun unknownEmojiKeepsAUsefulFallbackLabel() {
-        assertEquals("emoji", EmojiAccessibilityLabeler.label("🫄", false))
-        assertEquals("emoji", EmojiAccessibilityLabeler.label("🫄", true))
+        assertEquals("emoji", EmojiAccessibilityLabeler.label("🫥", false))
+        assertEquals("emoji", EmojiAccessibilityLabeler.label("🫥", true))
     }
 }
