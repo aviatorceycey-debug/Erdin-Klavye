@@ -1116,12 +1116,15 @@ class ErdinKeyboardView(
         keyRects().firstOrNull { it.second.contains(x, y) }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_DOWN) {
+        // Mask pointer-index bits so ACTION_POINTER_DOWN is recognized
+        // regardless of which pointer Android assigns as the new index.
+        val action = event.actionMasked
+        if (action == MotionEvent.ACTION_DOWN) {
             multiTouchGuard.beginGesture()
-        } else if (multiTouchGuard.shouldIgnore(event.action)) {
+        } else if (multiTouchGuard.shouldIgnore(action)) {
             return true
         }
-        when (event.action) {
+        when (action) {
             MotionEvent.ACTION_DOWN -> {
                 if (clipboardAvailable && event.y < topInset && event.x < 58f * density) {
                     onKey("__CLIPBOARD__")
