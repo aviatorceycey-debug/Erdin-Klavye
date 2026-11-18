@@ -891,6 +891,17 @@ class ErdinKeyboardView(
         super.onDetachedFromWindow()
     }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        if (w != oldw || h != oldh) {
+            // A popup or swipe trace is tied to the old key geometry. Do not
+            // let it complete after rotation, resizing, or height changes.
+            cancelTransientKeyInteraction()
+            cachedLayoutRows = null
+            accessibilityHelper.invalidateRoot()
+        }
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val preferredHeight = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
             .getInt("keyboard_height_dp", 310)
