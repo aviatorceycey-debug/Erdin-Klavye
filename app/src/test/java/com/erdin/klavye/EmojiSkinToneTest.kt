@@ -28,4 +28,14 @@ class EmojiSkinToneTest {
     fun emptyToneKeepsOriginalEmoji() {
         assertEquals("🧑‍🍼", EmojiSkinTone.apply("🧑‍🍼", ""))
     }
+
+    @Test
+    fun invalidPersistedToneKeepsOriginalEmoji() {
+        assertEquals("👍", EmojiSkinTone.apply("👍", "unexpected"))
+    }
+
+    @Test
+    fun rejectsPartialOrMalformedToneModifier() {
+        assertEquals("👏", EmojiSkinTone.apply("👏", "🏽text"))
+    }
 }
