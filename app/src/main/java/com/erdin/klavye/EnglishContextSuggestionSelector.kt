@@ -7,8 +7,8 @@ internal object EnglishContextSuggestionSelector {
         seededHints: List<String>,
         learnedPairCounts: Map<String, Int>,
         learnedTrigramCounts: Map<String, Int>,
-        personalWordCounts: Map<String, Int> = emptyMap(),
-        limit: Int = 3
+        limit: Int = 3,
+        personalWordCounts: Map<String, Int> = emptyMap()
     ): List<String> {
         val candidates = (contextualHints.asSequence() + seededHints.asSequence() +
             learnedPairCounts.keys.asSequence() + learnedTrigramCounts.keys.asSequence() +
@@ -21,7 +21,14 @@ internal object EnglishContextSuggestionSelector {
             compareByDescending<String> {
                 (learnedTrigramCounts[it]?.coerceAtLeast(0)?.toLong() ?: 0L) * 3L +
                     (learnedPairCounts[it]?.coerceAtLeast(0)?.toLong() ?: 0L)
+            }.thenByDescending {
+                val index = contextualHints.indexOf(it)
+                if (index < 0) 0 else contextualHints.size - index
             }.thenByDescending { personalWordCounts[it]?.coerceAtLeast(0) ?: 0 }
+                .thenByDescending {
+                    val index = seededHints.indexOf(it)
+                    if (index < 0) 0 else seededHints.size - index
+                }
                 .thenBy { it.length }
                 .thenBy { it }
         )
