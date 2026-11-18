@@ -288,6 +288,10 @@ object EmojiAccessibilityLabeler {
         "↵" to ("enter symbol" to "enter tuşu"),
     )
 
+    private val normalizedNames = names.entries.associate { (emoji, labels) ->
+        emoji.replace("\uFE0F", "") to labels
+    }
+
     fun label(emoji: String, english: Boolean): String {
         val tones = toneModifiers.filter { emoji.contains(it) }.distinct()
         // Variation selectors are presentation hints, not part of the spoken name.
@@ -295,7 +299,7 @@ object EmojiAccessibilityLabeler {
             value.replace(modifier, "")
         }.replace("\uFE0F", "")
         val normalizedBase = base
-        val name = names[normalizedBase]?.let { if (english) it.first else it.second }
+        val name = normalizedNames[normalizedBase]?.let { if (english) it.first else it.second }
             ?: if (english) "emoji" else "emoji"
         if (tones.isEmpty()) return name
         if (tones.size > 1) {
