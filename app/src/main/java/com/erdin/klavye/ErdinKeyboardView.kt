@@ -397,12 +397,25 @@ class ErdinKeyboardView(
         clipboardMode = true
         emojiMode = false
         symbols = false
+        symbolsPageTwo = false
+        // A panel switch must not leave an old long-press popup attached
+        // to a key that no longer exists in the clipboard layout.
+        handler.removeCallbacks(longPressRunnable)
+        handler.removeCallbacks(deleteRepeatRunnable)
+        downKey = null
+        downRect = null
+        longPressed = false
+        alternateOptions = emptyList()
+        popupRect = null
+        selectedAlternate = -1
+        cachedLayoutRows = null
         accessibilityHelper.invalidateRoot()
         invalidate()
     }
 
     fun hideClipboard() {
         clipboardMode = false
+        cachedLayoutRows = null
         accessibilityHelper.invalidateRoot()
         invalidate()
     }
