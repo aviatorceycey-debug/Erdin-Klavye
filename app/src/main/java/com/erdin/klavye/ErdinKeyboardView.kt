@@ -684,7 +684,7 @@ class ErdinKeyboardView(
                     action == AccessibilityNodeInfo.ACTION_CLICK
                 ) {
                     val option = alternateOptions.getOrNull(virtualViewId - 3000) ?: return false
-                    onKey(option)
+                    commitAlternateOption(option)
                     alternateOptions = emptyList()
                     popupRect = null
                     downKey = null
@@ -772,6 +772,16 @@ class ErdinKeyboardView(
         } else {
             emptyList()
         }
+    }
+
+    private fun commitAlternateOption(value: String) {
+        if (emojiMode) {
+            val tone = EmojiSkinTone.modifierFrom(value)
+            context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+                .edit().putString("preferred_emoji_skin_tone", tone).apply()
+            rememberEmoji(value)
+        }
+        onKey(value)
     }
 
     private fun performAccessibleKey(key: KeyboardKey) {
@@ -1254,13 +1264,7 @@ class ErdinKeyboardView(
                 } else if (longPressed && alternateOptions.isNotEmpty()) {
                     if (selectedAlternate >= 0) {
                         val selected = alternateOptions[selectedAlternate]
-                        if (emojiMode) {
-                            val tone = EmojiSkinTone.modifierFrom(selected)
-                            context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
-                                .edit().putString("preferred_emoji_skin_tone", tone).apply()
-                            rememberEmoji(selected)
-                        }
-                        onKey(selected)
+                        commitAlternateOption(selected)
                     } else if (key != null) {
                         onKey(if (shift || capsLock) upper(key.value) else key.value)
                     }
