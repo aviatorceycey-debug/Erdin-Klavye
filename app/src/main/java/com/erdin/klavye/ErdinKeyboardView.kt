@@ -231,6 +231,20 @@ class ErdinKeyboardView(
         return rows
     }
 
+    private val skinToneBases = setOf(
+        "👍", "👎", "👏", "🙏", "🤝", "👌", "✌️", "🤞", "🫶", "🙌", "👋", "🖐️", "✋",
+        "🤟", "🤘", "💪", "👊", "✊", "☝️", "👇", "👆", "👉", "👈", "🤙", "🫰",
+        "🫵", "👐", "🤲", "🫳", "🫴", "💅", "🤌", "🖖"
+    )
+    private val skinToneModifiers = listOf("", "🏻", "🏼", "🏽", "🏾", "🏿")
+
+    private fun preferredEmoji(value: String): String {
+        if (!emojiMode || value !in skinToneBases) return value
+        val tone = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+            .getString("preferred_emoji_skin_tone", "").orEmpty()
+        return value + tone
+    }
+
     private fun rememberEmoji(value: String) {
         val prefs = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
         val recent = prefs.getString("recent_emojis", "").orEmpty()
@@ -734,13 +748,9 @@ class ErdinKeyboardView(
 
     private fun alternateOptionsFor(key: KeyboardKey): List<String> {
         if (clipboardMode) return emptyList()
-        // Emoji skin-tone variants are offered only on long press, keeping the
-        // regular emoji grid compact and the default tap behavior unchanged.
-        val skinToneBases = setOf("👍", "👎", "👏", "🙏", "🤝", "👌", "✌️", "🤞", "🫶", "🙌", "👋", "🖐️", "✋", "🤟", "🤘", "💪", "👊", "✊", "☝️", "👇", "👆", "👉", "👈", "🤙", "🫰", "🫵", "👐", "🤲", "🫳", "🫴", "💅", "🤌", "🖖")
+        // Emoji skin-tone variants are offered only on long press.
         if (emojiMode && key.value in skinToneBases) {
-            return listOf(key.value, "🏻", "🏼", "🏽", "🏾", "🏿").mapIndexed { index, tone ->
-                if (index == 0) tone else key.value + tone
-            }
+            return skinToneModifiers.map { tone -> if (tone.isEmpty()) key.value else key.value + tone }
         }
         if (emojiMode) return emptyList()
         val punctuation = punctuationAlternatives[key.value]
@@ -769,8 +779,9 @@ class ErdinKeyboardView(
             "🌐" -> onKey("🌐")
             activeLanguageLabel -> onKey(" ")
             else -> if (key.value.isNotEmpty()) {
-                if (emojiMode) rememberEmoji(key.value)
-                onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) upper(key.value) else key.value)
+                val output = if (emojiMode) preferredEmoji(key.value) else key.value
+                if (emojiMode) rememberEmoji(output)
+                onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) upper(key.value) else output)
                 if (shift && !capsLock && !symbols && !emojiMode && key.value.length == 1) shift = false
             }
         }
@@ -1223,7 +1234,12 @@ class ErdinKeyboardView(
                 } else if (longPressed && alternateOptions.isNotEmpty()) {
                     if (selectedAlternate >= 0) {
                         val selected = alternateOptions[selectedAlternate]
-                        if (emojiMode) rememberEmoji(selected)
+                        if (emojiMode) {
+                            val tone = skinToneModifiers.firstOrNull { it.isNotEmpty() && selected.endsWith(it) }.orEmpty()
+                            context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+                                .edit().putString("preferred_emoji_skin_tone", tone).apply()
+                            rememberEmoji(selected)
+                        }
                         onKey(selected)
                     } else if (key != null) {
                         onKey(if (shift || capsLock) upper(key.value) else key.value)
@@ -1250,8 +1266,9 @@ class ErdinKeyboardView(
                         "🌐" -> onKey("🌐")
                         activeLanguageLabel -> onKey(" ")
                         else -> {
-                            if (emojiMode && key.value.isNotEmpty()) rememberEmoji(key.value)
-                            if (key.value.isNotEmpty()) onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) upper(key.value) else key.value)
+                            val output = if (emojiMode) preferredEmoji(key.value) else key.value
+                            if (emojiMode && output.isNotEmpty()) rememberEmoji(output)
+                            if (key.value.isNotEmpty()) onKey(if ((shift || capsLock) && !symbols && !emojiMode && key.value.length == 1) upper(key.value) else output)
                             if (shift && !capsLock && !symbols && !emojiMode && key.value.length == 1) shift = false
                         }
                     }
