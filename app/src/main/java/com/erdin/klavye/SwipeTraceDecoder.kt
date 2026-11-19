@@ -50,8 +50,14 @@ internal object SwipeTraceDecoder {
                 key.value.lowercase(locale),
                 (key.left.toDouble() + key.right.toDouble()) / 2.0,
                 (key.top.toDouble() + key.bottom.toDouble()) / 2.0,
-                minOf(key.right - key.left, key.bottom - key.top).toDouble() * 0.60,
-                minOf(key.right - key.left, key.bottom - key.top).toDouble() * 0.22
+                minOf(
+                    key.right.toDouble() - key.left.toDouble(),
+                    key.bottom.toDouble() - key.top.toDouble()
+                ) * 0.35,
+                minOf(
+                    key.right.toDouble() - key.left.toDouble(),
+                    key.bottom.toDouble() - key.top.toDouble()
+                ) * 0.15
             )
         }
         // Keep geometry arithmetic in Double: finite Float bounds can still
