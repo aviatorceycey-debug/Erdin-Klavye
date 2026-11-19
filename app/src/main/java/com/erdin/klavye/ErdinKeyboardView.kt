@@ -1031,9 +1031,11 @@ class ErdinKeyboardView(
             // Shift feedback is visible at a glance; caps-lock is slightly
             // brighter than one-shot shift while keeping the original layout.
             val shiftActive = key.label == "⇧" && (shift || capsLock)
+            val keyPressed = downKey == key
             val keyColor = when {
                 key.label == "⇧" && capsLock -> blendColor(baseKeyColor, colors.accent, 0.78f)
                 shiftActive -> blendColor(baseKeyColor, colors.accent, 0.48f)
+                keyPressed -> blendColor(baseKeyColor, colors.accent, 0.22f)
                 else -> baseKeyColor
             }
             val keyBottom = when (key.kind) {
