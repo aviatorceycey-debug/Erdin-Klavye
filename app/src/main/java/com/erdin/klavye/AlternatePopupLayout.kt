@@ -15,6 +15,16 @@ internal data class PopupBounds(
 }
 
 internal object AlternatePopupLayout {
+    fun optionIndex(x: Float, y: Float, bounds: PopupBounds, optionCount: Int): Int {
+        if (optionCount <= 0 || !x.isFinite() || !y.isFinite() ||
+            bounds.width <= 0f || bounds.height <= 0f ||
+            x < bounds.left || x >= bounds.right ||
+            y < bounds.top || y >= bounds.bottom
+        ) return -1
+        val cellWidth = bounds.width / optionCount
+        return ((x - bounds.left) / cellWidth).toInt().coerceIn(0, optionCount - 1)
+    }
+
     fun calculate(
         viewWidth: Float,
         gap: Float,
