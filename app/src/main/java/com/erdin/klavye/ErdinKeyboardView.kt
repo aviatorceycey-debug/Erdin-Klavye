@@ -1429,10 +1429,12 @@ class ErdinKeyboardView(
         }
     }
 
-    private fun updateAlternateSelection(x: Float) {
+    private fun updateAlternateSelection(x: Float, y: Float) {
         val rect = popupRect ?: return
-        val cellWidth = rect.width() / alternateOptions.size
-        selectedAlternate = floor((x - rect.left) / cellWidth).toInt().coerceIn(0, alternateOptions.lastIndex)
+        selectedAlternate = AlternatePopupLayout.optionIndex(
+            x, y, PopupBounds(rect.left, rect.top, rect.right, rect.bottom),
+            alternateOptions.size
+        )
         invalidate()
     }
 
@@ -1509,7 +1511,7 @@ class ErdinKeyboardView(
             }
             MotionEvent.ACTION_MOVE -> {
                 if (longPressed && alternateOptions.isNotEmpty()) {
-                    updateAlternateSelection(event.x)
+                    updateAlternateSelection(event.x, event.y)
                 } else if (downKey?.value?.length == 1 && downKey?.value?.firstOrNull()?.isLetter() == true &&
                     context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
                         .getBoolean("swipe_typing_enabled", false)) {
@@ -1576,7 +1578,9 @@ class ErdinKeyboardView(
                     if (selectedAlternate >= 0) {
                         val selected = alternateOptions[selectedAlternate]
                         commitAlternateOption(selected)
-                    } else if (key != null) {
+                    } else if (key != null && downRect?.contains(event.x, event.y) == true) {
+                        // Releasing on the original key keeps its base character;
+                        // dragging outside both key and popup cancels the gesture.
                         onKey(if (shift || capsLock) upper(key.value) else key.value)
                     }
                 } else if (key != null && !longPressed && !cursorMoved) {
