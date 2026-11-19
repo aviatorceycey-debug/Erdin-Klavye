@@ -1095,6 +1095,22 @@ class ErdinKeyboardView(
                 )
                 paint.shader = null
             }
+            if (!symbols && !emojiMode && numericInputMode == 0 &&
+                activeLanguageLabel == "Türkçe" &&
+                (key.value == "f" || key.value == "j")
+            ) {
+                // Physical-keyboard home-row markers help fingers re-center
+                // without adding labels or changing the compact key geometry.
+                val markerWidth = 8f * density
+                val markerHeight = 1.15f * density
+                val markerLeft = rect.centerX() - markerWidth / 2f
+                val markerTop = rect.bottom - 4f * density
+                paint.color = blendColor(colors.accentOutline, 0xFFFFFFFF.toInt(), 0.08f)
+                canvas.drawRoundRect(
+                    RectF(markerLeft, markerTop, markerLeft + markerWidth, markerTop + markerHeight),
+                    markerHeight, markerHeight, paint
+                )
+            }
             if (key.label == "⇧") {
                 // A compact status lamp makes one-shot shift and caps-lock
                 // recognizable even when the arrow glyph itself is unchanged.
@@ -1146,7 +1162,7 @@ class ErdinKeyboardView(
                 // Small corner legends make Turkish long-press characters
                 // discoverable without permanently adding six extra keys.
                 if (!symbols && !emojiMode && numericInputMode == 0 &&
-                    activeLanguageLabel != "English" && key.value.length == 1
+                    activeLanguageLabel == "Türkçe" && key.value.length == 1
                 ) {
                     val variants = alternatives[key.value.lowercase(Locale.ROOT)]
                     val alternateHint = variants?.getOrNull(if (shift || capsLock) 1 else 0)
