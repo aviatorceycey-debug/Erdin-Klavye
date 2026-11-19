@@ -24,6 +24,23 @@ class SwipeTraceDecoderTest {
     }
 
     @Test
+    fun deliberateLoopOnSameKeyProducesARepeatedLetter() {
+        val loopPath = listOf(
+            110f to 10f,
+            110f to 0f,
+            110f to -15f,
+            110f to 10f
+        )
+        assertEquals("aa", SwipeTraceDecoder.decode(loopPath, keys, 1f, english = true))
+    }
+
+    @Test
+    fun smallMovementOnSameKeyDoesNotLookLikeARepeatedLetterLoop() {
+        val path = listOf(110f to 10f, 110f to 0f, 110f to 10f, 111f to 10f)
+        assertEquals("a", SwipeTraceDecoder.decode(path, keys, 1f, english = true))
+    }
+
+    @Test
     fun keySwitchingIgnoresSmallBoundaryFluctuations() {
         val boundaryPath = listOf(10f to 10f, 65f to 10f)
         val switchedPath = listOf(10f to 10f, 70f to 10f)
