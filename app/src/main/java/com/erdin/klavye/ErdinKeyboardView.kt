@@ -262,15 +262,15 @@ class ErdinKeyboardView(
     private fun symbolRows(): List<List<KeyboardKey>> = if (!symbolsPageTwo) listOf(
         listOf("1","2","3","4","5","6","7","8","9","0").map { KeyboardKey(it) },
         listOf("@","#","₺","%","&","-","+","(",")","/").map { KeyboardKey(it) },
-        listOf("*","\\\"","'",":",";","!","?","€","£","₺").map { KeyboardKey(it) },
+        listOf("*","\"","'",":",";","!","?","€","£","$").map { KeyboardKey(it) },
         listOf(KeyboardKey("=\\<", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)) +
-            listOf("_","\\\\","|","~","<",">","[").map { KeyboardKey(it) } +
+            listOf("_","\\","|","~","<",">","[").map { KeyboardKey(it) } +
             listOf(KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)),
         symbolBottomRow("ABC")
     ) else listOf(
         listOf("1","2","3","4","5","6","7","8","9","0").map { KeyboardKey(it) },
         listOf("~","`","|","•","√","π","÷","×","¶","∆").map { KeyboardKey(it) },
-        listOf("£","¢","€","¥","^","°","=","{","}","\\\\").map { KeyboardKey(it) },
+        listOf("£","¢","€","¥","^","°","=","{","}","\\").map { KeyboardKey(it) },
         listOf(KeyboardKey("123", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)) +
             listOf("%","©","®","™","✓","[","]").map { KeyboardKey(it) } +
             listOf(KeyboardKey("⌫", kind = KeyboardKey.Kind.ACTION, weight = 1.35f)),
