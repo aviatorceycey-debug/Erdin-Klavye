@@ -1038,17 +1038,29 @@ class ErdinKeyboardView(
                 keyPressed -> blendColor(baseKeyColor, colors.accent, 0.22f)
                 else -> baseKeyColor
             }
+            // Pressed caps travel down a fraction and lose their floating shadow,
+            // giving immediate tactile feedback without changing hit rectangles.
+            val pressInset = if (keyPressed) 0.8f * density else 0f
+            val faceRect = RectF(
+                rect.left + pressInset,
+                rect.top + pressInset,
+                rect.right - pressInset,
+                rect.bottom + pressInset
+            )
             val keyBottom = when (key.kind) {
                 KeyboardKey.Kind.ACCENT -> blendColor(keyColor, 0xFF101A32.toInt(), 0.20f)
                 KeyboardKey.Kind.SPACE -> blendColor(keyColor, 0xFF101A32.toInt(), 0.16f)
                 else -> blendColor(keyColor, 0xFF080E1A.toInt(), 0.22f)
             }
-            paint.setShadowLayer(5f * density, 0f, 2.5f * density, 0x99000000.toInt())
+            paint.setShadowLayer(
+                (if (keyPressed) 1.5f else 5f) * density,
+                0f, (if (keyPressed) 0.6f else 2.5f) * density, 0x99000000.toInt()
+            )
             paint.shader = LinearGradient(
-                rect.left, rect.top, rect.left, rect.bottom,
+                faceRect.left, faceRect.top, faceRect.left, faceRect.bottom,
                 keyColor, keyBottom, Shader.TileMode.CLAMP
             )
-            canvas.drawRoundRect(rect, 8.5f * density, 8.5f * density, paint)
+            canvas.drawRoundRect(faceRect, 8.5f * density, 8.5f * density, paint)
             paint.shader = null
             paint.clearShadowLayer()
             paint.style = Paint.Style.STROKE
@@ -1059,14 +1071,14 @@ class ErdinKeyboardView(
                 else -> if (shiftActive) blendColor(colors.accentOutline, 0xFFFFFFFF.toInt(), 0.22f)
                     else blendColor(keyColor, 0xFFFFFFFF.toInt(), 0.13f)
             }
-            canvas.drawRoundRect(rect, 8.5f * density, 8.5f * density, paint)
+            canvas.drawRoundRect(faceRect, 8.5f * density, 8.5f * density, paint)
             paint.style = Paint.Style.FILL
             // A small upper highlight makes the keycaps feel dimensional
             // without introducing a glossy, oversized SwiftKey-like style.
-            paint.color = 0x22FFFFFF
+            paint.color = if (keyPressed) 0x10FFFFFF else 0x22FFFFFF
             canvas.drawRoundRect(
-                RectF(rect.left + density, rect.top + density,
-                    rect.right - density, rect.top + 3f * density),
+                RectF(faceRect.left + density, faceRect.top + density,
+                    faceRect.right - density, faceRect.top + 3f * density),
                 2f * density, 2f * density, paint
             )
             if (key.kind == KeyboardKey.Kind.SPACE) {
