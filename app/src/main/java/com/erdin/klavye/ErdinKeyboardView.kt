@@ -1161,13 +1161,18 @@ class ErdinKeyboardView(
                 val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
                 canvas.drawText(label, rect.centerX(), baseline, paint)
 
-                // Small corner legends make Turkish long-press characters
-                // discoverable without permanently adding six extra keys.
-                if (!symbols && !emojiMode && numericInputMode == 0 &&
-                    activeLanguageLabel == "Türkçe" && key.value.length == 1
-                ) {
-                    val variants = alternatives[key.value.lowercase(Locale.ROOT)]
-                    val alternateHint = variants?.getOrNull(if (shift || capsLock) 1 else 0)
+                // Corner legends quietly reveal useful long-press options:
+                // Turkish letters stay compact, while punctuation hints work in either language.
+                if (!emojiMode && numericInputMode == 0 && key.value.length == 1) {
+                    val isTurkishLetter = !symbols && activeLanguageLabel == "Türkçe" &&
+                        alternatives.containsKey(key.value.lowercase(Locale.ROOT))
+                    val isPunctuation = punctuationAlternatives.containsKey(key.value)
+                    val alternateHint = when {
+                        isTurkishLetter -> alternatives[key.value.lowercase(Locale.ROOT)]
+                            ?.getOrNull(if (shift || capsLock) 1 else 0)
+                        isPunctuation -> punctuationAlternatives[key.value]?.firstOrNull()
+                        else -> null
+                    }
                     if (alternateHint != null) {
                         paint.textAlign = Paint.Align.RIGHT
                         paint.textSize = 7.5f * density
