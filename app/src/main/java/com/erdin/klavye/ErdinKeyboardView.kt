@@ -1095,6 +1095,22 @@ class ErdinKeyboardView(
                 )
                 paint.shader = null
             }
+            if (key.label == "⇧") {
+                // A compact status lamp makes one-shot shift and caps-lock
+                // recognizable even when the arrow glyph itself is unchanged.
+                paint.style = Paint.Style.FILL
+                paint.color = when {
+                    capsLock -> 0xFFFFFFFF.toInt()
+                    shift -> colors.accent
+                    else -> 0xFF64748B.toInt()
+                }
+                canvas.drawCircle(
+                    rect.right - 5.5f * density,
+                    rect.top + 5.5f * density,
+                    (if (capsLock) 2.3f else 1.8f) * density,
+                    paint
+                )
+            }
             val label = when {
                 key.kind == KeyboardKey.Kind.SPACE -> key.label
                 (shift || capsLock) && !symbols && key.label.length == 1 -> upper(key.label)
