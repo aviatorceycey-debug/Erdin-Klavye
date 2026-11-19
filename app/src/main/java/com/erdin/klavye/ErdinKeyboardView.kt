@@ -1111,21 +1111,38 @@ class ErdinKeyboardView(
                     paint
                 )
             }
-            val label = when {
-                key.kind == KeyboardKey.Kind.SPACE -> key.label
-                (shift || capsLock) && !symbols && key.label.length == 1 -> upper(key.label)
-                else -> key.label
+            val phoneParts = if (numericInputMode == 2) key.label.split(' ', limit = 2) else emptyList()
+            if (phoneParts.size == 2 && phoneParts[0].length == 1) {
+                // Telephone keypad legends use a clear two-level hierarchy:
+                // the dialed digit stays prominent, its letter group is secondary.
+                paint.textAlign = Paint.Align.CENTER
+                paint.color = 0xFFF5F8FF.toInt()
+                paint.textSize = 21f * density
+                val digitBaseline = rect.centerY() - 2f * density -
+                    (paint.ascent() + paint.descent()) / 2f
+                canvas.drawText(phoneParts[0], rect.centerX(), digitBaseline, paint)
+                paint.color = 0xFFB9C8DE.toInt()
+                paint.textSize = 8f * density
+                val lettersBaseline = rect.centerY() + 11f * density -
+                    (paint.ascent() + paint.descent()) / 2f
+                canvas.drawText(phoneParts[1], rect.centerX(), lettersBaseline, paint)
+            } else {
+                val label = when {
+                    key.kind == KeyboardKey.Kind.SPACE -> key.label
+                    (shift || capsLock) && !symbols && key.label.length == 1 -> upper(key.label)
+                    else -> key.label
+                }
+                paint.color = if (key.kind == KeyboardKey.Kind.SPACE) 0xFFC5D5EE.toInt() else 0xFFF5F8FF.toInt()
+                paint.textAlign = Paint.Align.CENTER
+                paint.textSize = when {
+                    key.kind == KeyboardKey.Kind.SPACE -> 10f * density
+                    key.label.length > 3 -> 11f * density
+                    key.label.length > 1 -> 14f * density
+                    else -> 18f * density
+                }
+                val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
+                canvas.drawText(label, rect.centerX(), baseline, paint)
             }
-            paint.color = if (key.kind == KeyboardKey.Kind.SPACE) 0xFFC5D5EE.toInt() else 0xFFF5F8FF.toInt()
-            paint.textAlign = Paint.Align.CENTER
-            paint.textSize = when {
-                key.kind == KeyboardKey.Kind.SPACE -> 10f * density
-                key.label.length > 3 -> 11f * density
-                key.label.length > 1 -> 14f * density
-                else -> 18f * density
-            }
-            val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
-            canvas.drawText(label, rect.centerX(), baseline, paint)
         }
         if (clipboardMode && clipboardItems.isEmpty()) drawClipboardEmptyState(canvas)
         drawKeyPreview(canvas)
