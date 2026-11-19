@@ -1022,11 +1022,19 @@ class ErdinKeyboardView(
         drawSuggestionStrip(canvas)
         keyRects().forEach { (key, rect) ->
             if (key.label.isBlank()) return@forEach
-            val keyColor = when (key.kind) {
+            val baseKeyColor = when (key.kind) {
                 KeyboardKey.Kind.SPACE -> colors.space
                 KeyboardKey.Kind.ACCENT -> colors.accent
                 KeyboardKey.Kind.ACTION -> colors.action
                 KeyboardKey.Kind.NORMAL -> colors.normal
+            }
+            // Shift feedback is visible at a glance; caps-lock is slightly
+            // brighter than one-shot shift while keeping the original layout.
+            val shiftActive = key.label == "⇧" && (shift || capsLock)
+            val keyColor = when {
+                key.label == "⇧" && capsLock -> blendColor(baseKeyColor, colors.accent, 0.78f)
+                shiftActive -> blendColor(baseKeyColor, colors.accent, 0.48f)
+                else -> baseKeyColor
             }
             val keyBottom = when (key.kind) {
                 KeyboardKey.Kind.ACCENT -> blendColor(keyColor, 0xFF101A32.toInt(), 0.20f)
@@ -1046,7 +1054,8 @@ class ErdinKeyboardView(
             paint.color = when (key.kind) {
                 KeyboardKey.Kind.ACCENT -> colors.accentOutline
                 KeyboardKey.Kind.SPACE -> colors.spaceOutline
-                else -> blendColor(keyColor, 0xFFFFFFFF.toInt(), 0.13f)
+                else -> if (shiftActive) blendColor(colors.accentOutline, 0xFFFFFFFF.toInt(), 0.22f)
+                    else blendColor(keyColor, 0xFFFFFFFF.toInt(), 0.13f)
             }
             canvas.drawRoundRect(rect, 8.5f * density, 8.5f * density, paint)
             paint.style = Paint.Style.FILL
