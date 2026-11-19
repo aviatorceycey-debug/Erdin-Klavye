@@ -1243,14 +1243,20 @@ class ErdinKeyboardView(
                 if (activeLanguageLabel == "English") "SMART KEYBOARD" else "AKILLI KLAVYE",
                 brandX - 42f * density, centerY + 10f * density, paint
             )
-            paint.shader = LinearGradient(
-                brandX + 65f * density, centerY, width - 18f * density, centerY,
-                intArrayOf(palette().accent, 0x003F9DFF), null, Shader.TileMode.CLAMP
-            )
-            paint.strokeWidth = 1.2f * density
-            canvas.drawLine(brandX + 65f * density, centerY + 12f * density,
-                width - 18f * density, centerY + 12f * density, paint)
-            paint.shader = null
+            // Keep the brand rail clear of the right-side theme control,
+            // including on compact screens and one-handed layouts.
+            val railStart = brandX + 65f * density
+            val railEnd = width - 64f * density
+            if (railEnd > railStart + 8f * density) {
+                paint.shader = LinearGradient(
+                    railStart, 0f, railEnd, 0f,
+                    intArrayOf(palette().accent, 0x003F9DFF), null, Shader.TileMode.CLAMP
+                )
+                paint.strokeWidth = 1.2f * density
+                canvas.drawLine(railStart, centerY + 12f * density,
+                    railEnd, centerY + 12f * density, paint)
+                paint.shader = null
+            }
             return
         }
         suggestions.forEachIndexed { index, suggestion ->
