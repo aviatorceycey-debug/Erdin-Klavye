@@ -1058,6 +1058,34 @@ class ErdinKeyboardView(
                     rect.right - density, rect.top + 3f * density),
                 2f * density, 2f * density, paint
             )
+            if (key.kind == KeyboardKey.Kind.SPACE) {
+                // Give the primary spacebar a quiet, ownable signature:
+                // inset hairline + short accent rail, without changing hit areas.
+                val inset = RectF(
+                    rect.left + 3f * density,
+                    rect.top + 3f * density,
+                    rect.right - 3f * density,
+                    rect.bottom - 3f * density
+                )
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 0.55f * density
+                paint.color = blendColor(colors.spaceOutline, 0xFFFFFFFF.toInt(), 0.16f)
+                canvas.drawRoundRect(inset, 6f * density, 6f * density, paint)
+                paint.style = Paint.Style.FILL
+                val railWidth = (rect.width() * 0.24f).coerceAtLeast(18f * density)
+                val railLeft = rect.centerX() - railWidth / 2f
+                paint.shader = LinearGradient(
+                    railLeft, 0f, railLeft + railWidth, 0f,
+                    intArrayOf(0x003F9DFF, colors.accent, 0x003F9DFF),
+                    null, Shader.TileMode.CLAMP
+                )
+                canvas.drawRoundRect(
+                    RectF(railLeft, rect.bottom - 3.2f * density,
+                        railLeft + railWidth, rect.bottom - 2.1f * density),
+                    density, density, paint
+                )
+                paint.shader = null
+            }
             val label = when {
                 key.kind == KeyboardKey.Kind.SPACE -> key.label
                 (shift || capsLock) && !symbols && key.label.length == 1 -> upper(key.label)
