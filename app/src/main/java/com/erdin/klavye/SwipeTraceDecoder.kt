@@ -23,7 +23,9 @@ internal object SwipeTraceDecoder {
     private data class CenteredKey(
         val value: String,
         val centerX: Double,
-        val centerY: Double
+        val centerY: Double,
+        val loopThreshold: Double,
+        val returnThreshold: Double
     )
     fun decode(
         path: List<Pair<Float, Float>>,
@@ -47,7 +49,9 @@ internal object SwipeTraceDecoder {
             CenteredKey(
                 key.value.lowercase(locale),
                 (key.left.toDouble() + key.right.toDouble()) / 2.0,
-                (key.top.toDouble() + key.bottom.toDouble()) / 2.0
+                (key.top.toDouble() + key.bottom.toDouble()) / 2.0,
+                minOf(key.right - key.left, key.bottom - key.top).toDouble() * 0.60,
+                minOf(key.right - key.left, key.bottom - key.top).toDouble() * 0.22
             )
         }
         // Keep geometry arithmetic in Double: finite Float bounds can still
@@ -57,6 +61,7 @@ internal object SwipeTraceDecoder {
         val word = StringBuilder()
         var previous = ""
         var activeKey: CenteredKey? = null
+        var activeKeyLooped = false
 
         path.forEach { (x, y) ->
             if (!x.isFinite() || !y.isFinite()) return@forEach
@@ -84,7 +89,22 @@ internal object SwipeTraceDecoder {
                 // Switch only when the new key is meaningfully closer than the active key.
                 if (nearestDistance + switchMargin >= currentDistance) return@forEach
             }
-            if (value != previous) word.append(value)
+            if (value != previous) {
+                word.append(value)
+                activeKeyLooped = false
+            } else {
+                // A deliberate loop that leaves and returns to the same key
+                // represents a repeated letter (for example the "oo" in "book").
+                // Small tremors do not pass the excursion threshold.
+                if (nearestDistance >= nearestKey.loopThreshold) {
+                    activeKeyLooped = true
+                } else if (activeKeyLooped &&
+                    nearestDistance <= nearestKey.returnThreshold
+                ) {
+                    word.append(value)
+                    activeKeyLooped = false
+                }
+            }
             previous = value
             activeKey = nearestKey
         }
