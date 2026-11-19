@@ -1142,6 +1142,26 @@ class ErdinKeyboardView(
                 }
                 val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
                 canvas.drawText(label, rect.centerX(), baseline, paint)
+
+                // Small corner legends make Turkish long-press characters
+                // discoverable without permanently adding six extra keys.
+                if (!symbols && !emojiMode && numericInputMode == 0 &&
+                    activeLanguageLabel != "English" && key.value.length == 1
+                ) {
+                    val variants = alternatives[key.value.lowercase(Locale.ROOT)]
+                    val alternateHint = variants?.getOrNull(if (shift || capsLock) 1 else 0)
+                    if (alternateHint != null) {
+                        paint.textAlign = Paint.Align.RIGHT
+                        paint.textSize = 7.5f * density
+                        paint.color = blendColor(colors.accentOutline, 0xFFFFFFFF.toInt(), 0.12f)
+                        canvas.drawText(
+                            alternateHint,
+                            rect.right - 4f * density,
+                            rect.top + 10f * density,
+                            paint
+                        )
+                    }
+                }
             }
         }
         if (clipboardMode && clipboardItems.isEmpty()) drawClipboardEmptyState(canvas)
