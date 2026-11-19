@@ -626,6 +626,16 @@ class ErdinKeyboardView(
                     }
                     node.text = label
                     node.contentDescription = label
+                    if (virtualViewId == 2001) {
+                        val theme = context.getSharedPreferences(
+                            "erdin_keyboard_settings", Context.MODE_PRIVATE
+                        ).getString("keyboard_theme", "midnight")
+                        node.stateDescription = when (theme) {
+                            "ocean" -> if (activeLanguageLabel == "English") "Ocean theme" else "Okyanus teması"
+                            "violet" -> if (activeLanguageLabel == "English") "Violet theme" else "Mor tema"
+                            else -> if (activeLanguageLabel == "English") "Midnight theme" else "Gece teması"
+                        }
+                    }
                     node.className = android.widget.Button::class.java.name
                     node.isFocusable = true
                     node.isClickable = true
