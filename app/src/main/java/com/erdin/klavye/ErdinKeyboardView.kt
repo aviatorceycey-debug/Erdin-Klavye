@@ -1170,6 +1170,14 @@ class ErdinKeyboardView(
                     key.label.length > 1 -> 14f * density
                     else -> 18f * density
                 }
+                // Keep every legend inside its own keycap on compact phones and
+                // localized layouts; only typography scales, never the touch target.
+                val labelWidth = (rect.width() - 10f * density).coerceAtLeast(1f)
+                val measuredLabelWidth = paint.measureText(label)
+                if (measuredLabelWidth > labelWidth) {
+                    paint.textSize = (paint.textSize * labelWidth / measuredLabelWidth)
+                        .coerceAtLeast(8f * density)
+                }
                 val baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f
                 canvas.drawText(label, rect.centerX(), baseline, paint)
 
