@@ -55,4 +55,23 @@ class AlternatePopupLayoutTest {
         assertEquals(0f, bounds.width, 0f)
         assertEquals(0f, bounds.height, 0f)
     }
+    @Test
+    fun popupSelectionRejectsTouchesOutsideInsteadOfPickingAnEdgeOption() {
+        val bounds = PopupBounds(10f, 20f, 148f, 72f)
+
+        assertEquals(-1, AlternatePopupLayout.optionIndex(9.9f, 40f, bounds, 3))
+        assertEquals(-1, AlternatePopupLayout.optionIndex(148f, 40f, bounds, 3))
+        assertEquals(-1, AlternatePopupLayout.optionIndex(50f, 19.9f, bounds, 3))
+        assertEquals(-1, AlternatePopupLayout.optionIndex(50f, 72f, bounds, 3))
+    }
+
+    @Test
+    fun popupSelectionMapsInsideTouchToItsOption() {
+        val bounds = PopupBounds(10f, 20f, 148f, 72f)
+
+        assertEquals(0, AlternatePopupLayout.optionIndex(11f, 40f, bounds, 3))
+        assertEquals(1, AlternatePopupLayout.optionIndex(79f, 40f, bounds, 3))
+        assertEquals(2, AlternatePopupLayout.optionIndex(147f, 40f, bounds, 3))
+    }
+
 }
