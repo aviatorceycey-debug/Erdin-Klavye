@@ -1525,6 +1525,16 @@ class ErdinKeyboardView(
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
+                // A long press belongs to the original key. Moving away before
+                // the timer fires cancels it; moving away from a held Backspace
+                // also stops repeat immediately instead of deleting off-key.
+                if (downKey != null && downRect?.contains(event.x, event.y) != true) {
+                    if (!longPressed) handler.removeCallbacks(longPressRunnable)
+                    if (longPressed && downKey?.label == "⌫") {
+                        handler.removeCallbacks(deleteRepeatRunnable)
+                        longPressed = false
+                    }
+                }
                 if (longPressed && alternateOptions.isNotEmpty()) {
                     updateAlternateSelection(event.x, event.y)
                 } else if (downKey?.value?.length == 1 && downKey?.value?.firstOrNull()?.isLetter() == true &&
