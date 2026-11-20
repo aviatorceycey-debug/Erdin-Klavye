@@ -135,7 +135,14 @@ class ErdinKeyboardView(
     private var lastCursorX = 0f
     private var cursorMoved = false
     private var swipeTyping = false
+    private var swipeTypingAvailable = false
     private val swipePath = mutableListOf<Pair<Float, Float>>()
+
+    fun setSwipeTypingAvailable(available: Boolean) {
+        swipeTypingAvailable = available
+        if (!available) cancelTransientKeyInteraction()
+        invalidate()
+    }
 
     private fun appendSwipeSegment(x: Float, y: Float) {
         SwipePathSampler.appendSegment(swipePath, x, y, density)
@@ -1521,8 +1528,7 @@ class ErdinKeyboardView(
                 if (longPressed && alternateOptions.isNotEmpty()) {
                     updateAlternateSelection(event.x, event.y)
                 } else if (downKey?.value?.length == 1 && downKey?.value?.firstOrNull()?.isLetter() == true &&
-                    context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
-                        .getBoolean("swipe_typing_enabled", false)) {
+                    swipeTypingAvailable) {
                     val dx = event.x - (downRect?.centerX() ?: event.x)
                     val dy = event.y - (downRect?.centerY() ?: event.y)
                     if (!swipeTyping && kotlin.math.hypot(dx.toDouble(), dy.toDouble()) > 18f * density) {
