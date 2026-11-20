@@ -608,11 +608,12 @@ class LocalLanguageModel(context: Context) {
      * a known word is a very close spelling match; otherwise keeps the raw path.
      */
     @Synchronized
-    fun decodeSwipePath(path: String): String {
+    fun decodeSwipePath(path: String, includePersonalWords: Boolean = true): String {
         refreshPersonalDataIfChanged()
         val clean = normalize(path).filter { it.isLetter() }
         if (clean.length < 2) return clean
-        val candidates = (starterWords.asSequence() + wordCounts.keys.asSequence())
+        val personalCandidates = if (includePersonalWords) wordCounts.keys.asSequence() else emptySequence()
+        val candidates = (starterWords.asSequence() + personalCandidates)
             .filter { kotlin.math.abs(it.length - clean.length) <= 1 }
             .distinct()
         val rankedCandidates = candidates.mapNotNull { word ->
@@ -630,11 +631,12 @@ class LocalLanguageModel(context: Context) {
      * Conservative English swipe decoder using fixed and privately learned vocabulary.
      */
     @Synchronized
-    fun decodeEnglishSwipePath(path: String): String {
+    fun decodeEnglishSwipePath(path: String, includePersonalWords: Boolean = true): String {
         refreshPersonalDataIfChanged()
         val clean = path.lowercase(Locale.US).filter { it in 'a'..'z' }
         if (clean.length < 2) return clean
-        val rankedCandidates = (englishStarterWords.asSequence() + englishWordCounts.keys.asSequence())
+        val personalCandidates = if (includePersonalWords) englishWordCounts.keys.asSequence() else emptySequence()
+        val rankedCandidates = (englishStarterWords.asSequence() + personalCandidates)
             .distinct()
             .filter { kotlin.math.abs(it.length - clean.length) <= 1 }
             .mapNotNull { word ->
