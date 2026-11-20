@@ -609,7 +609,7 @@ class LocalLanguageModel(context: Context) {
      */
     @Synchronized
     fun decodeSwipePath(path: String, includePersonalWords: Boolean = true): String {
-        refreshPersonalDataIfChanged()
+        if (includePersonalWords) refreshPersonalDataIfChanged()
         val clean = normalize(path).filter { it.isLetter() }
         if (clean.length < 2) return clean
         val personalCandidates = if (includePersonalWords) wordCounts.keys.asSequence() else emptySequence()
@@ -621,7 +621,7 @@ class LocalLanguageModel(context: Context) {
             if (distance > 1) null else SwipeWordCandidate(
                 word = word,
                 distance = distance,
-                personalCount = wordCounts[word] ?: 0
+                personalCount = if (includePersonalWords) wordCounts[word] ?: 0 else 0
             )
         }
         return SwipeCandidateSelector.selectTurkish(rankedCandidates, clean)
@@ -632,7 +632,7 @@ class LocalLanguageModel(context: Context) {
      */
     @Synchronized
     fun decodeEnglishSwipePath(path: String, includePersonalWords: Boolean = true): String {
-        refreshPersonalDataIfChanged()
+        if (includePersonalWords) refreshPersonalDataIfChanged()
         val clean = path.lowercase(Locale.US).filter { it in 'a'..'z' }
         if (clean.length < 2) return clean
         val personalCandidates = if (includePersonalWords) englishWordCounts.keys.asSequence() else emptySequence()
@@ -644,7 +644,7 @@ class LocalLanguageModel(context: Context) {
                 if (distance > 1) null else SwipeWordCandidate(
                     word = word,
                     distance = distance,
-                    personalCount = englishWordCounts[word] ?: 0,
+                    personalCount = if (includePersonalWords) englishWordCounts[word] ?: 0 else 0,
                     frequencyRank = englishFrequencyRank[word] ?: Int.MAX_VALUE
                 )
             }
