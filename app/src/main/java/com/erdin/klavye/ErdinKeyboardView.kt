@@ -1606,7 +1606,13 @@ class ErdinKeyboardView(
                         // dragging outside both key and popup cancels the gesture.
                         onKey(if (shift || capsLock) upper(key.value) else key.value)
                     }
-                } else if (key != null && !longPressed && !cursorMoved) {
+                } else if (key != null && !longPressed && !cursorMoved &&
+                    SwipeGestureCommitPolicy.shouldCommitBaseKey(
+                        downRect?.contains(event.x, event.y) == true
+                    )
+                ) {
+                    // A tap is valid only if the finger is released on the
+                    // same key where it began; sliding onto another key cancels.
                     when (key.label) {
                         "⇧" -> {
                             if (shift && !capsLock) {
