@@ -43,8 +43,10 @@ class EditorInputPolicyTest {
         val numericPassword = policy(
             InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
         )
+        assertFalse(numericPassword.suggestionsEnabled)
         assertFalse(numericPassword.clipboardEnabled)
         assertFalse(numericPassword.learningEnabled)
+        assertFalse(numericPassword.doubleSpacePeriodEnabled)
         assertFalse(numericPassword.swipeTypingEnabled)
     }
 
