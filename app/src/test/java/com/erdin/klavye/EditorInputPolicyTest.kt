@@ -11,16 +11,19 @@ class EditorInputPolicyTest {
         inputType: Int = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_NORMAL,
         imeOptions: Int = 0,
         learning: Boolean = true,
-        suggestions: Boolean = true
-    ) = EditorInputPolicy.from(inputType, imeOptions, learning, suggestions)
+        suggestions: Boolean = true,
+        swipeTyping: Boolean = true
+    ) = EditorInputPolicy.from(inputType, imeOptions, learning, suggestions, swipeTyping)
 
     @Test
     fun ordinaryTextEnablesExpectedFeatures() {
         val result = policy()
         assertTrue(result.suggestionsEnabled)
         assertTrue(result.clipboardEnabled)
+        assertTrue(result.swipeTypingEnabled)
         assertTrue(result.doubleSpacePeriodEnabled)
         assertTrue(result.learningEnabled)
+        assertTrue(result.swipeTypingEnabled)
     }
 
     @Test
@@ -36,12 +39,15 @@ class EditorInputPolicyTest {
             assertFalse(result.clipboardEnabled)
             assertFalse(result.learningEnabled)
             assertFalse(result.doubleSpacePeriodEnabled)
+        assertFalse(result.swipeTypingEnabled)
+            assertFalse(result.swipeTypingEnabled)
         }
         val numericPassword = policy(
             InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
         )
         assertFalse(numericPassword.clipboardEnabled)
         assertFalse(numericPassword.learningEnabled)
+        assertFalse(numericPassword.swipeTypingEnabled)
     }
 
     @Test
@@ -50,6 +56,7 @@ class EditorInputPolicyTest {
         assertFalse(result.clipboardEnabled)
         assertFalse(result.learningEnabled)
         assertTrue(result.suggestionsEnabled)
+        assertTrue(result.swipeTypingEnabled)
     }
 
     @Test
@@ -79,5 +86,13 @@ class EditorInputPolicyTest {
         assertFalse(result.suggestionsEnabled)
         assertFalse(result.learningEnabled)
         assertTrue(result.clipboardEnabled)
+        assertFalse(result.swipeTypingEnabled)
+    }
+    @Test
+    fun userCanDisableSwipeTypingWithoutDisablingOtherFeatures() {
+        val result = policy(swipeTyping = false)
+        assertFalse(result.swipeTypingEnabled)
+        assertTrue(result.suggestionsEnabled)
+        assertTrue(result.learningEnabled)
     }
 }
