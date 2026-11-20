@@ -1582,10 +1582,19 @@ class ErdinKeyboardView(
                         density,
                         activeLanguageLabel == "English"
                     )
-                    if (word.length >= 2) {
+                    val releaseOnLetterKey = letterKeys.any { (_, rect) ->
+                        rect.contains(event.x, event.y)
+                    }
+                    if (SwipeGestureCommitPolicy.shouldCommitWord(word, releaseOnLetterKey)) {
                         onKey("__SWIPE_WORD__" + if (shift || capsLock) upper(word) else word)
                         if (shift && !capsLock) shift = false
-                    } else if (key != null) {
+                    } else if (key != null && SwipeGestureCommitPolicy.shouldCommitBaseKey(
+                            downRect?.contains(event.x, event.y) == true
+                        )
+                    ) {
+                        // A failed/one-letter swipe is a tap only when the
+                        // finger is released on its original key. Dragging
+                        // away from the key cancels instead of inserting it.
                         onKey(if (shift || capsLock) upper(key.value) else key.value)
                     }
                 } else if (longPressed && alternateOptions.isNotEmpty()) {
