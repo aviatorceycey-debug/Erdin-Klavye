@@ -20,14 +20,13 @@ class EditorInputPolicyTest {
         val result = policy()
         assertTrue(result.suggestionsEnabled)
         assertTrue(result.clipboardEnabled)
-        assertTrue(result.swipeTypingEnabled)
         assertTrue(result.doubleSpacePeriodEnabled)
         assertTrue(result.learningEnabled)
         assertTrue(result.swipeTypingEnabled)
     }
 
     @Test
-    fun passwordFieldsDisableSuggestionsClipboardAndLearning() {
+    fun passwordFieldsDisableSuggestionsClipboardLearningAndSwipeTyping() {
         val textPasswords = listOf(
             InputType.TYPE_TEXT_VARIATION_PASSWORD,
             InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
@@ -39,7 +38,6 @@ class EditorInputPolicyTest {
             assertFalse(result.clipboardEnabled)
             assertFalse(result.learningEnabled)
             assertFalse(result.doubleSpacePeriodEnabled)
-        assertFalse(result.swipeTypingEnabled)
             assertFalse(result.swipeTypingEnabled)
         }
         val numericPassword = policy(
@@ -51,7 +49,7 @@ class EditorInputPolicyTest {
     }
 
     @Test
-    fun editorPersonalizationFlagDisablesClipboardAndLearning() {
+    fun editorPersonalizationFlagDisablesPersonalLearningButKeepsBaseSwipeTyping() {
         val result = policy(imeOptions = EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING)
         assertFalse(result.clipboardEnabled)
         assertFalse(result.learningEnabled)
@@ -68,6 +66,7 @@ class EditorInputPolicyTest {
         assertFalse(result.suggestionsEnabled)
         assertFalse(result.learningEnabled)
         assertFalse(result.doubleSpacePeriodEnabled)
+        assertFalse(result.swipeTypingEnabled)
     }
 
     @Test
@@ -76,10 +75,11 @@ class EditorInputPolicyTest {
         assertFalse(result.learningEnabled)
         assertFalse(result.suggestionsEnabled)
         assertTrue(result.clipboardEnabled)
+        assertTrue(result.swipeTypingEnabled)
     }
 
     @Test
-    fun nonPlainTextFieldsDoNotEnableSuggestionsOrLearning() {
+    fun nonPlainTextFieldsDoNotEnableSuggestionsLearningOrSwipeTyping() {
         val result = policy(
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         )
@@ -88,6 +88,7 @@ class EditorInputPolicyTest {
         assertTrue(result.clipboardEnabled)
         assertFalse(result.swipeTypingEnabled)
     }
+
     @Test
     fun userCanDisableSwipeTypingWithoutDisablingOtherFeatures() {
         val result = policy(swipeTyping = false)
