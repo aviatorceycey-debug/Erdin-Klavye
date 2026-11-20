@@ -290,9 +290,9 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
 
     private fun nextWordsForActiveLanguage(current: String, previous: String?): List<String> {
         val suggestions = if (usesTurkishModel()) {
-            languageModel.nextWords(current, previous)
+            languageModel.nextWords(current, previous, includePersonalData = learningEnabled)
         } else {
-            languageModel.englishNextWords(current, previous)
+            languageModel.englishNextWords(current, previous, includePersonalData = learningEnabled)
         }
         val autoCapitalization = getSharedPreferences(
             "erdin_keyboard_settings", MODE_PRIVATE
@@ -532,7 +532,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 return@Runnable
             }
             lastQueriedWord = word
-            val local = if (usesTurkishModel()) languageModel.completions(word) else languageModel.englishCompletions(word)
+            val local = if (usesTurkishModel()) languageModel.completions(word, includePersonalData = learningEnabled) else languageModel.englishCompletions(word, includePersonalData = learningEnabled)
             keyboardView?.setSuggestions((listOf(word) + local).take(3))
             spellCheckerSession?.getSuggestions(
                 arrayOf(TextInfo(word, 0, requestSequence)), 3, false
@@ -634,7 +634,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             .map { matchSuggestionCase(it, queriedWord) }
             .distinctBy { it.lowercase(activeEditorLocale()) }
             .take(2)
-        val localCompletions = if (usesTurkishModel()) languageModel.completions(queriedWord) else languageModel.englishCompletions(queriedWord)
+        val localCompletions = if (usesTurkishModel()) languageModel.completions(queriedWord, includePersonalData = learningEnabled) else languageModel.englishCompletions(queriedWord, includePersonalData = learningEnabled)
         val candidates = (listOf(queriedWord) + corrections + localCompletions)
             .distinctBy { it.lowercase(activeEditorLocale()) }
             .take(3)
