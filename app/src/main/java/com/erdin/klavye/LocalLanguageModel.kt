@@ -14,6 +14,7 @@ class LocalLanguageModel(context: Context) {
 
     // Compact seed vocabulary: useful everyday Turkish words, kept on-device.
     private val starterWords = """
+        ad ak al an ar aş at av ay az be bu da de el en er eş et ev iç il in ip iş it iz ki mi ne ol on ot oy öz ön öp su şu un ve ya ye
         acaba açık açıklama adam adres aile akşam alabilir alışveriş ama ancak anlat ara
         arkadaş artık aslında asla at bugün bana başarı başka bazen bekle belki ben bence
         beni beraber bilgi bilmek bir biraz biz böyle büyük çalışma çalışmak çok da daha
