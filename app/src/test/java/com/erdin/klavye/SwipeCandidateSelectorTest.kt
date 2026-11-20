@@ -170,6 +170,24 @@ class SwipeCandidateSelectorTest {
     }
 
     @Test
+    fun strongPersonalLearningCanResolveAnAmbiguousTwoLetterTurkishSwipe() {
+        val candidates = listOf(
+            SwipeWordCandidate("bu", distance = 1, personalCount = 8),
+            SwipeWordCandidate("su", distance = 1, personalCount = 3)
+        )
+        assertEquals("bu", SwipeCandidateSelector.selectTurkish(candidates.asSequence(), "xu"))
+    }
+
+    @Test
+    fun strongPersonalLearningCanResolveAnAmbiguousTwoLetterEnglishSwipe() {
+        val candidates = listOf(
+            SwipeWordCandidate("to", distance = 1, personalCount = 8),
+            SwipeWordCandidate("do", distance = 1, personalCount = 3)
+        )
+        assertEquals("to", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "xo"))
+    }
+
+    @Test
     fun emptyCandidateListsPreserveOriginalTrace() {
         assertEquals("trace", SwipeCandidateSelector.selectTurkish(emptyList<SwipeWordCandidate>().asSequence(), "trace"))
         assertEquals("trace", SwipeCandidateSelector.selectEnglish(emptyList<SwipeWordCandidate>().asSequence(), "trace"))
