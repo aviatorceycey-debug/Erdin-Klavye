@@ -152,6 +152,24 @@ class SwipeCandidateSelectorTest {
     }
 
     @Test
+    fun ambiguousTwoLetterTurkishSwipeKeepsRawTrace() {
+        val candidates = listOf(
+            SwipeWordCandidate("bu", distance = 1),
+            SwipeWordCandidate("su", distance = 1)
+        )
+        assertEquals("xu", SwipeCandidateSelector.selectTurkish(candidates.asSequence(), "xu"))
+    }
+
+    @Test
+    fun ambiguousTwoLetterEnglishSwipeKeepsRawTrace() {
+        val candidates = listOf(
+            SwipeWordCandidate("to", distance = 1),
+            SwipeWordCandidate("do", distance = 1)
+        )
+        assertEquals("xo", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "xo"))
+    }
+
+    @Test
     fun emptyCandidateListsPreserveOriginalTrace() {
         assertEquals("trace", SwipeCandidateSelector.selectTurkish(emptyList<SwipeWordCandidate>().asSequence(), "trace"))
         assertEquals("trace", SwipeCandidateSelector.selectEnglish(emptyList<SwipeWordCandidate>().asSequence(), "trace"))
