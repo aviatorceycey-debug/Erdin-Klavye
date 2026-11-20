@@ -65,9 +65,14 @@ class ErdinKeyboardView(
     private var cachedBackgroundHeight = -1
     private var cachedBackgroundColorsHash = 0
 
+    private var cachedPaletteTheme: String? = null
+    private var cachedPalette: KeyboardPalette? = null
+
     private fun loadPalette(): KeyboardPalette {
-        return when (context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
-            .getString("keyboard_theme", "midnight")) {
+        val theme = context.getSharedPreferences("erdin_keyboard_settings", Context.MODE_PRIVATE)
+            .getString("keyboard_theme", "midnight") ?: "midnight"
+        if (theme == cachedPaletteTheme) cachedPalette?.let { return it }
+        val loaded = when (theme) {
             "ocean" -> KeyboardPalette(
                 intArrayOf(0xFF061B25.toInt(), 0xFF0B3444.toInt(), 0xFF092632.toInt()),
                 0xFF164657.toInt(), 0xFF1D5364.toInt(), 0xFF087F8C.toInt(), 0xFF1B5969.toInt(),
@@ -87,6 +92,9 @@ class ErdinKeyboardView(
                 0x332D83D5
             )
         }
+        cachedPaletteTheme = theme
+        cachedPalette = loaded
+        return loaded
     }
     private fun palette(): KeyboardPalette = activeDrawPalette ?: loadPalette()
 
