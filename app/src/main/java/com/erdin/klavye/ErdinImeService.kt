@@ -29,6 +29,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
     private var lastContextPreviousWord = ""
     private lateinit var languageModel: LocalLanguageModel
     private var learningEnabled = true
+    private var swipeTypingEnabled = false
     private var suggestionsEnabled = true
     private var doubleSpacePeriodEnabled = true
     private var clipboardEnabled = true
@@ -80,9 +81,14 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 ).getBoolean("personal_learning_enabled", true),
                 suggestionsPreference = getSharedPreferences(
                     "erdin_keyboard_settings", MODE_PRIVATE
-                ).getBoolean("suggestions_enabled", true)
+                ).getBoolean("suggestions_enabled", true),
+                swipeTypingPreference = getSharedPreferences(
+                    "erdin_keyboard_settings", MODE_PRIVATE
+                ).getBoolean("swipe_typing_enabled", false)
             )
             suggestionsEnabled = policy.suggestionsEnabled
+            swipeTypingEnabled = policy.swipeTypingEnabled
+            keyboardView?.setSwipeTypingAvailable(swipeTypingEnabled)
             clipboardEnabled = policy.clipboardEnabled
             keyboardView?.setClipboardAvailable(clipboardEnabled)
             if (!clipboardEnabled) {
@@ -115,6 +121,7 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         ).also {
             keyboardView = it
             it.setClipboardAvailable(clipboardEnabled)
+            it.setSwipeTypingAvailable(swipeTypingEnabled)
             it.setInputLanguage(activeSubtypeLocale)
             it.setEditorActionDescription(editorActionDescription(currentInputEditorInfo))
             it.setNumericInputMode(currentInputEditorInfo?.inputType ?: InputType.TYPE_NULL)
@@ -141,10 +148,15 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
             ).getBoolean("personal_learning_enabled", true),
             suggestionsPreference = getSharedPreferences(
                 "erdin_keyboard_settings", MODE_PRIVATE
-            ).getBoolean("suggestions_enabled", true)
+            ).getBoolean("suggestions_enabled", true),
+            swipeTypingPreference = getSharedPreferences(
+                "erdin_keyboard_settings", MODE_PRIVATE
+            ).getBoolean("swipe_typing_enabled", false)
         )
         learningEnabled = policy.learningEnabled
         suggestionsEnabled = policy.suggestionsEnabled
+        swipeTypingEnabled = policy.swipeTypingEnabled
+        keyboardView?.setSwipeTypingAvailable(swipeTypingEnabled)
         doubleSpacePeriodEnabled = policy.doubleSpacePeriodEnabled
         clipboardEnabled = policy.clipboardEnabled
         keyboardView?.setClipboardAvailable(clipboardEnabled)
@@ -320,9 +332,9 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
                 val turkish = usesTurkishModel()
                 val locale = if (turkish) Locale("tr", "TR") else Locale.US
                 val decoded = if (turkish) {
-                    languageModel.decodeSwipePath(traced)
+                    languageModel.decodeSwipePath(traced, includePersonalWords = learningEnabled)
                 } else {
-                    languageModel.decodeEnglishSwipePath(traced)
+                    languageModel.decodeEnglishSwipePath(traced, includePersonalWords = learningEnabled)
                 }
                 val letters = traced.filter { it.isLetter() }
                 val formatted = when {
