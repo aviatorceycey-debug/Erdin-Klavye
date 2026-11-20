@@ -362,7 +362,7 @@ class MainActivity : Activity() {
         refreshLearningStatus()
 
         val privacyNote = TextView(this).apply {
-            text = "GİZLİLİK  •  Yazdıkların sunucuya gönderilmez. Kişisel kelime öğrenme verileri yalnızca bu cihazda saklanır. Şifreli ve önerilerin kapalı olduğu alanlarda öğrenme devre dışıdır. İstediğinde aşağıdan silebilirsin."
+            text = "GİZLİLİK  •  Erdin Klavye kişisel kelime verilerini kendi sunucusuna göndermez; öğrenme verileri bu cihazda saklanır. Şifreli ve önerilerin kapalı olduğu alanlarda kişisel öğrenme devre dışıdır. Öğrenme kapatıldığında kayıtlı kişisel kelimeler önerilerde de kullanılmaz. İstediğinde aşağıdan silebilirsin."
             textSize = 12f
             setTextColor(0xFF9FB4D2.toInt())
             setPadding(16, 12, 16, 12)
