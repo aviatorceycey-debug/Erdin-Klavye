@@ -11,14 +11,16 @@ internal data class EditorInputPolicy(
     val suggestionsEnabled: Boolean,
     val clipboardEnabled: Boolean,
     val doubleSpacePeriodEnabled: Boolean,
-    val learningEnabled: Boolean
+    val learningEnabled: Boolean,
+    val swipeTypingEnabled: Boolean
 ) {
     companion object {
         fun from(
             inputType: Int,
             imeOptions: Int,
             personalLearningPreference: Boolean,
-            suggestionsPreference: Boolean
+            suggestionsPreference: Boolean,
+            swipeTypingPreference: Boolean
         ): EditorInputPolicy {
             val inputClass = inputType and InputType.TYPE_MASK_CLASS
             val variation = inputType and InputType.TYPE_MASK_VARIATION
@@ -45,7 +47,9 @@ internal data class EditorInputPolicy(
                     !explicitlyNoSuggestions,
                 learningEnabled = plainTextField && !passwordField &&
                     !explicitlyNoSuggestions && personalLearningPreference &&
-                    !editorDisablesPersonalization
+                    !editorDisablesPersonalization,
+                swipeTypingEnabled = plainTextField && !passwordField &&
+                    !explicitlyNoSuggestions && swipeTypingPreference
             )
         }
     }
