@@ -167,7 +167,15 @@ class ErdinImeService : InputMethodService(), SpellCheckerSession.SpellCheckerSe
         keyboardView?.hideClipboard()
         keyboardView?.setSuggestions(emptyList())
         updateAutoShift()
-        if (suggestionsEnabled) refreshSpellCheckerSession()
+        if (suggestionsEnabled) {
+            refreshSpellCheckerSession()
+        } else {
+            // Do not keep a spell-checker session alive when the active field
+            // explicitly disables suggestions (including password fields).
+            spellCheckerSession?.close()
+            spellCheckerSession = null
+            spellCheckerLocale = null
+        }
     }
 
     override fun onUpdateSelection(
