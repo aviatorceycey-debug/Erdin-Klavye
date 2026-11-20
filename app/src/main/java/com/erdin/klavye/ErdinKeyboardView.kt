@@ -1528,12 +1528,17 @@ class ErdinKeyboardView(
                 // A long press belongs to the original key. Moving away before
                 // the timer fires cancels it; moving away from a held Backspace
                 // also stops repeat immediately instead of deleting off-key.
-                if (downKey != null && downRect?.contains(event.x, event.y) != true) {
-                    if (!longPressed) handler.removeCallbacks(longPressRunnable)
-                    if (longPressed && downKey?.label == "⌫") {
-                        handler.removeCallbacks(deleteRepeatRunnable)
-                        longPressed = false
-                    }
+                val movementEffects = KeyGestureMovementPolicy.evaluate(
+                    releasedInsideKey = downRect?.contains(event.x, event.y) == true,
+                    longPressAlreadyStarted = longPressed,
+                    isBackspace = downKey?.label == "⌫"
+                )
+                if (movementEffects.cancelPendingLongPress) {
+                    handler.removeCallbacks(longPressRunnable)
+                }
+                if (movementEffects.stopBackspaceRepeat) {
+                    handler.removeCallbacks(deleteRepeatRunnable)
+                    longPressed = false
                 }
                 if (longPressed && alternateOptions.isNotEmpty()) {
                     updateAlternateSelection(event.x, event.y)
