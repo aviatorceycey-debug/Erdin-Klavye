@@ -37,8 +37,8 @@ class MainActivity : Activity() {
         val enabled = prefs.getBoolean("personal_learning_enabled", true)
         val learnedCount = LocalLanguageModel(this).learnedWords().size
         learningStatus?.apply {
-            text = if (enabled) "Açık  •  cihazda $learnedCount kelime öğrenildi" else "Kapalı  •  yeni kelime öğrenilmiyor"
-            contentDescription = if (enabled) "Kişisel kelime öğrenme açık. Cihazda $learnedCount kelime öğrenildi." else "Kişisel kelime öğrenme kapalı. Yeni kelime öğrenilmiyor."
+            text = if (enabled) "Açık  •  cihazda $learnedCount kelime öğrenildi" else "Kapalı  •  yeni kelime öğrenilmiyor, kişisel kelimeler önerilmiyor"
+            contentDescription = if (enabled) "Kişisel kelime öğrenme açık. Cihazda $learnedCount kelime öğrenildi." else "Kişisel kelime öğrenme kapalı. Yeni kelime öğrenilmiyor ve öğrenilmiş kişisel kelimeler önerilerde kullanılmıyor."
         }
     }
 
