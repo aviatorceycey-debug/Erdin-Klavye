@@ -132,6 +132,26 @@ class SwipeCandidateSelectorTest {
     }
 
     @Test
+    fun twoLetterTurkishSwipeCanResolveAnExactWord() {
+        val candidates = listOf(
+            SwipeWordCandidate("su", distance = 0),
+            SwipeWordCandidate("bu", distance = 1),
+            SwipeWordCandidate("ev", distance = 1)
+        )
+        assertEquals("su", SwipeCandidateSelector.selectTurkish(candidates.asSequence(), "su"))
+    }
+
+    @Test
+    fun twoLetterEnglishSwipeCanResolveAnExactWord() {
+        val candidates = listOf(
+            SwipeWordCandidate("to", distance = 0),
+            SwipeWordCandidate("do", distance = 1),
+            SwipeWordCandidate("so", distance = 1)
+        )
+        assertEquals("to", SwipeCandidateSelector.selectEnglish(candidates.asSequence(), "to"))
+    }
+
+    @Test
     fun emptyCandidateListsPreserveOriginalTrace() {
         assertEquals("trace", SwipeCandidateSelector.selectTurkish(emptyList<SwipeWordCandidate>().asSequence(), "trace"))
         assertEquals("trace", SwipeCandidateSelector.selectEnglish(emptyList<SwipeWordCandidate>().asSequence(), "trace"))
