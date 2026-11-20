@@ -68,6 +68,7 @@ internal object SwipeTraceDecoder {
         var previous = ""
         var activeKey: CenteredKey? = null
         var activeKeyLooped = false
+        var activeKeyReachedCore = false
 
         path.forEach { (x, y) ->
             if (!x.isFinite() || !y.isFinite()) return@forEach
@@ -98,17 +99,21 @@ internal object SwipeTraceDecoder {
             if (value != previous) {
                 word.append(value)
                 activeKeyLooped = false
+                activeKeyReachedCore = nearestDistance <= nearestKey.returnThreshold
             } else {
-                // A deliberate loop that leaves and returns to the same key
-                // represents a repeated letter (for example the "oo" in "book").
-                // Small tremors do not pass the excursion threshold.
-                if (nearestDistance >= nearestKey.loopThreshold) {
-                    activeKeyLooped = true
-                } else if (activeKeyLooped &&
-                    nearestDistance <= nearestKey.returnThreshold
+                // Only count a loop after the finger has first reached the
+                // key's center area. This prevents a fast swipe entering a
+                // key from its edge from being mistaken for a repeated letter.
+                if (nearestDistance <= nearestKey.returnThreshold) {
+                    if (activeKeyLooped) {
+                        word.append(value)
+                        activeKeyLooped = false
+                    }
+                    activeKeyReachedCore = true
+                } else if (activeKeyReachedCore &&
+                    nearestDistance >= nearestKey.loopThreshold
                 ) {
-                    word.append(value)
-                    activeKeyLooped = false
+                    activeKeyLooped = true
                 }
             }
             previous = value
