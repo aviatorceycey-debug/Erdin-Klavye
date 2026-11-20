@@ -287,17 +287,18 @@ class LocalLanguageModel(context: Context) {
     ).mapIndexed { index, word -> word.trim() to index }.toMap()
 
     @Synchronized
-    fun englishCompletions(prefix: String): List<String> {
+    fun englishCompletions(prefix: String, includePersonalData: Boolean = true): List<String> {
         val typed = prefix.trim()
         val key = UnicodeWordNormalizer.normalize(typed, Locale.US)
         if (key.length < 2) return emptyList()
-        refreshPersonalDataIfChanged()
+        if (includePersonalData) refreshPersonalDataIfChanged()
+        val personalWords = if (includePersonalData) englishWordCounts.keys.asSequence() else emptySequence()
         val candidates = SuggestionCandidateSelector.top(
-            (englishStarterWords.asSequence() + englishWordCounts.keys.asSequence())
+            (englishStarterWords.asSequence() + personalWords)
                 .filter { it.startsWith(key) && it != key }
                 .distinct(),
             limit = 2,
-            comparator = compareByDescending<String> { englishWordCounts[it] ?: 0 }
+            comparator = compareByDescending<String> { if (includePersonalData) englishWordCounts[it] ?: 0 else 0 }
                 .thenBy { englishFrequencyRank[it] ?: Int.MAX_VALUE }
                 .thenBy { it }
         )
@@ -312,21 +313,22 @@ class LocalLanguageModel(context: Context) {
     }
 
     @Synchronized
-    fun englishNextWords(previousWord: String, wordBeforePrevious: String? = null): List<String> {
+    fun englishNextWords(previousWord: String, wordBeforePrevious: String? = null, includePersonalData: Boolean = true): List<String> {
         val previous = UnicodeWordNormalizer.normalize(previousWord, Locale.US)
         if (previous.isBlank()) return emptyList()
         val context = wordBeforePrevious?.let { UnicodeWordNormalizer.normalize(it, Locale.US) }.orEmpty()
         val contextual = if (context.isBlank()) emptyList()
             else englishContextHints["$context>$previous"].orEmpty()
-        val learnedPair = englishPairNextCounts[previous].orEmpty()
+        if (includePersonalData) refreshPersonalDataIfChanged()
+        val learnedPair = if (includePersonalData) englishPairNextCounts[previous].orEmpty() else emptyMap()
         val prefix = if (context.isBlank()) "" else "$context>$previous"
-        val learnedTrigram = if (prefix.isBlank()) emptyMap() else englishTrigramNextCounts[prefix].orEmpty()
+        val learnedTrigram = if (!includePersonalData || prefix.isBlank()) emptyMap() else englishTrigramNextCounts[prefix].orEmpty()
         return EnglishContextSuggestionSelector.select(
             contextualHints = contextual,
             seededHints = englishNextHints[previous].orEmpty(),
             learnedPairCounts = learnedPair,
             learnedTrigramCounts = learnedTrigram,
-            personalWordCounts = englishWordCounts,
+            personalWordCounts = if (includePersonalData) englishWordCounts else emptyMap(),
             limit = 3
         )
     }
@@ -576,14 +578,15 @@ class LocalLanguageModel(context: Context) {
     }
 
     @Synchronized
-    fun completions(prefix: String): List<String> {
-        refreshPersonalDataIfChanged()
+    fun completions(prefix: String, includePersonalData: Boolean = true): List<String> {
+        if (includePersonalData) refreshPersonalDataIfChanged()
         val key = normalize(prefix)
         if (key.length < 2) return emptyList()
-        val learned = wordCounts
+        val learned = if (includePersonalData) wordCounts else emptyMap()
+        val personalWords = if (includePersonalData) learned.keys.asSequence() else emptySequence()
         val candidates = SuggestionCandidateSelector.top(
             (starterWords.asSequence().filter { it.startsWith(key) } +
-                learned.keys.asSequence().filter { it.startsWith(key) })
+                personalWords.filter { it.startsWith(key) })
                 .distinct()
                 .filterNot { it.equals(key, ignoreCase = true) },
             limit = 2,
@@ -652,15 +655,15 @@ class LocalLanguageModel(context: Context) {
     }
 
     @Synchronized
-    fun nextWords(previousWord: String, previousPreviousWord: String? = null): List<String> {
-        refreshPersonalDataIfChanged()
+    fun nextWords(previousWord: String, previousPreviousWord: String? = null, includePersonalData: Boolean = true): List<String> {
+        if (includePersonalData) refreshPersonalDataIfChanged()
         val previous = normalize(previousWord)
         if (previous.isBlank()) return emptyList()
 
-        val learned = pairNextCounts[previous].orEmpty()
+        val learned = if (includePersonalData) pairNextCounts[previous].orEmpty() else emptyMap()
         val previousPrevious = previousPreviousWord?.let(::normalize).orEmpty()
         val trigramPrefix = if (previousPrevious.isBlank()) "" else "$previousPrevious>$previous"
-        val contextual = if (trigramPrefix.isBlank()) emptyMap()
+        val contextual = if (!includePersonalData || trigramPrefix.isBlank()) emptyMap()
             else trigramNextCounts[trigramPrefix].orEmpty()
         val seeded = starterNextWords[previous].orEmpty()
         val seededContext = starterTrigrams["$previousPrevious>$previous"].orEmpty()
@@ -669,7 +672,7 @@ class LocalLanguageModel(context: Context) {
             seededHints = seeded,
             learnedPairCounts = learned,
             learnedTrigramCounts = contextual,
-            personalWordCounts = wordCounts,
+            personalWordCounts = if (includePersonalData) wordCounts else emptyMap(),
             limit = 3
         )
     }
