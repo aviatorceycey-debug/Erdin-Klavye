@@ -610,7 +610,7 @@ class LocalLanguageModel(context: Context) {
     fun decodeSwipePath(path: String): String {
         refreshPersonalDataIfChanged()
         val clean = normalize(path).filter { it.isLetter() }
-        if (clean.length < 3) return clean
+        if (clean.length < 2) return clean
         val candidates = (starterWords.asSequence() + wordCounts.keys.asSequence())
             .filter { kotlin.math.abs(it.length - clean.length) <= 1 }
             .distinct()
@@ -632,7 +632,7 @@ class LocalLanguageModel(context: Context) {
     fun decodeEnglishSwipePath(path: String): String {
         refreshPersonalDataIfChanged()
         val clean = path.lowercase(Locale.US).filter { it in 'a'..'z' }
-        if (clean.length < 3) return clean
+        if (clean.length < 2) return clean
         val rankedCandidates = (englishStarterWords.asSequence() + englishWordCounts.keys.asSequence())
             .distinct()
             .filter { kotlin.math.abs(it.length - clean.length) <= 1 }
