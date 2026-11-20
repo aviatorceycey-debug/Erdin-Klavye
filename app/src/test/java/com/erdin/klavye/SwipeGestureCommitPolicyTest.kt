@@ -17,13 +17,8 @@ class SwipeGestureCommitPolicyTest {
     }
 
     @Test
-    fun failedSwipeFallsBackToTapOnlyOnItsStartingKey() {
-        assertTrue(SwipeGestureCommitPolicy.shouldCommitBaseKey(true))
-        assertFalse(SwipeGestureCommitPolicy.shouldCommitBaseKey(false))
-    }
-
-    @Test
-    fun ordinaryTapAlsoRequiresReleaseOnTheStartingKey() {
+    fun baseKeyCommitRequiresReleaseOnTheStartingKey() {
+        // Covers both a failed swipe falling back to a tap and an ordinary tap.
         assertTrue(SwipeGestureCommitPolicy.shouldCommitBaseKey(true))
         assertFalse(SwipeGestureCommitPolicy.shouldCommitBaseKey(false))
     }
