@@ -21,4 +21,10 @@ class SwipeGestureCommitPolicyTest {
         assertTrue(SwipeGestureCommitPolicy.shouldCommitBaseKey(true))
         assertFalse(SwipeGestureCommitPolicy.shouldCommitBaseKey(false))
     }
+
+    @Test
+    fun ordinaryTapAlsoRequiresReleaseOnTheStartingKey() {
+        assertTrue(SwipeGestureCommitPolicy.shouldCommitBaseKey(true))
+        assertFalse(SwipeGestureCommitPolicy.shouldCommitBaseKey(false))
+    }
 }
