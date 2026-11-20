@@ -438,6 +438,9 @@ class ErdinKeyboardView(
     }
 
     fun hideClipboard() {
+        // Hiding the clipboard can replace the active panel while a finger is
+        // still down. Cancel that gesture so it cannot type into the new panel.
+        cancelTransientKeyInteraction()
         clipboardMode = false
         cachedLayoutRows = null
         accessibilityHelper.invalidateRoot()
