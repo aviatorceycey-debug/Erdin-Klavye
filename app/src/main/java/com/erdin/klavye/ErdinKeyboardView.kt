@@ -1568,7 +1568,7 @@ class ErdinKeyboardView(
                         density,
                         activeLanguageLabel == "English"
                     )
-                    if (word.length >= 3) {
+                    if (word.length >= 2) {
                         onKey("__SWIPE_WORD__" + if (shift || capsLock) upper(word) else word)
                         if (shift && !capsLock) shift = false
                     } else if (key != null) {
